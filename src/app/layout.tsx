@@ -1,7 +1,13 @@
 import type { Metadata } from "next";
 import { Manrope, Poppins } from "next/font/google";
 import "./globals.css";
+
+// Import Swiper styles
+import "swiper/css";
+import "swiper/css/navigation";
+
 import { ReduxProvider } from "../lib/store/provider";
+import ThemeProvider from "../lib/theme/ThemeProvider";
 import ReactQueryProvider from "../lib/query/ReactQueryProvider";
 
 const poppins = Poppins({
@@ -23,9 +29,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${poppins.variable} antialiased`}>
-        <ReduxProvider>
-          <ReactQueryProvider>{children}</ReactQueryProvider>
-        </ReduxProvider>
+        <ThemeProvider>
+          <ReduxProvider>
+            <ReactQueryProvider>{children}</ReactQueryProvider>
+          </ReduxProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

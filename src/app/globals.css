@@ -49,7 +49,7 @@
 }
 
 :root {
-  --font-poppins: 'Poppins', sans-serif;
+  --font-poppins: "Poppins", sans-serif;
   /* <-- Add this */
   --radius: 0.625rem;
   --background: oklch(1 0 0);
@@ -58,14 +58,14 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --primary: #f85e00;
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
+  --secondary-foreground: #f85e00;
   --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
+  --muted-foreground: oklch(62.675% 0.00007 271.152);
   --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  --accent-foreground: #f85e00;
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
@@ -77,7 +77,7 @@
   --chart-5: oklch(0.769 0.188 70.08);
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
+  --sidebar-primary: #f85e00;
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.97 0 0);
   --sidebar-accent-foreground: oklch(0.205 0 0);
@@ -86,13 +86,13 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
+  --background: #1c1c1e;
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
+  --primary: #f85e00;
   --primary-foreground: oklch(0.205 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
@@ -127,12 +127,19 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-poppins);
+  }
 
+  .bg-app {
+    background-color: rgb(243, 244, 246);
+  }
+
+  .dark .bg-app {
+    background-color: rgba(107, 114, 128, 0.2);
   }
 }
 
 .auth_bg {
-  background-image: url('/images/auth_bg.png');
+  background-image: url("/images/auth_bg.png");
   background-size: cover;
   background-position: center;
 }
