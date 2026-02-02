@@ -7,7 +7,8 @@ export default function RootLayout({
 }>) {
   return (
     // <PublicRoute>
-    <div className="w-screen min-h-screen  flex justify-center items-center auth_bg p-3 md:py-8">
+    <div className="w-screen h-screen flex justify-center items-center auth_bg ">
+      {" "}
       {children}
     </div>
     // </PublicRoute>
