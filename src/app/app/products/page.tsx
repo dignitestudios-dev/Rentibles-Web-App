@@ -1,8 +1,19 @@
-import React from "react";
-import SwiperProducts from "./swiper-products";
+"use client";
 
-const Products = () => {
-  const products = [
+import React, { useState } from "react";
+import { ArrowLeft, Search } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import Categories, { CATEGORIES } from "../home/_components/categories";
+import ProductCard from "../home/_components/product-card";
+import Link from "next/link";
+
+const ProductsPage = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [likedProducts, setLikedProducts] = useState<Set<string>>(new Set());
+
+  // Sample products data
+  const allProducts = [
     {
       _id: "695fcaf55f8a230e6cb6ae5f",
       name: "Test",
@@ -27,8 +38,7 @@ const Products = () => {
       isOwn: false,
       isLiked: false,
       isActive: true,
-      createdAt: "2026-01-08T15:19:17.608Z",
-      updatedAt: "2026-01-08T15:19:17.608Z",
+      rating: 4.5,
     },
     {
       _id: "6932a45e912545702b79dad5",
@@ -54,8 +64,7 @@ const Products = () => {
       isOwn: false,
       isLiked: true,
       isActive: true,
-      createdAt: "2025-12-05T09:22:38.826Z",
-      updatedAt: "2025-12-11T07:21:00.351Z",
+      rating: 4.5,
     },
     {
       _id: "68b99e0ded64fb55be419720",
@@ -81,8 +90,7 @@ const Products = () => {
       isOwn: false,
       isLiked: false,
       isActive: true,
-      createdAt: "2025-09-04T14:11:25.883Z",
-      updatedAt: "2025-09-04T14:19:32.181Z",
+      rating: 4.5,
     },
     {
       _id: "6881fec1eb495ea3dc6ae145",
@@ -108,8 +116,7 @@ const Products = () => {
       isOwn: false,
       isLiked: false,
       isActive: true,
-      createdAt: "2025-07-24T09:37:05.408Z",
-      updatedAt: "2026-01-28T09:11:20.428Z",
+      rating: 4.5,
     },
     {
       _id: "6852bdb8c495face6b7576d2",
@@ -135,8 +142,7 @@ const Products = () => {
       isOwn: false,
       isLiked: false,
       isActive: true,
-      createdAt: "2025-06-18T13:23:04.185Z",
-      updatedAt: "2025-06-18T13:23:04.185Z",
+      rating: 4.5,
     },
     {
       _id: "6852bbfbc495face6b757613",
@@ -162,8 +168,7 @@ const Products = () => {
       isOwn: false,
       isLiked: false,
       isActive: true,
-      createdAt: "2025-06-18T13:15:39.313Z",
-      updatedAt: "2025-06-18T13:15:39.313Z",
+      rating: 4.5,
     },
     {
       _id: "6852b4c8c495face6b757268",
@@ -189,8 +194,7 @@ const Products = () => {
       isOwn: false,
       isLiked: false,
       isActive: true,
-      createdAt: "2025-06-18T12:44:56.293Z",
-      updatedAt: "2025-06-18T13:41:34.475Z",
+      rating: 4.5,
     },
     {
       _id: "6814de07c495face6b73173b",
@@ -216,11 +220,89 @@ const Products = () => {
       isOwn: false,
       isLiked: false,
       isActive: true,
-      createdAt: "2025-05-02T15:00:23.547Z",
-      updatedAt: "2025-05-02T15:00:23.547Z",
+      rating: 4.5,
     },
   ];
-  return <SwiperProducts products={products} />;
+
+  // Get selected category from URL params
+  const selectedCategory = searchParams?.get("category") ?? "all";
+
+  // Filter products by category
+  const filteredProducts =
+    selectedCategory && selectedCategory !== "all"
+      ? allProducts.filter(
+          (product) => product.category._id === selectedCategory,
+        )
+      : allProducts;
+
+  const handleProductLike = (productId: string) => {
+    const newLiked = new Set(likedProducts);
+    if (newLiked.has(productId)) {
+      newLiked.delete(productId);
+    } else {
+      newLiked.add(productId);
+    }
+    setLikedProducts(newLiked);
+  };
+
+  const handleProductClick = (productId: string) => {
+    router.push(`/app/products/${productId}`);
+  };
+
+  return (
+    <div className="bg-background min-h-screen">
+      {/* Header */}
+      <div className="sticky top-0 z-40 bg-background border-b border-border">
+        <div className="flex items-center justify-between px-4 py-4 md:px-6">
+          <Link
+            href="/app/home"
+            className="p-2 hover:bg-muted rounded-md transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+
+          <h1 className="text-lg md:text-xl font-semibold">Products</h1>
+
+          <button className="p-2 hover:bg-muted rounded-md transition-colors">
+            <Search className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="px-4 py-6 md:px-6 md:py-8">
+        {/* Categories Section */}
+        <Categories />
+
+        {/* Products Grid */}
+        <div className="mt-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+            {filteredProducts.map((product) => (
+              <div
+                key={product._id}
+                onClick={() => handleProductClick(product._id)}
+              >
+                <ProductCard
+                  product={product}
+                  liked={likedProducts.has(product._id)}
+                  onLikeToggle={() => handleProductLike(product._id)}
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Empty State */}
+          {filteredProducts.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-12">
+              <p className="text-gray-500 dark:text-gray-400 text-lg">
+                No products found in this category
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 };
 
-export default Products;
+export default ProductsPage;

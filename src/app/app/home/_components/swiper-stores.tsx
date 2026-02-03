@@ -6,8 +6,21 @@ import { Navigation, A11y } from "swiper/modules";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import StoreCard from "./store-card";
 
+type Store = {
+  _id: string;
+  name?: string;
+  email?: string;
+  profilePicture?: string;
+  coverPicture?: string;
+};
 
-const SwiperStores = ({ storeCount = 5 }) => {
+interface SwiperStoresProps {
+  stores?: Store[];
+}
+
+const SwiperStores: React.FC<SwiperStoresProps> = ({ stores = [] }) => {
+  const storeCount = stores.length || 5;
+
   return (
     <div className="my-5">
       <h2 className="font-semibold text-2xl mb-4">Stores</h2>
@@ -23,11 +36,17 @@ const SwiperStores = ({ storeCount = 5 }) => {
           }}
           className="stores-swiper"
         >
-          {Array.from({ length: storeCount }).map((_, index) => (
-            <SwiperSlide key={index}>
-              <StoreCard />
-            </SwiperSlide>
-          ))}
+          {stores.length > 0
+            ? stores.map((store) => (
+                <SwiperSlide key={store._id}>
+                  <StoreCard store={store} />
+                </SwiperSlide>
+              ))
+            : Array.from({ length: storeCount }).map((_, index) => (
+                <SwiperSlide key={index}>
+                  <StoreCard />
+                </SwiperSlide>
+              ))}
         </Swiper>
 
         {/* Custom Navigation Buttons */}

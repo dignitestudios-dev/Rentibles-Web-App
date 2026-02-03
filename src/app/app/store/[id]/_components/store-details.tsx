@@ -1,7 +1,67 @@
-import React from "react";
-import SwiperProducts from "./swiper-products";
+"use client";
 
-const Products = () => {
+import React from "react";
+import Image from "next/image";
+import { ArrowLeft, MapPin, Phone } from "lucide-react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import CategoryCard from "../../../home/_components/category-card";
+import ProductCard from "../../../home/_components/product-card";
+import { CATEGORIES } from "../../../home/_components/categories";
+import Link from "next/link";
+
+const StoreDetails = () => {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
+  const selectedCategoryId = searchParams?.get("category") ?? "all";
+
+  const handleSelect = (id: string) => {
+    const params = new URLSearchParams(searchParams?.toString() ?? "");
+
+    if (id === "all") {
+      params.delete("category");
+    } else {
+      if (params.get("category") === id) {
+        params.delete("category");
+      } else {
+        params.set("category", id);
+      }
+    }
+
+    const query = params.toString();
+    const url = query ? `${pathname}?${query}` : pathname;
+    router.push(url);
+  };
+
+  const store = {
+    _id: "68c42cc21e1affac1cafa5aa",
+    name: "Test",
+    email: "test23@yopmail.com",
+    description:
+      "This is a test store description. It provides an overview of the store's offerings, values, and unique selling points. Customers can expect quality products and excellent service when shopping here. We pride ourselves on our commitment to customer satisfaction and our wide range of products to meet diverse needs.",
+    profilePicture:
+      "https://rentibles-bucket.s3.us-west-2.amazonaws.com/pictures/761f866f-6b7a-4316-9dd1-085a6a042283.png",
+    coverPicture:
+      "https://media.istockphoto.com/id/1412353022/photo/empty-aisle-at-a-supermarket.jpg?s=612x612&w=0&k=20&c=lua6Ayl1iyoOndHTXEWoolyh1xV9HTROcl6we_o-HRc=",
+    phone: "12267847792",
+    address:
+      "Plot 8 B, Sindhi Muslim Cooperative Housing Society Block A Sindhi Muslim CHS (SMCHS), Karachi, Pakistan",
+    country: "USA",
+    apartment: "322222",
+    city: "Cicero",
+    state: "Illinois",
+    zipCode: 32131,
+    location: {
+      type: "Point",
+      coordinates: [67.05391949999999, 24.8592086],
+    },
+    isOwn: false,
+    createdAt: "2025-09-12T14:22:58.536Z",
+    updatedAt: "2025-11-12T06:03:35.398Z",
+    hasPurchased: true,
+  };
+
   const products = [
     {
       _id: "695fcaf55f8a230e6cb6ae5f",
@@ -220,7 +280,108 @@ const Products = () => {
       updatedAt: "2025-05-02T15:00:23.547Z",
     },
   ];
-  return <SwiperProducts products={products} />;
+
+  return (
+    <div className="">
+      <div className="sticky top-0">
+        <div className="relative flex flex-col min-h-72 md:min-h-92 h-fit">
+          <Image
+            src={store.coverPicture}
+            alt="cover"
+            width={1000}
+            height={1000}
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+
+          <div className="absolute inset-0 bg-linear-to-b from-black/40 to-black/95" />
+
+          <Link href={"/app/home"}>
+            <button
+              className="absolute left-4 top-4 z-40 bg-white/20 backdrop-blur-sm text-white p-2 rounded-md"
+              aria-label="Back"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+          </Link>
+
+          <h2 className="absolute left-1/2 -translate-x-1/2 top-4 text-white text-xl font-semibold">
+            Store Details
+          </h2>
+
+          <div className="relative z-20 h-full flex-1 flex flex-col justify-end p-5">
+            <div className="flex items-center gap-5 text-white">
+              <div className="w-20 h-20 rounded-full p-1 bg-white ring-4 ring-primary">
+                <Image
+                  src={store.profilePicture}
+                  alt="profile"
+                  width={1000}
+                  height={1000}
+                  className="w-full h-full object-cover rounded-full"
+                />
+              </div>
+
+              <div>
+                <div className="text-2xl font-semibold">{store.name}</div>
+                <div className="opacity-90">{store.email}</div>
+              </div>
+            </div>
+
+            <div className="mt-6 mb-12">
+              <div className="flex items-center gap-6 text-white text-sm">
+                <div className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 text-primary" />
+                  <span>{store.address}</span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Phone className="w-4 h-4 text-primary" />
+                  <span>{store.phone}</span>
+                </div>
+              </div>
+
+              <p className="mt-4 text-gray-300">
+                {store.description.length > 680
+                  ? `${store.description.slice(0, 680)}...`
+                  : store.description}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="relative z-20 -mt-10">
+        <div className="bg-background rounded-t-[42px] pt-8 pb-12 px-6">
+          <h3 className="text-2xl font-semibold mb-4">Categories</h3>
+
+          <div className="flex gap-3 overflow-x-auto py-2 mb-6 scrollbar-light">
+            {CATEGORIES.map((cat) => (
+              <div key={cat._id} className="shrink-0">
+                <CategoryCard
+                  category={{
+                    _id: cat._id,
+                    name: cat.name,
+                    cover: "",
+                    createdAt: "",
+                    updatedAt: "",
+                  }}
+                  selected={cat._id === selectedCategoryId}
+                  onClick={() => handleSelect(cat._id)}
+                />
+              </div>
+            ))}
+          </div>
+
+          <h3 className="text-2xl font-semibold mb-4">Products</h3>
+
+          <div className="grid grid-cols-4 gap-4">
+            {products.map((p) => (
+              <ProductCard key={p._id} product={p} />
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 };
 
-export default Products;
+export default StoreDetails;

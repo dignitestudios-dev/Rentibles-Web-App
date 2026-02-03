@@ -88,7 +88,7 @@
 .dark {
   --background: #1c1c1e;
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  --card: #343436;
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
@@ -142,4 +142,56 @@
   background-image: url("/images/auth_bg.png");
   background-size: cover;
   background-position: center;
+}
+
+/* Custom scrollbar for horizontal scroll containers */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Styled scrollbar for light mode */
+.scrollbar-light {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+}
+
+.scrollbar-light::-webkit-scrollbar {
+  height: 6px;
+}
+
+.scrollbar-light::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-light::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+  border-radius: 3px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.scrollbar-light::-webkit-scrollbar-thumb:hover {
+  background-color: #9ca3af;
+}
+
+/* Styled scrollbar for dark mode */
+.dark .scrollbar-light {
+  scrollbar-color: #4b5563 transparent;
+}
+
+.dark .scrollbar-light::-webkit-scrollbar-thumb {
+  background-color: #4b5563;
+}
+
+.dark .scrollbar-light::-webkit-scrollbar-thumb:hover {
+  background-color: #6b7280;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
 }

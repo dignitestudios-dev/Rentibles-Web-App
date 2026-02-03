@@ -1,0 +1,383 @@
+"use client";
+
+import React, { useState, useRef } from "react";
+import Image from "next/image";
+import {
+  ArrowLeft,
+  Star,
+  Phone,
+  MapPin,
+  Minus,
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Navigation, A11y } from "swiper/modules";
+import type { Swiper as SwiperType } from "swiper";
+import MediaViewer from "./_components/MediaViewer";
+
+const ProductDetailsPage = () => {
+  const router = useRouter();
+  const [quantity, setQuantity] = useState(14);
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [isMediaViewerOpen, setIsMediaViewerOpen] = useState(false);
+  const swiperRef = useRef<SwiperType>(null);
+
+  const product = {
+    _id: "68b99e0ded64fb55be419720",
+    name: "Test Product",
+    description:
+      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
+    cover:
+      "https://rentibles-bucket.s3.us-west-2.amazonaws.com/pictures/37b3c72e-c2df-406f-a433-fe8a6da5b1df.jpg",
+    images: [
+      "https://rentibles-bucket.s3.us-west-2.amazonaws.com/pictures/37b3c72e-c2df-406f-a433-fe8a6da5b1df.jpg",
+      "https://rentibles-bucket.s3.us-west-2.amazonaws.com/pictures/8586f2da-d4a3-43ca-b40e-a8ffea023ab7.jpg",
+      "https://rentibles-bucket.s3.us-west-2.amazonaws.com/pictures/bf930ca3-5f96-4554-9f35-7f7043c8093a.jpg",
+      "https://rentibles-bucket.s3.us-west-2.amazonaws.com/pictures/7cd58120-ab4b-44fa-a7d3-780cd4b54105.jpg",
+    ],
+    rating: 4.5,
+    category: "Furniture",
+    subCategory: "Chair",
+    pricePerHour: 3000,
+    pricePerDay: 9000,
+    totalQuantity: 100,
+    availableQuantity: 14,
+    distance: "8 Miles Away",
+    phone: "+1 136 898 21345",
+    storeAvatar:
+      "https://rentibles-bucket.s3.us-west-2.amazonaws.com/pictures/761f866f-6b7a-4316-9dd1-085a6a042283.png",
+  };
+
+  const reviews = [
+    {
+      _id: "1",
+      author: "David Laid",
+      rating: 4.5,
+      text: "Amazing product. I booked on Monday and I got my order on the next day. I'm highly impressed with their services.",
+      avatar:
+        "https://rentibles-bucket.s3.us-west-2.amazonaws.com/pictures/761f866f-6b7a-4316-9dd1-085a6a042283.png",
+    },
+    {
+      _id: "1",
+      author: "David Laid",
+      rating: 4.5,
+      text: "Amazing product. I booked on Monday and I got my order on the next day. I'm highly impressed with their services.",
+      avatar:
+        "https://rentibles-bucket.s3.us-west-2.amazonaws.com/pictures/761f866f-6b7a-4316-9dd1-085a6a042283.png",
+    },
+    {
+      _id: "1",
+      author: "David Laid",
+      rating: 4.5,
+      text: "Amazing product. I booked on Monday and I got my order on the next day. I'm highly impressed with their services.",
+      avatar:
+        "https://rentibles-bucket.s3.us-west-2.amazonaws.com/pictures/761f866f-6b7a-4316-9dd1-085a6a042283.png",
+    },
+    {
+      _id: "1",
+      author: "David Laid",
+      rating: 4.5,
+      text: "Amazing product. I booked on Monday and I got my order on the next day. I'm highly impressed with their services.",
+      avatar:
+        "https://rentibles-bucket.s3.us-west-2.amazonaws.com/pictures/761f866f-6b7a-4316-9dd1-085a6a042283.png",
+    },
+  ];
+
+  const handleQuantityChange = (change: number) => {
+    const newQty = quantity + change;
+    if (newQty > 0 && newQty <= product.totalQuantity) {
+      setQuantity(newQty);
+    }
+  };
+
+  return (
+    <div className="bg-background min-h-screen">
+      {/* Header */}
+      <div className="sticky top-18 z-40 bg-background border-b border-border">
+        <div className="flex items-center justify-between px-4 py-4 md:px-6">
+          <button
+            onClick={() => router.back()}
+            className="p-2 hover:bg-muted rounded-md transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+
+          <h1 className="text-lg font-semibold">Product Details</h1>
+
+          <div className="w-10 h-10 rounded-full p-1 bg-primary ring-2 ring-primary overflow-hidden">
+            <img
+              src={product.storeAvatar}
+              alt="store"
+              className="w-full h-full object-cover rounded-full"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="w-full px-0 md:px-6 py-6 pb-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column - Image */}
+          <div className="lg:col-span-2">
+            {/* Image Carousel with Navigation */}
+            <div className="mb-6 sticky top-20">
+              <div className="relative w-full bg-gray-100 dark:bg-gray-800 rounded-3xl overflow-hidden mb-3 flex items-center justify-center group">
+                {/* Left Chevron */}
+                <button
+                  onClick={() => {
+                    if (activeImageIndex > 0) {
+                      setActiveImageIndex(activeImageIndex - 1);
+                    }
+                  }}
+                  className="absolute left-4 z-10 bg-primary text-white rounded-full p-3 hover:bg-primary/90 transition-colors"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+
+                <img
+                  src={product.images[activeImageIndex]}
+                  alt="product"
+                  onClick={() => setIsMediaViewerOpen(true)}
+                  className="w-full h-96 md:h-125 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                />
+
+                {/* Right Chevron */}
+                <button
+                  onClick={() => {
+                    if (activeImageIndex < product.images.length - 1) {
+                      setActiveImageIndex(activeImageIndex + 1);
+                    }
+                  }}
+                  className="absolute right-4 z-10 bg-primary text-white rounded-full p-3 hover:bg-primary/90 transition-colors"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Image Indicators */}
+              <div className="flex items-center justify-center gap-2">
+                {product.images.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setActiveImageIndex(idx)}
+                    className={`h-2 rounded-full transition-all ${
+                      idx === activeImageIndex
+                        ? "w-8 bg-primary"
+                        : "w-2 bg-gray-300 dark:bg-gray-600"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Details */}
+          <div className="lg:col-span-1">
+            {/* Product Name & Rating */}
+            <div className="mb-6">
+              <div className="flex items-start justify-between gap-4 mb-3">
+                <h2 className="text-3xl md:text-4xl font-bold">
+                  {product.name}
+                </h2>
+                <div className="flex items-center gap-1 bg-primary text-primary-foreground px-3 py-1 rounded-md whitespace-nowrap">
+                  <Star className="w-5 h-5 fill-current" />
+                  <span className="font-semibold">{product.rating}</span>
+                </div>
+              </div>
+
+              <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base">
+                {product.description}
+              </p>
+            </div>
+
+            <hr className="my-6 border-border" />
+
+            {/* Pickup & Phone */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Pickup Locations</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">
+                  Location will be visible once you book the item.
+                </p>
+                <p className="text-xl font-bold">{product.distance}</p>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Phone Number</h3>
+                <div className="flex items-center gap-2">
+                  <Phone className="w-5 h-5 text-gray-500" />
+                  <span className="text-lg">{product.phone}</span>
+                </div>
+              </div>
+            </div>
+
+            <hr className="my-6 border-border" />
+
+            {/* Category & SubCategory */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Category</h3>
+                <p className="text-gray-500 dark:text-gray-400">
+                  {product.category}
+                </p>
+              </div>
+
+              <div>
+                <h3 className="text-lg font-semibold mb-2">Sub Category</h3>
+                <p className="text-gray-500 dark:text-gray-400">
+                  {product.subCategory}
+                </p>
+              </div>
+            </div>
+
+            <hr className="my-6 border-border" />
+
+            {/* Quantity */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-semibold">
+                  Quantity,{" "}
+                  <span className="text-primary">
+                    {product.totalQuantity}Pcs
+                  </span>
+                </h3>
+              </div>
+
+              <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
+                {quantity} Items
+              </p>
+
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => handleQuantityChange(-1)}
+                  className="px-4 py-2 text-gray-400 hover:text-foreground transition-colors"
+                  disabled={quantity <= 1}
+                >
+                  <Minus className="w-5 h-5" />
+                </button>
+
+                <span className="text-xl font-semibold w-12 text-center">
+                  {quantity}
+                </span>
+
+                <button
+                  onClick={() => handleQuantityChange(1)}
+                  className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+                  disabled={quantity >= product.totalQuantity}
+                >
+                  <Plus className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+
+            <hr className="my-6 border-border" />
+
+            {/* Availability */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-4">Availability</h3>
+
+              <div className="flex flex-wrap gap-4">
+                <div className="bg-orange-400/20 dark:bg-orange-900/10 px-6 py-4 rounded-2xl">
+                  <p className="text-2xl font-bold text-primary">
+                    ${product.pricePerHour.toLocaleString()}/
+                    <span className="text-base font-normal text-gray-600 dark:text-gray-400">
+                      hr
+                    </span>
+                  </p>
+                </div>
+
+                <div className="bg-orange-400/20 dark:bg-orange-900/10 px-6 py-4 rounded-2xl">
+                  <p className="text-2xl font-bold text-primary">
+                    ${product.pricePerDay.toLocaleString()}/
+                    <span className="text-base font-normal text-gray-600 dark:text-gray-400">
+                      day
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Reviews Section - Full Width */}
+        <div className="mt-12 px-4 md:px-0">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-2xl font-semibold">What People Say</h3>
+            <button className="text-primary hover:underline">See All</button>
+          </div>
+
+          {/* Swiper for Reviews */}
+          <Swiper
+            ref={swiperRef}
+            modules={[Navigation, A11y]}
+            spaceBetween={24}
+            slidesPerView={1}
+            breakpoints={{
+              768: {
+                slidesPerView: 1.5,
+              },
+              1024: {
+                slidesPerView: 2,
+              },
+            }}
+            className="reviews-swiper"
+          >
+            {reviews.map((review) => (
+              <SwiperSlide key={review._id}>
+                <div className="bg-muted dark:bg-card p-6 rounded-2xl h-full">
+                  <div className="flex items-start gap-4 mb-4">
+                    <div className="w-12 h-12 rounded-full p-1 bg-primary ring-2 ring-primary shrink-0 overflow-hidden">
+                      <img
+                        src={review.avatar}
+                        alt={review.author}
+                        className="w-full h-full object-cover rounded-full"
+                      />
+                    </div>
+
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between gap-2 mb-2">
+                        <h4 className="font-semibold text-lg">
+                          {review.author}
+                        </h4>
+                        <div className="flex items-center gap-1">
+                          <Star className="w-5 h-5 fill-primary text-primary" />
+                          <span className="font-semibold text-sm">
+                            {review.rating}
+                          </span>
+                        </div>
+                      </div>
+
+                      <p className="text-gray-600 dark:text-gray-300 text-sm">
+                        {review.text}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </SwiperSlide>
+            ))}
+          </Swiper>
+        </div>
+      </div>
+
+      {/* Book Now Button - Fixed Bottom */}
+      <div className="w-full flex justify-center bg-background border-t border-border px-4 py-4 md:px-6 md:py-5 z-50">
+        <button className="w-120 max-w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-4 rounded-lg transition-colors text-lg">
+          Book Now
+        </button>
+      </div>
+
+      {/* Media Viewer Modal */}
+      <MediaViewer
+        images={product.images}
+        initialIndex={activeImageIndex}
+        isOpen={isMediaViewerOpen}
+        onClose={() => setIsMediaViewerOpen(false)}
+      />
+    </div>
+  );
+};
+
+export default ProductDetailsPage;

@@ -11,12 +11,20 @@ interface Category {
 
 interface CategoryCardProps {
   category: Category;
+  selected?: boolean;
+  onClick?: () => void;
 }
 
-const CategoryCard: React.FC<CategoryCardProps> = ({ category }) => {
+const CategoryCard: React.FC<CategoryCardProps> = ({ category, selected = false, onClick }) => {
   return (
-    <div className="bg-app w-fit py-2 px-4 rounded-md cursor-pointer">
-      <p className="uppercase select-none">{category.name}</p>
+    <div
+      role="button"
+      onClick={onClick}
+      className={`w-fit py-2 px-4 rounded-md text-foreground cursor-pointer select-none transition-colors ${
+        selected ? "bg-primary text-white" : "bg-app"
+      }`}
+    >
+      <p className="uppercase">{category.name}</p>
     </div>
   );
 };
