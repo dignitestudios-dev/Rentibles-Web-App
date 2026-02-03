@@ -6,6 +6,7 @@ import Otp_Icon from "./otp_Icon.png";
 import Eng_flag from "./eng_flag.png";
 import Profile_img from "./profile_img.png";
 import Map_img from "./map_img.png";
+import UserProfile from "./user.png";
 
 export {
   OrangeLogo,
@@ -16,7 +17,5 @@ export {
   Eng_flag,
   Profile_img,
   Map_img,
+  UserProfile,
 };
-import UserProfile from "./user.png";
-
-export { OrangeLogo, WhiteLogo, GoogleIcon, UserProfile };
