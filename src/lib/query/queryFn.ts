@@ -1,6 +1,8 @@
 import Cookies from "js-cookie";
 import { axiosInstance } from "../axiosInstance";
 import {
+  CheckEmailPayload,
+  CheckEmailResponse,
   ForgotPayload,
   ForgotResponse,
   LoginPayload,
@@ -9,6 +11,9 @@ import {
   NewPasswordResponse,
   RegisterPayload,
   RegisterResponse,
+  ResendEmailPaylod,
+  ResendPhonePaylod,
+  ResendResponse,
   VerifyOtpResponse,
 } from "@/src/types/index.type";
 import { OtpPayload } from "@/src/schema";
@@ -32,9 +37,10 @@ export const ForgotUser = async (
 export const verifyOtp = async (
   payload: OtpPayload,
 ): Promise<VerifyOtpResponse> => {
-  const { data } = await axiosInstance.post("/auth/verify-otp", payload);
+  const { data } = await axiosInstance.post("/auth/verifyEmail", payload);
   return data;
 };
+
 export const newPassword = async (
   payload: NewPasswordPayload,
 ): Promise<NewPasswordResponse> => {
@@ -44,6 +50,37 @@ export const newPassword = async (
 export const RegisterUser = async (
   payload: FormData,
 ): Promise<RegisterResponse> => {
-  const { data } = await axiosInstance.post("/auth/sign-up", payload);
+  const { data } = await axiosInstance.post("/auth/signUp", payload);
+  return data;
+};
+export const CheckEmailStatus = async (
+  payload: CheckEmailPayload,
+): Promise<CheckEmailResponse> => {
+  const { data } = await axiosInstance.post("/auth/check", payload);
+  return data;
+};
+export const ResendOtp = async (
+  payload: ResendEmailPaylod,
+): Promise<ResendResponse> => {
+  const { data } = await axiosInstance.post(
+    "/auth/emailVerificationOTP",
+    payload,
+  );
+  return data;
+};
+export const PhoneVerifyOtp = async (
+  payload: OtpPayload,
+): Promise<VerifyOtpResponse> => {
+  const { data } = await axiosInstance.post("/auth/verifyPhone", payload);
+  return data;
+};
+
+export const PhoneResendOtp = async (
+  payload: ResendPhonePaylod,
+): Promise<ResendResponse> => {
+  const { data } = await axiosInstance.post(
+    "/auth/phoneVerificationOTP",
+    payload,
+  );
   return data;
 };

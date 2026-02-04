@@ -52,14 +52,27 @@ export const RegisterSchema = z
     fullName: z.string().min(2, "Full name is required"),
     email: z.string().email("Invalid email address"),
     phone: z.string().min(7, "Invalid phone number"),
-    home: z.string().min(1, "Home is required"),
+    fcmToken: z.string().optional(),
+
     zipCode: z.string().min(3, "Zip code is required"),
     apartmentNo: z.string().min(1, "Apartment number is required"),
+
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string().min(6, "Confirm your password"),
+
     image: z
       .any()
       .refine((file) => file?.length > 0, "Profile image is required"),
+
+    location: z
+      .object({
+        lat: z.number(),
+        lng: z.number(),
+      })
+      .nullable()
+      .refine((val) => val !== null, {
+        message: "Please select your location on the map",
+      }),
 
     terms: z.boolean().refine((v) => v === true, {
       message: "You must accept terms & conditions",
@@ -71,3 +84,15 @@ export const RegisterSchema = z
   });
 
 export type RegisterPayload = z.infer<typeof RegisterSchema>;
+
+export const identitySchema = z.object({
+  legalName: z.string().min(3, "Legal name is required"),
+
+  faceImage: z.instanceof(File, { message: "Face image is required" }),
+
+  frontImage: z.instanceof(File, { message: "Front image is required" }),
+
+  backImage: z.instanceof(File, { message: "Back image is required" }),
+});
+
+export type IdentityFormValues = z.infer<typeof identitySchema>;

@@ -5,6 +5,9 @@ interface User {
   name: string;
   email: string;
   image?: string;
+  phone: number;
+  isPhoneVerified?: boolean;
+  isEmailVerified?: boolean;
 }
 
 interface AuthState {
@@ -13,35 +16,38 @@ interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
 }
+const token =
+  typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
+const user =
+  typeof window !== "undefined" ? localStorage.getItem("user") : null;
 export const initialState: AuthState = {
-  accessToken: "dummy_token_12345",
-  refreshToken: "dummy_refresh_token_12345",
-  user: {
-    id: "1",
-    name: "Kevin Parker",
-    email: "kevin@example.com",
-    image: "",
-  },
-  isAuthenticated: true,
+  accessToken: token,
+  refreshToken: token,
+  user: user ? JSON.parse(user) : null,
+  isAuthenticated:
+    typeof window !== "undefined" && localStorage.getItem("token")
+      ? true
+      : false,
 };
 
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    setCredentials: (
+    singUp: (
       state,
       action: PayloadAction<{
         token: { access: string; refresh: string };
         user: User;
       }>,
     ) => {
-      console.log("run creds");
+      state.isAuthenticated = true;
       state.accessToken = action.payload.token.access;
       state.refreshToken = action.payload.token.refresh;
       state.user = action.payload.user;
-      state.isAuthenticated = true;
+      localStorage.setItem("user", JSON.stringify(action.payload.user));
+      localStorage.setItem("token", action.payload.token.access);
     },
     setAccessToken: (state, action: PayloadAction<string>) => {
       state.accessToken = action.payload;
@@ -58,6 +64,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setCredentials, setAccessToken, setUser, logout } =
-  authSlice.actions;
+export const { singUp, setAccessToken, setUser, logout } = authSlice.actions;
 export default authSlice.reducer;

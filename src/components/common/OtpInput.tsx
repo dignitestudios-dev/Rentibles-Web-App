@@ -46,7 +46,7 @@ export const OtpInput = ({ value, onChange, error }: Props) => {
 
   return (
     <>
-      <div className="flex gap-3 justify-center mt-6">
+      <div className="flex gap-3 justify-center mt-4">
         {Array.from({ length: 6 }).map((_, i) => (
           <input
             key={i}
@@ -58,7 +58,7 @@ export const OtpInput = ({ value, onChange, error }: Props) => {
             onKeyDown={(e) => handleKeyDown(e, i)}
             maxLength={1}
             className="
-              w-12 h-12
+              w-16 h-16
               text-center
               rounded-lg
               bg-white

@@ -73,7 +73,7 @@ const LoginForm = () => {
       <div className="w-full flex justify-end -mt-1">
         <Link
           href="/auth/forgot-password"
-          className="text-black hover:no-underline hover:text-black text-[14px] font-normal leading-[20.4px]"
+          className=" hover:no-underline  text-[14px] font-normal leading-[20.4px]"
         >
           Forgot Password?
         </Link>
@@ -90,13 +90,13 @@ const LoginForm = () => {
         )}
       </Button>
       <div className="w-full flex items-center gap-3 ">
-        <div className="flex-1 h-px bg-gray-300" />
-        <span className="text-[14px] text-[#3C3C43D9] whitespace-nowrap">
+        <div className="flex-1 h-px bg-background" />
+        <span className="text-[14px]  whitespace-nowrap">
           OR
         </span>
-        <div className="flex-1 h-px bg-gray-300" />
+        <div className="flex-1 h-px bg-background" />
       </div>
-      <p className="w-full text-center text-[16px] text-[#3C3C43D9] ">
+      <p className="w-full text-center text-[16px]  ">
         Don’t have an account?{" "}
         <Link
           href="/auth/register"

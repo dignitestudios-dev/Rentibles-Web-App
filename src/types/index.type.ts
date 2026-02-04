@@ -3,18 +3,51 @@ export type RegisterPayload = {
   image: FileList;
   email: string;
   phone: string;
-  home: string;
+  // fcmToken: any;
   zipCode: string;
   apartmentNo: string;
   password: string;
   confirmPassword: string;
+  location: {
+    lat: number;
+    lng: number;
+  } | null;
   terms: boolean;
 };
+
 export type RegisterResponse = {
+  success: boolean;
+  message: string;
+  data: {
+    token: string;
+    user: {
+      id: string;
+      name: string;
+      email: string;
+      image?: string;
+      phone: number;
+    };
+  };
+};
+export type CheckEmailPayload = {
+  email: string;
+  role: string;
+};
+export type ResendEmailPaylod = {
+  email?: string;
+};
+export type ResendPhonePaylod = {
+  phone?: number;
+};
+export type CheckEmailResponse = {
   success: boolean;
   message: string;
   user: object;
   access: string;
+};
+export type ResendResponse = {
+  success: boolean;
+  message: string;
 };
 
 export type LoginPayload = {
@@ -50,4 +83,12 @@ export interface VerifyOtpResponse {
   success: boolean;
   message: string;
   token?: string;
+}
+
+export interface ImportMetaEnv {
+  readonly VITE_API_BASE_URL: string;
+}
+
+export interface ImportMeta {
+  readonly env: ImportMetaEnv;
 }
