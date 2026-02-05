@@ -32,6 +32,12 @@ export const OtpSchema = z.object({
 
 export type OtpPayload = z.infer<typeof OtpSchema>;
 
+export const ForgotOtpSchema = z.object({
+  otp: z.string().length(6, "OTP must be 6 digits"),
+  email: z.string().email(), // add email
+  role: z.literal("user"), // role fixed
+});
+
 export const NewPasswordSchema = z
   .object({
     password: z.string().min(6, "Password must be at least 6 characters"),
@@ -86,13 +92,13 @@ export const RegisterSchema = z
 export type RegisterPayload = z.infer<typeof RegisterSchema>;
 
 export const identitySchema = z.object({
-  legalName: z.string().min(3, "Legal name is required"),
+  name: z.string().min(3, "Legal name is required"),
 
-  faceImage: z.instanceof(File, { message: "Face image is required" }),
+  face: z.instanceof(File, { message: "Face image is required" }),
 
-  frontImage: z.instanceof(File, { message: "Front image is required" }),
+  front: z.instanceof(File, { message: "Front image is required" }),
 
-  backImage: z.instanceof(File, { message: "Back image is required" }),
+  back: z.instanceof(File, { message: "Back image is required" }),
 });
 
 export type IdentityFormValues = z.infer<typeof identitySchema>;

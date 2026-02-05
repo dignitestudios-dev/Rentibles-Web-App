@@ -8,19 +8,22 @@ import { NewPasswordPayload } from "@/src/types/index.type";
 import { getAxiosErrorMessage } from "@/src/utils/errorHandlers";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { redirect } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import PasswordResetModal from "./PasswordResetModal";
 import { useState } from "react";
+import Loader from "../common/Loader";
+import { ErrorToast } from "../common/Toaster";
+import z from "zod";
 
 const NewPasswordForm = () => {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const {
     register,
-    setError,
     handleSubmit,
     formState: { errors },
-  } = useForm<NewPasswordPayload>({
+  } = useForm<z.infer<typeof NewPasswordSchema>>({
     resolver: zodResolver(NewPasswordSchema),
     defaultValues: {
       password: "",
@@ -31,20 +34,17 @@ const NewPasswordForm = () => {
   const newPasswordMutation = useMutation({
     mutationFn: newPassword,
     onSuccess: () => {
-      redirect("/dashboard/home");
+      localStorage.removeItem("email");
+      setOpen(true);
     },
     onError: (err) => {
       const message = getAxiosErrorMessage(err || "Something went wrong");
-
-      setError("confirmPassword", {
-        type: "manual",
-        message,
-      });
+      ErrorToast(message);
     },
   });
 
   const onSubmit = (data: NewPasswordPayload) => {
-    newPasswordMutation.mutate(data);
+    newPasswordMutation.mutate({ password: data.password });
   };
 
   return (
@@ -64,12 +64,11 @@ const NewPasswordForm = () => {
         error={errors.confirmPassword?.message}
         {...register("confirmPassword")}
       />
-
+      <Loader show={newPasswordMutation.isPending} />
       <Button
-        // type="submit"
-        // disabled={newPasswordMutation.isPending}
-        onClick={() => setOpen(true)}
-        className="w-full h-12.25 bg-[#F85E00] text-white"
+        type="submit"
+        disabled={newPasswordMutation.isPending}
+        className="w-full cursor-pointer h-12.25 bg-[#F85E00] text-white"
       >
         Save
       </Button>
@@ -77,7 +76,7 @@ const NewPasswordForm = () => {
         open={open}
         onContinue={() => {
           setOpen(false);
-          redirect("/auth/login");
+          router.push("/auth/login");
         }}
       />
     </form>

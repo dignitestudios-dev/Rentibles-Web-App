@@ -10,7 +10,7 @@ export default function Loader({
   if (!show) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 h-screen flex items-center justify-center bg-black/50 backdrop-blur-sm">
       <div className="flex flex-col items-center gap-4 rounded-xl bg-zinc-900 px-8 py-6 shadow-xl">
         <div className="flex items-end gap-2 h-8">
           {[0, 1, 2, 3, 4].map((i) => (

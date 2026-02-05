@@ -54,7 +54,7 @@ const OtpForm = ({
           >
             {isResendingOtp
               ? "Sending..."
-              : timer > 0
+              : timer
                 ? `Resend in ${timer}s`
                 : "Send again"}
           </span>

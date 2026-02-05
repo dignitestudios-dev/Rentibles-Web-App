@@ -5,15 +5,19 @@ import {
   CheckEmailResponse,
   ForgotPayload,
   ForgotResponse,
+  ForgotVerifyOtpPayload,
+  ForgotVerifyOtpResponse,
   LoginPayload,
   LoginResponse,
   NewPasswordPayload,
   NewPasswordResponse,
-  RegisterPayload,
   RegisterResponse,
   ResendEmailPaylod,
   ResendPhonePaylod,
   ResendResponse,
+  SocialRegisterPayload,
+  SocialRegisterResponse,
+  VerifyIdentityResponse,
   VerifyOtpResponse,
 } from "@/src/types/index.type";
 import { OtpPayload } from "@/src/schema";
@@ -21,7 +25,7 @@ import { OtpPayload } from "@/src/schema";
 export const loginUser = async (
   credentials: LoginPayload,
 ): Promise<LoginResponse> => {
-  const { data } = await axiosInstance.post("/auth/login/", credentials);
+  const { data } = await axiosInstance.post("/auth/signIn", credentials);
   Cookies.set("access_token", data.access, { expires: 7, path: "/" });
   return data;
 };
@@ -40,11 +44,23 @@ export const verifyOtp = async (
   const { data } = await axiosInstance.post("/auth/verifyEmail", payload);
   return data;
 };
+export const ForgotVerifyOtp = async (
+  payload: ForgotVerifyOtpPayload,
+): Promise<ForgotVerifyOtpResponse> => {
+  const { data } = await axiosInstance.post("/auth/verifyOTP", payload);
+  return data;
+};
+export const ForgotResendOtp = async (
+  payload: OtpPayload,
+): Promise<VerifyOtpResponse> => {
+  const { data } = await axiosInstance.post("/auth/forgot", payload);
+  return data;
+};
 
 export const newPassword = async (
   payload: NewPasswordPayload,
 ): Promise<NewPasswordResponse> => {
-  const { data } = await axiosInstance.post("/auth/new-password", payload);
+  const { data } = await axiosInstance.post("/auth/updatePassword", payload);
   return data;
 };
 export const RegisterUser = async (
@@ -82,5 +98,17 @@ export const PhoneResendOtp = async (
     "/auth/phoneVerificationOTP",
     payload,
   );
+  return data;
+};
+export const IdentityVerification = async (
+  payload: FormData,
+): Promise<VerifyIdentityResponse> => {
+  const { data } = await axiosInstance.post("/user/verifyIdentity", payload);
+  return data;
+};
+export const socialRegister = async (
+  payload: SocialRegisterPayload,
+): Promise<SocialRegisterResponse> => {
+  const { data } = await axiosInstance.post("/auth/socialRegister", payload);
   return data;
 };

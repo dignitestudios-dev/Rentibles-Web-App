@@ -20,7 +20,7 @@ const Page = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
-  const [timer, setTimer] = useState(55);
+  const [timer, setTimer] = useState(0);
 
   useEffect(() => {
     if (timer === 0) return;

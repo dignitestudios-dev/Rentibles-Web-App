@@ -46,7 +46,7 @@ const Page = () => {
     mutationFn: verifyOtp,
     onSuccess: (response) => {
       SuccessToast(response.message);
-      SuccessToast(response.message);
+
       if (user) {
         const updatedUser = { ...user, isEmailVerified: true };
         dispatch(setUser(updatedUser));

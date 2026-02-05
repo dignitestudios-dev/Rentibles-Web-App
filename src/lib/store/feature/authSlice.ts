@@ -8,6 +8,8 @@ interface User {
   phone: number;
   isPhoneVerified?: boolean;
   isEmailVerified?: boolean;
+  identityStatus?: "not-provided" | "pending" | "approved" | "rejected";
+  isVerified?: boolean;
 }
 
 interface AuthState {
@@ -15,6 +17,7 @@ interface AuthState {
   refreshToken: string | null;
   user: User | null;
   isAuthenticated: boolean;
+  isVerified: boolean;
 }
 const token =
   typeof window !== "undefined" ? localStorage.getItem("token") : null;
@@ -29,6 +32,7 @@ export const initialState: AuthState = {
     typeof window !== "undefined" && localStorage.getItem("token")
       ? true
       : false,
+  isVerified: false,
 };
 
 const authSlice = createSlice({
@@ -52,6 +56,9 @@ const authSlice = createSlice({
     setAccessToken: (state, action: PayloadAction<string>) => {
       state.accessToken = action.payload;
     },
+    setVerified: (state, action: PayloadAction<boolean>) => {
+      state.isVerified = action.payload;
+    },
     setUser: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
     },
@@ -60,9 +67,15 @@ const authSlice = createSlice({
       state.refreshToken = null;
       state.user = null;
       state.isAuthenticated = false;
+      state.isVerified === false;
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
     },
   },
 });
 
-export const { singUp, setAccessToken, setUser, logout } = authSlice.actions;
+export const { singUp, setAccessToken, setUser, logout, setVerified } =
+  authSlice.actions;
 export default authSlice.reducer;
