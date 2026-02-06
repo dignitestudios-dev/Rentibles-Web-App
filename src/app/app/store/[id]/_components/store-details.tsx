@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { ArrowLeft, MapPin, Phone } from "lucide-react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import CategoryCard from "../../../home/_components/category-card";
 import ProductCard from "../../../home/_components/product-card";
 import { CATEGORIES } from "../../../home/_components/categories";
@@ -11,27 +11,14 @@ import Link from "next/link";
 
 const StoreDetails = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
-
-  const selectedCategoryId = searchParams?.get("category") ?? "all";
+  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
 
   const handleSelect = (id: string) => {
-    const params = new URLSearchParams(searchParams?.toString() ?? "");
-
-    if (id === "all") {
-      params.delete("category");
+    if (selectedCategoryId === id) {
+      setSelectedCategoryId("all");
     } else {
-      if (params.get("category") === id) {
-        params.delete("category");
-      } else {
-        params.set("category", id);
-      }
+      setSelectedCategoryId(id);
     }
-
-    const query = params.toString();
-    const url = query ? `${pathname}?${query}` : pathname;
-    router.replace(url);
   };
 
   const store = {

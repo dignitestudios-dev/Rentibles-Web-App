@@ -1,9 +1,8 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import CategoryCard from "./category-card";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { A11y } from "swiper/modules";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 
 export const CATEGORIES = [
@@ -171,28 +170,14 @@ export const CATEGORIES = [
 ];
 
 const Categories = () => {
-  const searchParams = useSearchParams();
-  const pathname = usePathname();
-  const router = useRouter();
-
-  const selectedCategoryId = searchParams?.get("category") ?? "all";
+  const [selectedCategoryId, setSelectedCategoryId] = useState("all");
 
   const handleSelect = (id: string) => {
-    const params = new URLSearchParams(searchParams?.toString() ?? "");
-
-    if (id === "all") {
-      params.delete("category");
+    if (selectedCategoryId === id) {
+      setSelectedCategoryId("all");
     } else {
-      if (params.get("category") === id) {
-        params.delete("category");
-      } else {
-        params.set("category", id);
-      }
+      setSelectedCategoryId(id);
     }
-
-    const query = params.toString();
-    const url = query ? `${pathname}?${query}` : pathname;
-    router.replace(url);
   };
 
   return (
