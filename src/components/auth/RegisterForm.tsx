@@ -3,21 +3,38 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import PhoneInput from "../common/PhoneInput";
-import { Map_img, Profile_img } from "@/public/images/export";
+import { Profile_img } from "@/public/images/export";
 import { InputField } from "../common/InputField";
 import Link from "next/link";
 import { useState } from "react";
 import { getAxiosErrorMessage } from "@/src/utils/errorHandlers";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { RegisterPayload } from "@/src/types/index.type";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { RegisterSchema } from "@/src/schema";
 import { useForm } from "react-hook-form";
-import { RegisterUser } from "@/src/lib/query/queryFn";
+import { CheckEmailStatus, RegisterUser } from "@/src/lib/query/queryFn";
+import Loader from "../common/Loader";
+import GoogleMapComponent from "../common/GoogleMapPicker";
+import { useDispatch } from "react-redux";
+import { ErrorToast, SuccessToast } from "../common/Toaster";
+import { firebaseLogin, firebaseSignup } from "@/src/firebase/getIdToken";
+import { singUp } from "@/src/lib/store/feature/authSlice";
 
 const RegisterForm = () => {
+  const router = useRouter();
+  const dispatch = useDispatch();
   const [preview, setPreview] = useState<string | null>(null);
+  const [fireBaseLoading, setFirebaseLoading] = useState(false);
+  const [location, setLocation] = useState<{
+    lat: number;
+    lng: number;
+    address?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+  } | null>(null);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -34,8 +51,10 @@ const RegisterForm = () => {
 
   const {
     register,
-    setError,
     handleSubmit,
+    setValue,
+    clearErrors,
+    setError,
     formState: { errors },
   } = useForm<RegisterPayload>({
     resolver: zodResolver(RegisterSchema),
@@ -44,44 +63,112 @@ const RegisterForm = () => {
       fullName: "",
       email: "",
       phone: "",
-      home: "",
       zipCode: "",
       apartmentNo: "",
       password: "",
       confirmPassword: "",
+      location: null,
       terms: false,
     },
   });
 
-  const onSubmit = (data: RegisterPayload) => {
-    const formData = new FormData();
+  const checkEmailMutation = useMutation({
+    mutationFn: (payload: { email: string; role: string }) =>
+      CheckEmailStatus(payload),
+  });
 
-    formData.append("fullName", data.fullName);
-    formData.append("email", data.email);
-    formData.append("phone", data.phone);
-    formData.append("home", data.home);
-    formData.append("zipCode", data.zipCode);
-    formData.append("apartmentNo", data.apartmentNo);
-    formData.append("password", data.password);
-    formData.append("image", data.image[0]);
-    registerMutation.mutate(formData);
+  const onSubmit = async (data: RegisterPayload) => {
+    try {
+      setFirebaseLoading(true);
+
+      await checkEmailMutation.mutateAsync({ email: data.email, role: "user" });
+
+      let idToken = "";
+      try {
+        const firebaseRes = await firebaseSignup(data.email, data.password);
+        idToken = firebaseRes.idToken;
+      } catch (firebaseError: any) {
+        if (firebaseError.code === "auth/email-already-in-use") {
+          const loginRes = await firebaseLogin(data.email, data.password);
+          idToken = loginRes.idToken;
+        } else {
+          throw firebaseError;
+        }
+      }
+
+      const formData = new FormData();
+      formData.append("name", data.fullName);
+      formData.append("email", data.email);
+      formData.append("phone", data.phone);
+      formData.append("zipCode", data.zipCode);
+      formData.append("password", data.password);
+      formData.append("profilePicture", data.image[0]);
+      formData.append("apartment", data.apartmentNo);
+      formData.append("idToken", idToken);
+      formData.append("role", "user");
+      if (location) {
+        formData.append("latitude", String(location.lat));
+        formData.append("longitude", String(location.lng));
+        formData.append("address", location.address || "");
+        formData.append("city", location.city || "");
+        formData.append("state", location.state || "");
+        formData.append("country", location.country || "");
+      }
+
+      await registerMutation.mutateAsync(formData);
+    } catch (err: any) {
+      const message = err?.message || "Signup failed. Please try again.";
+      setError("root", { type: "manual", message });
+      ErrorToast(message);
+    } finally {
+      setFirebaseLoading(false);
+    }
   };
-
   const registerMutation = useMutation({
     mutationFn: (payload: FormData) => RegisterUser(payload),
-    onSuccess: () => {
-      redirect("/dashboard/home");
+
+    onSuccess: (response) => {
+      const userInfo = response?.data;
+
+      dispatch(
+        singUp({
+          token: {
+            access: userInfo.token,
+            refresh: userInfo.token,
+          },
+          user: response.data.user,
+        }),
+      );
+      SuccessToast(response?.message);
+      router.push("/auth/select-otp");
     },
     onError: (err) => {
       const message = getAxiosErrorMessage(err);
       setError("root", { type: "manual", message });
+      ErrorToast(message);
     },
   });
+
+  const onLocationSelect = (loc: any) => {
+    const lat = loc.location.coordinates[1];
+    const lng = loc.location.coordinates[0];
+
+    setLocation({
+      lat,
+      lng,
+      address: loc.address,
+      city: loc.city,
+      state: loc.state,
+      country: loc.country,
+    });
+    setValue("location", { lat, lng });
+    clearErrors("location");
+  };
 
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="flex flex-col  px-1 gap-[clamp(0.6rem,1.2vh,1rem)] h-full overflow-auto"
+      className="flex h-full flex-col gap-4 px-1 overflow-y-auto scrollbar-hide"
     >
       <div className="flex items-center gap-3">
         <label htmlFor="profile-upload">
@@ -141,14 +228,15 @@ const RegisterForm = () => {
           />
         </div>
       </div>
-      <InputField
-        placeholder="Home"
-        error={errors.home?.message}
-        {...register("home")}
-      />
-      <div className="rounded-xl overflow-hidden bg-gray-100 h-[clamp(4rem,10vh,6rem)]">
-        <Image src={Map_img} alt="map" className=" object-contain" />
+
+      <div>
+        <GoogleMapComponent onLocationSelect={onLocationSelect} />
       </div>
+
+      {errors.location && (
+        <p className="mt-1 text-xs text-red-500">{errors.location.message}</p>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <InputField
           placeholder="Zip Code"
@@ -195,8 +283,14 @@ const RegisterForm = () => {
         <p className="text-red-500 text-xs">{errors.terms.message}</p>
       )}
 
-      <Button className="h-12 bg-[#F85E00] text-white rounded-xl text-base">
-        Sign Up
+      <Loader show={fireBaseLoading || registerMutation.isPending} />
+      <Button
+        disabled={fireBaseLoading || registerMutation.isPending}
+        className="h-12 bg-[#F85E00] cursor-pointer text-white rounded-xl text-base"
+      >
+        {fireBaseLoading || registerMutation.isPending
+          ? "Signing Up..."
+          : "Sign Up"}
       </Button>
 
       <div className="w-full flex items-center gap-3">

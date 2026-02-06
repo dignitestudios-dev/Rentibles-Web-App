@@ -144,6 +144,55 @@
   background-position: center;
 }
 
+@keyframes pulseBar {
+  0% {
+    transform: scaleY(0.4);
+  }
+
+  50% {
+    transform: scaleY(1);
+  }
+
+  100% {
+    transform: scaleY(0.4);
+  }
+}
+
+
+.scrollbar-hide::-webkit-scrollbar {
+  width: 2px;
+}
+
+.scrollbar-hide::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-hide::-webkit-scrollbar-thumb {
+  background-color: rgba(232, 219, 219, 0.759);
+  border-radius: 10px;
+}
+
+.scrollbar-hide {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(205, 194, 194, 0.2) transparent;
+}
+
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.toast-slide {
+  animation: slideUp 0.35s ease-out;
+}
 /* Custom scrollbar for horizontal scroll containers */
 .scrollbar-hide {
   -ms-overflow-style: none;

@@ -5,6 +5,11 @@ interface User {
   name: string;
   email: string;
   image?: string;
+  phone: number;
+  isPhoneVerified?: boolean;
+  isEmailVerified?: boolean;
+  identityStatus?: "not-provided" | "pending" | "approved" | "rejected";
+  isVerified?: boolean;
 }
 
 interface AuthState {
@@ -12,44 +17,47 @@ interface AuthState {
   refreshToken: string | null;
   user: User | null;
   isAuthenticated: boolean;
+  isVerified: boolean;
 }
+const token =
+  typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
+const user =
+  typeof window !== "undefined" ? localStorage.getItem("user") : null;
 export const initialState: AuthState = {
-  // accessToken: "dummy_token_12345",
-  // refreshToken: "dummy_refresh_token_12345",
-  // user: {
-  //   id: "1",
-  //   name: "Kevin Parker",
-  //   email: "kevin@example.com",
-  //   image: "",
-  // },
-  // isAuthenticated: true,
-
-  accessToken: null,
-  refreshToken: null,
-  user: null,
-  isAuthenticated: false,
+  accessToken: token,
+  refreshToken: token,
+  user: user ? JSON.parse(user) : null,
+  isAuthenticated:
+    typeof window !== "undefined" && localStorage.getItem("token")
+      ? true
+      : false,
+  isVerified: false,
 };
 
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    setCredentials: (
+    singUp: (
       state,
       action: PayloadAction<{
         token: { access: string; refresh: string };
         user: User;
       }>,
     ) => {
-      console.log("run creds");
+      state.isAuthenticated = true;
       state.accessToken = action.payload.token.access;
       state.refreshToken = action.payload.token.refresh;
       state.user = action.payload.user;
-      state.isAuthenticated = true;
+      localStorage.setItem("user", JSON.stringify(action.payload.user));
+      localStorage.setItem("token", action.payload.token.access);
     },
     setAccessToken: (state, action: PayloadAction<string>) => {
       state.accessToken = action.payload;
+    },
+    setVerified: (state, action: PayloadAction<boolean>) => {
+      state.isVerified = action.payload;
     },
     setUser: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
@@ -59,10 +67,15 @@ const authSlice = createSlice({
       state.refreshToken = null;
       state.user = null;
       state.isAuthenticated = false;
+      state.isVerified === false;
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+      }
     },
   },
 });
 
-export const { setCredentials, setAccessToken, setUser, logout } =
+export const { singUp, setAccessToken, setUser, logout, setVerified } =
   authSlice.actions;
 export default authSlice.reducer;

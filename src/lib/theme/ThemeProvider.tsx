@@ -19,50 +19,50 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
     return "light";
   });
 
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+  // useEffect(() => {
+  //   const mq = window.matchMedia("(prefers-color-scheme: dark)");
 
-    const stored = localStorage.getItem("theme-override");
-    if (stored === "dark" || stored === "light") {
-      setThemeState(stored as Theme);
-    } else {
-      setThemeState(mq.matches ? "dark" : "light");
-    }
+  //   const stored = localStorage.getItem("theme-override");
+  //   if (stored === "dark" || stored === "light") {
+  //     setThemeState(stored as Theme);
+  //   } else {
+  //     setThemeState(mq.matches ? "dark" : "light");
+  //   }
 
-    const onChange = (e: MediaQueryListEvent) => {
-      const stillStored = localStorage.getItem("theme-override");
-      if (stillStored === null) {
-        setThemeState(e.matches ? "dark" : "light");
-      }
-    };
+  //   const onChange = (e: MediaQueryListEvent) => {
+  //     const stillStored = localStorage.getItem("theme-override");
+  //     if (stillStored === null) {
+  //       setThemeState(e.matches ? "dark" : "light");
+  //     }
+  //   };
 
-    // modern browsers support addEventListener on MediaQueryList
-    if (mq.addEventListener) {
-      mq.addEventListener("change", onChange);
-    } else {
-      // fallback
-      // @ts-ignore
-      mq.addListener(onChange);
-    }
+  //   // modern browsers support addEventListener on MediaQueryList
+  //   if (mq.addEventListener) {
+  //     mq.addEventListener("change", onChange);
+  //   } else {
+  //     // fallback
+  //     // @ts-ignore
+  //     mq.addListener(onChange);
+  //   }
 
-    return () => {
-      if (mq.removeEventListener) {
-        mq.removeEventListener("change", onChange);
-      } else {
-        // @ts-ignore
-        mq.removeListener(onChange);
-      }
-    };
-  }, []);
+  //   return () => {
+  //     if (mq.removeEventListener) {
+  //       mq.removeEventListener("change", onChange);
+  //     } else {
+  //       // @ts-ignore
+  //       mq.removeListener(onChange);
+  //     }
+  //   };
+  // }, []);
 
-  useEffect(() => {
-    const el = document.documentElement;
-    if (theme === "dark") {
-      el.classList.add("dark");
-    } else {
-      el.classList.remove("dark");
-    }
-  }, [theme]);
+  // useEffect(() => {
+  //   const el = document.documentElement;
+  //   if (theme === "dark") {
+  //     el.classList.add("dark");
+  //   } else {
+  //     el.classList.remove("dark");
+  //   }
+  // }, [theme]);
 
   const setTheme = (t: Theme) => {
     localStorage.setItem("theme-override", t);

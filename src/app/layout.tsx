@@ -9,6 +9,7 @@ import "swiper/css/navigation";
 import { ReduxProvider } from "../lib/store/provider";
 import ThemeProvider from "../lib/theme/ThemeProvider";
 import ReactQueryProvider from "../lib/query/ReactQueryProvider";
+import { Toaster } from "react-hot-toast";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -33,7 +34,15 @@ export default function RootLayout({
       <body className={`${poppins.variable} antialiased`}>
         <ThemeProvider>
           <ReduxProvider>
-            <ReactQueryProvider>{children}</ReactQueryProvider>
+            <ReactQueryProvider>
+              <Toaster
+                position="bottom-right"
+                toastOptions={{
+                  duration: 3000,
+                }}
+              />
+              {children}
+            </ReactQueryProvider>
           </ReduxProvider>
         </ThemeProvider>
       </body>

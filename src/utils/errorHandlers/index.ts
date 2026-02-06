@@ -4,6 +4,11 @@ export function getAxiosErrorMessage(
   error: unknown,
   fallback = "Something went wrong",
 ): string {
-  const err = error as AxiosError<{ msg?: string }>;
-  return err?.response?.data?.msg || fallback;
+  const err = error as AxiosError<any>;
+
+  if (err?.response?.data?.message) return err.response.data.message;
+
+  if (err?.response?.data?.msg) return err.response.data.msg;
+
+  return fallback;
 }
