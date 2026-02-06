@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, Keyboard } from "swiper/modules";
-import type { Swiper as SwiperType } from "swiper";
+import type SwiperCore from "swiper";
 import "swiper/css";
 import "swiper/css/navigation";
 
@@ -21,7 +21,8 @@ const MediaViewer: React.FC<MediaViewerProps> = ({
   isOpen,
   onClose,
 }) => {
-  const swiperRef = useRef<SwiperType>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const swiperRef = useRef<any>(null);
   const [activeIndex, setActiveIndex] = useState(initialIndex);
 
   useEffect(() => {

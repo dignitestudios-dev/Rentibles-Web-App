@@ -37,9 +37,11 @@ const StoreCard: React.FC<{ store?: Store }> = ({ store }) => {
           <div className="shrink-0">
             <div className="relative w-20 h-20 rounded-full">
               <div className="w-full h-full rounded-full ring-4 ring-primary p-1 bg-white">
-                <img
+                <Image
                   src={profile ?? ""}
                   alt={store?.name ?? "profile"}
+                  width={500}
+                  height={500}
                   className="w-full h-full object-cover rounded-full"
                 />
               </div>

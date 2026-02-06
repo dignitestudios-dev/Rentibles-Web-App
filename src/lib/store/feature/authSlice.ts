@@ -15,15 +15,20 @@ interface AuthState {
 }
 
 export const initialState: AuthState = {
-  accessToken: "dummy_token_12345",
-  refreshToken: "dummy_refresh_token_12345",
-  user: {
-    id: "1",
-    name: "Kevin Parker",
-    email: "kevin@example.com",
-    image: "",
-  },
-  isAuthenticated: true,
+  // accessToken: "dummy_token_12345",
+  // refreshToken: "dummy_refresh_token_12345",
+  // user: {
+  //   id: "1",
+  //   name: "Kevin Parker",
+  //   email: "kevin@example.com",
+  //   image: "",
+  // },
+  // isAuthenticated: true,
+
+  accessToken: null,
+  refreshToken: null,
+  user: null,
+  isAuthenticated: false,
 };
 
 const authSlice = createSlice({

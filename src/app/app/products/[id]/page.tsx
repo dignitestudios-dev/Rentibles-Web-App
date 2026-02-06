@@ -13,9 +13,10 @@ import {
   ChevronRight,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, A11y } from "swiper/modules";
-import type { Swiper as SwiperType } from "swiper";
+import type { SwiperRef } from "swiper/react";
 import MediaViewer from "./_components/MediaViewer";
 
 const ProductDetailsPage = () => {
@@ -23,7 +24,7 @@ const ProductDetailsPage = () => {
   const [quantity, setQuantity] = useState(14);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isMediaViewerOpen, setIsMediaViewerOpen] = useState(false);
-  const swiperRef = useRef<SwiperType>(null);
+  const swiperRef = useRef<SwiperRef>(null);
 
   const product = {
     _id: "68b99e0ded64fb55be419720",
@@ -96,7 +97,7 @@ const ProductDetailsPage = () => {
   return (
     <div className="bg-background min-h-screen">
       {/* Header */}
-      <div className="sticky top-18 z-40 bg-background border-b border-border">
+      <div className="sticky top-22.75 z-40 bg-background border-b border-border">
         <div className="flex items-center justify-between px-4 py-4 md:px-6">
           <button
             onClick={() => router.back()}
@@ -306,7 +307,12 @@ const ProductDetailsPage = () => {
         <div className="mt-12 px-4 md:px-0">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-2xl font-semibold">What People Say</h3>
-            <button className="text-primary hover:underline">See All</button>
+            <Link
+              href={`/app/products/${product._id}/reviews`}
+              className="text-primary hover:underline"
+            >
+              See All
+            </Link>
           </div>
 
           {/* Swiper for Reviews */}

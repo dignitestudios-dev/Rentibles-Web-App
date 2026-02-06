@@ -192,7 +192,7 @@ const Categories = () => {
 
     const query = params.toString();
     const url = query ? `${pathname}?${query}` : pathname;
-    router.push(url);
+    router.replace(url);
   };
 
   return (

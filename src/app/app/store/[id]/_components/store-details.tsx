@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { ArrowLeft, MapPin, Phone } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
@@ -31,7 +31,7 @@ const StoreDetails = () => {
 
     const query = params.toString();
     const url = query ? `${pathname}?${query}` : pathname;
-    router.push(url);
+    router.replace(url);
   };
 
   const store = {
@@ -281,28 +281,39 @@ const StoreDetails = () => {
     },
   ];
 
+  const [coverLoaded, setCoverLoaded] = useState(false);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+
   return (
     <div className="">
       <div className="sticky top-0">
         <div className="relative flex flex-col min-h-72 md:min-h-92 h-fit">
-          <Image
-            src={store.coverPicture}
-            alt="cover"
-            width={1000}
-            height={1000}
-            className="absolute inset-0 w-full h-full object-cover"
-          />
+          <div className="absolute inset-0">
+            {!coverLoaded && (
+              <div className="absolute inset-0 bg-card animate-pulse" />
+            )}
 
-          <div className="absolute inset-0 bg-linear-to-b from-black/40 to-black/95" />
+            <Image
+              src={store.coverPicture}
+              alt="cover"
+              width={1000}
+              height={1000}
+              onLoadingComplete={() => setCoverLoaded(true)}
+              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${coverLoaded ? "opacity-100" : "opacity-0"}`}
+            />
 
-          <Link href={"/app/home"}>
-            <button
-              className="absolute left-4 top-4 z-40 bg-white/20 backdrop-blur-sm text-white p-2 rounded-md"
-              aria-label="Back"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-          </Link>
+            {coverLoaded && (
+              <div className="absolute inset-0 bg-linear-to-b from-black/40 to-black/95" />
+            )}
+          </div>
+
+          <button
+            onClick={() => router.back()}
+            className="absolute left-4 top-4 z-40 bg-white/20 backdrop-blur-sm text-white p-2 rounded-md"
+            aria-label="Back"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
 
           <h2 className="absolute left-1/2 -translate-x-1/2 top-4 text-white text-xl font-semibold">
             Store Details
@@ -310,13 +321,18 @@ const StoreDetails = () => {
 
           <div className="relative z-20 h-full flex-1 flex flex-col justify-end p-5">
             <div className="flex items-center gap-5 text-white">
-              <div className="w-20 h-20 rounded-full p-1 bg-white ring-4 ring-primary">
+              <div className="w-20 h-20 rounded-full p-1 bg-white ring-4 ring-primary relative overflow-hidden">
+                {!profileLoaded && (
+                  <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-full" />
+                )}
+
                 <Image
                   src={store.profilePicture}
                   alt="profile"
                   width={1000}
                   height={1000}
-                  className="w-full h-full object-cover rounded-full"
+                  onLoadingComplete={() => setProfileLoaded(true)}
+                  className={`w-full h-full object-cover rounded-full transition-opacity duration-300 ${profileLoaded ? "opacity-100" : "opacity-0"}`}
                 />
               </div>
 

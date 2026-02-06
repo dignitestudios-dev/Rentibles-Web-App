@@ -11,9 +11,11 @@ import ThemeProvider from "../lib/theme/ThemeProvider";
 import ReactQueryProvider from "../lib/query/ReactQueryProvider";
 
 const poppins = Poppins({
-  subsets: ["devanagari"],
+  subsets: ["latin"],
   variable: "--font-poppins",
   weight: ["400", "500", "600", "700"],
+  display: "swap",
+  preload: true,
 });
 
 export const metadata: Metadata = {

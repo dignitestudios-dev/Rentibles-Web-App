@@ -252,14 +252,14 @@ const ProductsPage = () => {
   return (
     <div className="bg-background min-h-screen">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-background border-b border-border">
+      <div className="sticky top-22.75 z-40 bg-background border-b border-border">
         <div className="flex items-center justify-between px-4 py-4 md:px-6">
-          <Link
-            href="/app/home"
+          <button
+            onClick={() => router.back()}
             className="p-2 hover:bg-muted rounded-md transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-          </Link>
+          </button>
 
           <h1 className="text-lg md:text-xl font-semibold">Products</h1>
 
@@ -283,9 +283,10 @@ const ProductsPage = () => {
                 onClick={() => handleProductClick(product._id)}
               >
                 <ProductCard
-                  product={product}
-                  liked={likedProducts.has(product._id)}
-                  onLikeToggle={() => handleProductLike(product._id)}
+                  product={{
+                    ...product,
+                    isLiked: likedProducts.has(product._id),
+                  }}
                 />
               </div>
             ))}
