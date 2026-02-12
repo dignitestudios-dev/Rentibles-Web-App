@@ -214,7 +214,7 @@ export interface WithdrawalDetails {
   amount: number;
   currency: string;
   referenceId: string;
-  date: Date | string;
+  date: string;
   description: string;
   status: string;
 }

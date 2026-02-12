@@ -3,8 +3,10 @@
 import React from "react";
 import { ArrowLeft, Search } from "lucide-react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { CATEGORIES } from "../home/_components/categories";
+// import { CATEGORIES } from "../home/_components/categories";
+
 import Link from "next/link";
+import { useAppSelector } from "@/src/lib/store/hooks";
 
 // Dummy subcategories data
 const SUBCATEGORIES: Record<
@@ -155,6 +157,10 @@ const CategoriesPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
+
+  const { categories: CATEGORIES } = useAppSelector(
+    (state) => state.categories,
+  );
 
   // default to HOME & LIVING when no query param
   const defaultCategory = CATEGORIES[6]._id;

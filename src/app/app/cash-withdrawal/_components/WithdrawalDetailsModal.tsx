@@ -69,7 +69,8 @@ const WithdrawalDetailsModal: React.FC<WithdrawalDetailsModalProps> = ({
           <div className="pb-3 text-center">
             <p className="text-sm text-gray-600 mb-1">Date</p>
             <p className="text-base font-semibold text-gray-900">
-              {formatDateToMMDDYYYY(details.date)}
+              {/* {formatDateToMMDDYYYY(details.date)} */}
+              {details.date}
             </p>
           </div>
 

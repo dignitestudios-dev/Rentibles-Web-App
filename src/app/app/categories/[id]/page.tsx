@@ -4,7 +4,8 @@ import React from "react";
 import { ArrowLeft } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import ProductCard from "../../home/_components/product-card";
-import { CATEGORIES } from "../../home/_components/categories";
+import { useAppSelector } from "@/src/lib/store/hooks";
+// import { CATEGORIES } from "../../home/_components/categories";
 
 const dummyProducts = Array.from({ length: 8 }).map((_, i) => ({
   _id: `p-${i}`,
@@ -22,6 +23,10 @@ export default function CategoryDetailsPage() {
   const router = useRouter();
   const params = useParams();
   const id = params?.id as string | undefined;
+
+  const { categories: CATEGORIES } = useAppSelector(
+    (state) => state.categories,
+  );
 
   const category = CATEGORIES.find((c) => c._id === id) ?? { name: "Category" };
 

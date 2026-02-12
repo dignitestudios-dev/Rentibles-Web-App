@@ -1,7 +1,21 @@
 // data/mock-data.ts
 
-import { Category, ProductRequest } from "@/src/types/index.type";
+// import { ProductRequest } from "@/src/types/index.type";
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
 
+interface ProductRequest {
+  id: string;
+  productName: string;
+  description: string;
+  storeName: string;
+  status: string;
+  category: Category;
+  createdAt: Date;
+}
 export const mockCategories: Category[] = [
   { id: "cat-1", name: "Electronics", slug: "electronics" },
   { id: "cat-2", name: "Clothing", slug: "clothing" },

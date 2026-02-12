@@ -6,13 +6,16 @@ import { ArrowLeft, MapPin, Phone } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import CategoryCard from "../../../home/_components/category-card";
 import ProductCard from "../../../home/_components/product-card";
-import { CATEGORIES } from "../../../home/_components/categories";
+// import { CATEGORIES } from "../../../home/_components/categories";
 import Link from "next/link";
+import { useAppSelector } from "@/src/lib/store/hooks";
 
 const StoreDetails = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
+
+  const { categories } = useAppSelector((state) => state.categories);
 
   const selectedCategoryId = searchParams?.get("category") ?? "all";
 
@@ -370,7 +373,7 @@ const StoreDetails = () => {
           <h3 className="text-2xl font-semibold mb-4">Categories</h3>
 
           <div className="flex gap-3 overflow-x-auto py-2 mb-6 scrollbar-light">
-            {CATEGORIES.map((cat) => (
+            {categories.map((cat) => (
               <div key={cat._id} className="shrink-0">
                 <CategoryCard
                   category={{
