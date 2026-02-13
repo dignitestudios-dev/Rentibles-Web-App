@@ -21,12 +21,13 @@ import {
 } from "@/components/ui/select";
 
 import { PackagePlus } from "lucide-react";
-import {
-  AddProductRequestFormData,
-  Category,
-  DaysOfWeek,
-} from "@/src/types/index.type";
+import { AddProductRequestFormData, DaysOfWeek } from "@/src/types/index.type";
 import DaySelector from "./DaySelector";
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
 
 interface AddProductRequestModalProps {
   isOpen: boolean;

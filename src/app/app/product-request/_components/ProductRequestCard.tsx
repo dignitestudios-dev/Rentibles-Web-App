@@ -3,7 +3,23 @@
 
 import React from "react";
 import { Trash2, Store, Tag } from "lucide-react";
-import { ProductRequest } from "@/src/types/index.type";
+// import { ProductRequest } from "@/src/types/index.type";
+
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+interface ProductRequest {
+  id: string;
+  productName: string;
+  description: string;
+  storeName: string;
+  status: string;
+  category: Category;
+  createdAt: Date;
+}
 
 interface ProductRequestCardProps {
   request: ProductRequest;

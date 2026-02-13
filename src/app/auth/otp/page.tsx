@@ -17,9 +17,14 @@ import { singUp } from "@/src/lib/store/feature/authSlice";
 
 const Page = () => {
   const dispatch = useDispatch();
-  const email = localStorage.getItem("email");
   const router = useRouter();
   const [timer, setTimer] = useState(55);
+  const [email, setEmail] = useState<string | null>(null);
+
+  useEffect(() => {
+    const storedEmail = localStorage.getItem("email");
+    setEmail(storedEmail);
+  }, []);
 
   useEffect(() => {
     if (timer === 0) return;

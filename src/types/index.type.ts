@@ -220,10 +220,19 @@ export interface WithdrawalDetails {
 }
 
 // types/product-request.types.ts
+// export interface Category {
+//   id: string;
+//   name: string;
+//   slug: string;
+
+// }
+
 export interface Category {
-  id: string;
+  _id: string;
   name: string;
-  slug: string;
+  cover: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ProductRequest {
@@ -253,13 +262,6 @@ export interface DaySchedule {
 export type DaysOfWeek = DaySchedule[];
 
 // types/category.types.ts
-export interface Category {
-  _id: string;
-  name: string;
-  cover: string;
-  createdAt: string;
-  updatedAt: string;
-}
 
 export interface GetCategoriesResponse {
   success: boolean;
