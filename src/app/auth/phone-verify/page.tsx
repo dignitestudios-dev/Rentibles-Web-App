@@ -78,7 +78,7 @@ const Page = () => {
 
       <p className="text-gray-400 mt-2 text-center">
         Enter the OTP code sent to
-        <span className="text-black mx-2">{user?.phone}</span>
+        <span className="text-foreground mx-2">{user?.phone}</span>
       </p>
 
       <OtpForm

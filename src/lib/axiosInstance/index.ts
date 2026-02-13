@@ -58,13 +58,14 @@ axiosInstance.interceptors.response.use(
       console.warn("Request timeout or slow internet");
     }
 
-    // if (error.response?.status === 401) {
-    //   Cookies.remove("token");
+    if (error.response?.status === 401) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
 
-    //   if (typeof window !== "undefined") {
-    //     window.location.href = "/";
-    //   }
-    // }
+      if (typeof window !== "undefined") {
+        window.location.href = "/";
+      }
+    }
 
     return Promise.reject(error);
   },

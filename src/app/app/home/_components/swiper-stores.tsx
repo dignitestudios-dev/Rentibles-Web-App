@@ -5,6 +5,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, A11y } from "swiper/modules";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import StoreCard from "./store-card";
+import Loader from "@/src/components/common/Loader";
 
 type Store = {
   _id: string;
@@ -30,7 +31,7 @@ const SwiperStores: React.FC<SwiperStoresProps> = ({
       <h2 className="font-semibold text-2xl mb-4">Stores</h2>
 
       {isLoading ? (
-        <p>loading...</p>
+        <Loader show={isLoading} />
       ) : (
         <div className="relative">
           <Swiper

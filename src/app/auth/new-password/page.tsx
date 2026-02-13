@@ -12,7 +12,7 @@ const page = () => {
 
         <p className="text-[16px] mt-3 max-w-sm text-muted-foreground leading-5.5">
           Set New Password so you can login and access{" "}
-          <span className="font-bold text-black">RentalBay</span>
+          <span className="font-bold text-foreground">RentalBay</span>
         </p>
       </div>
       <NewPasswordForm />

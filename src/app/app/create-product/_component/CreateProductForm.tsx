@@ -28,6 +28,7 @@ import { toUnixTimestamp } from "@/src/utils/helperFunctions";
 import { ProductImagesInput } from "./ProductImagesInput";
 import { CoverImageInput } from "./CoverImageInput";
 import { useRouter } from "next/navigation";
+import Loader from "@/src/components/common/Loader";
 
 type LocationData = {
   country?: string;
@@ -523,15 +524,17 @@ const CreateProductForm = () => {
           </p>
         </div>
 
-        <Button
-          className="w-full h-12 text-foreground"
-          type="submit"
-          disabled={createProductMutation.isPending}
-        >
-          {createProductMutation.isPending
-            ? "Submitting..."
-            : "Add Rental Product"}
-        </Button>
+        {createProductMutation.isPending ? (
+          <Loader show={createProductMutation.isPending} />
+        ) : (
+          <Button
+            className="w-full h-12 "
+            type="submit"
+            disabled={createProductMutation.isPending}
+          >
+            Add Rental Product
+          </Button>
+        )}
       </form>
     </div>
   );
