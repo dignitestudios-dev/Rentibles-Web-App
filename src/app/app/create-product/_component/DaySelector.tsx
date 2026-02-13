@@ -110,7 +110,7 @@ const DaySelector: React.FC<DaySelectorProps> = ({
 
           <div className="flex items-center gap-2">
             {showSelectedCount && selectedCount > 0 && (
-              <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full whitespace-nowrap">
+              <span className="px-2 py-1 bg-background text-primary text-xs font-semibold rounded-full whitespace-nowrap">
                 {selectedCount} {selectedCount === 1 ? "day" : "days"}
               </span>
             )}
@@ -125,13 +125,11 @@ const DaySelector: React.FC<DaySelectorProps> = ({
 
       {/* Days List with Toggles - Absolute Positioned Dropdown */}
       {isOpen && (
-        <div className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg divide-y divide-gray-200 max-h-80 overflow-y-auto">
+        <div className="absolute z-50 w-full mt-2 bg-background text-foreground border border-gray-200 rounded-lg shadow-lg divide-y divide-gray-200 max-h-80 overflow-y-auto">
           {days.map((day) => (
             <div
               key={day.id}
-              className={`flex items-center justify-between px-4 py-3 transition-colors ${
-                day.enabled ? "bg-white" : "hover:bg-gray-50"
-              }`}
+              className={`flex items-center justify-between px-4 py-3 transition-colors`}
             >
               <div className="flex items-center gap-3">
                 {/* <div
@@ -144,7 +142,7 @@ const DaySelector: React.FC<DaySelectorProps> = ({
 
                 <p
                   className={`font-medium ${
-                    day.enabled ? "text-blue-900" : "text-gray-900"
+                    day.enabled ? "text-foreground" : "text-foreground"
                   }`}
                 >
                   {day.day}

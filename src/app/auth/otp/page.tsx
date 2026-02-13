@@ -20,11 +20,7 @@ const Page = () => {
   const router = useRouter();
   const [timer, setTimer] = useState(55);
   const [email, setEmail] = useState<string | null>(null);
-
-  useEffect(() => {
-    const storedEmail = localStorage.getItem("email");
-    setEmail(storedEmail);
-  }, []);
+  console.log("🚀 ~ Page ~ email:", email);
 
   useEffect(() => {
     if (timer === 0) return;
@@ -39,8 +35,17 @@ const Page = () => {
     formState: { errors },
   } = useForm<ForgotVerifyOtpPayload>({
     resolver: zodResolver(ForgotOtpSchema),
-    defaultValues: { otp: "", email: email || "", role: "user" },
+    defaultValues: { otp: "", email: "", role: "user" },
   });
+  console.log("🚀 ~ Page ~ errors:", errors);
+
+  useEffect(() => {
+    const storedEmail = localStorage.getItem("email");
+    if (storedEmail) {
+      setEmail(storedEmail);
+      setValue("email", storedEmail); // 🔥 IMPORTANT
+    }
+  }, [setValue]);
 
   const otp = watch("otp");
 
@@ -88,7 +93,7 @@ const Page = () => {
 
       <p className="text-gray-400 mt-2 text-center">
         The code was sent to{" "}
-        <span className="text-black font-normal">{email}</span>
+        <span className="text-foreground font-normal">{email}</span>
       </p>
 
       <OtpForm
@@ -96,7 +101,10 @@ const Page = () => {
         error={errors.otp?.message}
         isLoading={otpMutation.isPending}
         onChange={(val) => setValue("otp", val)}
-        onSubmit={handleSubmit((data) => otpMutation.mutate(data))}
+        onSubmit={handleSubmit((data) => {
+          console.log(data);
+          otpMutation.mutate(data);
+        })}
         onResendOtp={() => {
           if (!email) return; // agar email null ho toh call na ho
           resendOtp.mutate({ email, role: "user" } as ForgotVerifyOtpPayload);

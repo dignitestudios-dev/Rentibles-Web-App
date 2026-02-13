@@ -34,7 +34,7 @@ export type OtpPayload = z.infer<typeof OtpSchema>;
 
 export const ForgotOtpSchema = z.object({
   otp: z.string().length(6, "OTP must be 6 digits"),
-  email: z.string().email(), // add email
+  email: z.string(), // add email
   role: z.literal("user"), // role fixed
 });
 

@@ -21,12 +21,13 @@ import {
   setCategoriesSuccess,
 } from "@/src/lib/store/feature/appSlice";
 import { useCategories, useSubCategories } from "@/src/lib/api/products";
-import { ErrorToast } from "@/src/components/common/Toaster";
+import { ErrorToast, SuccessToast } from "@/src/components/common/Toaster";
 import { Input } from "@/components/ui/input";
 import { getAxiosErrorMessage } from "@/src/utils/errorHandlers";
 import { toUnixTimestamp } from "@/src/utils/helperFunctions";
 import { ProductImagesInput } from "./ProductImagesInput";
 import { CoverImageInput } from "./CoverImageInput";
+import { useRouter } from "next/navigation";
 
 type LocationData = {
   country?: string;
@@ -62,6 +63,7 @@ const CreateProductForm = () => {
   const dispatch = useAppDispatch();
   const [user, setUser] = useState<User>();
   const [isMap, setIsMap] = useState<boolean>(false);
+  const router = useRouter();
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -207,10 +209,10 @@ const CreateProductForm = () => {
 
   const createProductMutation = useMutation({
     mutationFn: createProduct,
-    onSuccess: () => {
-      // success handling
-      // toast, redirect, reset form etc.
-      console.log("Product created successfully");
+    onSuccess: (response) => {
+      console.log("🚀 ~ CreateProductForm ~ response:", response);
+      SuccessToast("Product Created");
+      router.push(`/app/products/${response?.data?._id}`);
     },
     onError: (err) => {
       const message = getAxiosErrorMessage(err || "Failed to create product");
@@ -475,7 +477,7 @@ const CreateProductForm = () => {
           <button
             onClick={handleSameAsProfile}
             type="button"
-            className="bg-[#F85E00] cursor-pointer h-12 rounded-xl px-6 text-sm font-medium"
+            className="bg-primary cursor-pointer h-12 rounded-xl px-6 text-sm font-medium"
           >
             Same as Profile
           </button>
@@ -483,7 +485,7 @@ const CreateProductForm = () => {
           <button
             type="button"
             onClick={handleClearLocation}
-            className="bg-foreground h-12  cursor-pointer rounded-xl px-6 flex items-center gap-2 text-sm font-medium"
+            className="bg-accent text-foreground h-12  cursor-pointer rounded-xl px-6 flex items-center gap-2 text-sm font-medium"
           >
             <Plus size={16} />
             Add New
@@ -520,7 +522,12 @@ const CreateProductForm = () => {
             no handoff.
           </p>
         </div>
-        <Button type="submit" disabled={createProductMutation.isPending}>
+
+        <Button
+          className="w-full h-12 text-foreground"
+          type="submit"
+          disabled={createProductMutation.isPending}
+        >
           {createProductMutation.isPending
             ? "Submitting..."
             : "Add Rental Product"}

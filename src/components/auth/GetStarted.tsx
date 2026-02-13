@@ -63,13 +63,13 @@ const GetStarted = () => {
               h-14
               w-full
               rounded-xl
-              bg-white
+              bg-background
               border-2
-              border-orange-400
+                            border-orange-400
               text-orange-400
               text-base
               font-medium
-              hover:bg-white
+              hover:bg-background
               hover:text-orange-400
               hover:border-orange-400
               flex
@@ -84,13 +84,13 @@ const GetStarted = () => {
             className="
               h-14
               rounded-xl
-              bg-white
+              bg-background
               border-2
               border-orange-400
               text-orange-400
               text-base
               font-medium
-              hover:bg-white
+                            hover:bg-background
               hover:text-orange-400
               hover:border-orange-400
               cursor-pointer
@@ -103,13 +103,14 @@ const GetStarted = () => {
             className="
               h-14
               rounded-xl
-              bg-white
+              bg-background
               border-2
               border-orange-400
               text-orange-400
               text-base
               font-medium
-              hover:bg-white
+                            hover:bg-background
+
               hover:text-orange-400
               hover:border-orange-400
               flex
