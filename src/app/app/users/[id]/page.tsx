@@ -139,7 +139,11 @@ export default function UserProfilePage() {
           <div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {dummyProducts.map((p) => (
-                <ProductCard key={p._id} product={p} />
+                <ProductCard
+                  key={p._id}
+                  product={p}
+                  handleWishlist={() => {}}
+                />
               ))}
             </div>
 
@@ -154,7 +158,7 @@ export default function UserProfilePage() {
                     No Products
                   </h3>
                   <p className="text-gray-500 dark:text-gray-400">
-                    This user hasn't listed any products yet
+                    This user hasn&apos;t listed any products yet
                   </p>
                 </div>
               </div>

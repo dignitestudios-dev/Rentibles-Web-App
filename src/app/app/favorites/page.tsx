@@ -67,6 +67,7 @@ const FavoritePage = () => {
                   ...product,
                   isLiked: likedProducts.has(product._id),
                 }}
+                handleWishlist={() => {}}
               />
             </div>
           ))}

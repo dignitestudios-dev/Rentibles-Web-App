@@ -285,6 +285,7 @@ const ProductsContent = () => {
                     ...product,
                     isLiked: likedProducts.has(product._id),
                   }}
+                  handleWishlist={() => {}}
                 />
               </div>
             ))}
