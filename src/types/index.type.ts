@@ -1,5 +1,5 @@
+import { store } from "./../lib/store/index";
 export type RegisterPayload = {
-import { store } from './../lib/store/index';
   fullName: string;
   image: FileList;
   email: string;
