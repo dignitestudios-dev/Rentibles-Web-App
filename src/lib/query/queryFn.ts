@@ -15,6 +15,8 @@ import {
   GetStoresParams,
   GetStoresResponse,
   GetSubCategoriesResponse,
+  GetUserParams,
+  GetUserResponse,
   LoginPayload,
   LoginResponse,
   NewPasswordPayload,
@@ -126,6 +128,15 @@ export const createProduct = async (formData: FormData) => {
   return response.data;
 };
 
+// add favorite
+export const createWishlist = async (payload: {
+  productId: string;
+  value: boolean;
+}) => {
+  const response = await axiosInstance.post("/wishlist", payload);
+  return response.data;
+};
+
 // categories
 
 export const getCategories = async (): Promise<GetCategoriesResponse> => {
@@ -169,5 +180,24 @@ export const getProductById = async (
   const { data } = await axiosInstance.get(
     `/product/${categoryId}?longitude=123&latitude=123`,
   );
+  return data;
+};
+
+//users
+export const getUsers = async (): Promise<GetCategoriesResponse> => {
+  const { data } = await axiosInstance.get("/user/all");
+  return data;
+};
+
+export const getUsersWithParams = async (
+  params?: GetUserParams,
+): Promise<GetUserResponse> => {
+  const { data } = await axiosInstance.get("/user/all", { params });
+  return data;
+};
+
+//store
+export const getStoreById = async (storeId: string) => {
+  const { data } = await axiosInstance.get(`/store/${storeId}`);
   return data;
 };

@@ -211,7 +211,6 @@ const CreateProductForm = () => {
   const createProductMutation = useMutation({
     mutationFn: createProduct,
     onSuccess: (response) => {
-      console.log("🚀 ~ CreateProductForm ~ response:", response);
       SuccessToast("Product Created");
       router.push(`/app/products/${response?.data?._id}`);
     },

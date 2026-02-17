@@ -1,4 +1,5 @@
 export type RegisterPayload = {
+import { store } from './../lib/store/index';
   fullName: string;
   image: FileList;
   email: string;
@@ -355,6 +356,8 @@ export interface GetProductsParams {
   page?: number;
   limit?: number;
   search?: string;
+  storeId?: string;
+  categoryId?: string;
 }
 
 export interface GetProductsResponse {
@@ -484,4 +487,43 @@ export interface LocationSelect {
   city: string;
   state: string;
   country: string;
+}
+
+// Params type: only "search" is allowed
+export interface GetUserParams {
+  search?: string;
+}
+
+// Response type: array of user objects
+export interface GetUserResponse {
+  success: boolean;
+  message: string;
+  data: {
+    _id: string;
+    name: string;
+    email: string;
+    profilePicture: string;
+    createdAt: string; // ISO date string
+    updatedAt: string; // ISO date string
+  }[];
+}
+
+export interface GetStoreByIdResponse {
+  success: boolean;
+  message: string;
+  data: {
+    _id: string;
+    name: string;
+    email: string;
+    phone: string;
+    profilePicture: string;
+    coverPicture: string;
+    description: string;
+    address: string;
+    city: string;
+    state: string;
+    country: string;
+    zipCode?: number;
+    location?: Location;
+  };
 }

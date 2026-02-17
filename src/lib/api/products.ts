@@ -1,5 +1,9 @@
 "use client";
-import { useQuery, UseQueryResult } from "@tanstack/react-query";
+import {
+  useQuery,
+  UseQueryOptions,
+  UseQueryResult,
+} from "@tanstack/react-query";
 import {
   getCategories,
   getProductById,
@@ -43,6 +47,10 @@ export const useSubCategories = (
 
 export const useStores = (
   params?: GetStoresParams,
+  options?: Omit<
+    UseQueryOptions<GetStoresResponse, Error>,
+    "queryKey" | "queryFn"
+  >,
 ): UseQueryResult<GetStoresResponse, Error> => {
   return useQuery({
     queryKey: ["stores", params], // include params in the key
@@ -52,11 +60,16 @@ export const useStores = (
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    ...options,
   });
 };
 
 export const useProducts = (
   params?: GetProductsParams,
+  options?: Omit<
+    UseQueryOptions<GetProductsResponse, Error>,
+    "queryKey" | "queryFn"
+  >,
 ): UseQueryResult<GetProductsResponse, Error> => {
   return useQuery<GetProductsResponse, Error>({
     queryKey: ["products", params],
@@ -66,6 +79,7 @@ export const useProducts = (
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+    ...options,
   });
 };
 

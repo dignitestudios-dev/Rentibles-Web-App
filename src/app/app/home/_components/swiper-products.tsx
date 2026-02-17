@@ -40,9 +40,16 @@ const SwiperProducts: React.FC<SwiperProductsProps> = ({
       ) : (
         <div className="grid grid-cols-4 gap-5">
           {products.length > 0
-            ? products.map((p) => <ProductCard key={p._id} product={p} />)
+            ? products.map((p) => (
+                <ProductCard
+                  key={p._id}
+                  product={p}
+                  isLiked={p.isLiked}
+                  handleWishlist={() => {}}
+                />
+              ))
             : Array.from({ length: productCount }).map((_, index) => (
-                <ProductCard key={index} />
+                <ProductCard key={index} handleWishlist={() => {}} />
               ))}
         </div>
       )}

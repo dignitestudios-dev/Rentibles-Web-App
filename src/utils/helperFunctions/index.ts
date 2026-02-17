@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+
 export const phoneFormatter = (input: string): string => {
   if (!input) return "";
 
@@ -79,3 +81,17 @@ export const getAddressFromLatLng = (
     });
   });
 };
+
+export function useDebounce<T>(value: T, delay = 500): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+
+  return debouncedValue;
+}

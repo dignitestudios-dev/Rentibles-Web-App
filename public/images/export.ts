@@ -13,6 +13,7 @@ import Camera_icon from "./camera_icon.png";
 import Rejected_img from "./rejected_img.png";
 import Submitted_img from "./submitted_img.png";
 import Checkmark_orange from "./checkmark_orange.png";
+import ProductSearch from "./searchImg.png";
 
 export {
   OrangeLogo,
@@ -30,4 +31,5 @@ export {
   Rejected_img,
   Submitted_img,
   Checkmark_orange,
+  ProductSearch,
 };

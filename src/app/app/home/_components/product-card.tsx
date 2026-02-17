@@ -14,14 +14,36 @@ type Product = {
   isLiked?: boolean;
 };
 
-const ProductCard: React.FC<{ product?: Product }> = ({ product }) => {
+interface ProductCardProps {
+  product?: Product;
+  handleWishlist: () => void;
+  isLiked?: boolean;
+  isLoading?: boolean;
+}
+
+const ProductCard: React.FC<ProductCardProps> = ({
+  product,
+  handleWishlist,
+  isLiked: externalIsLiked,
+  isLoading = false,
+}) => {
   const cover = product?.cover ?? "";
   const name = product?.name ?? "Product Name";
   const category = product?.category?.name ?? "Furniture";
   const price = product?.pricePerDay ?? product?.pricePerHour ?? 0;
   const review = product?.productReview?.toFixed(1) ?? 0.0;
-  const liked = product?.isLiked ?? false;
+  // Use external state if provided, otherwise fall back to product data
+  const liked =
+    externalIsLiked !== undefined
+      ? externalIsLiked
+      : (product?.isLiked ?? false);
   const [imgLoaded, setImgLoaded] = useState(false);
+
+  const handleWishlistClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    handleWishlist();
+  };
 
   return (
     <div className="bg-card rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 h-96 hover:-translate-y-2">
@@ -45,9 +67,16 @@ const ProductCard: React.FC<{ product?: Product }> = ({ product }) => {
             <span className="font-semibold">{review}</span>
           </div>
 
-          <button className="absolute top-3 right-3 bg-white rounded-md p-2 shadow flex items-center justify-center z-20">
+          <button
+            type="button"
+            onClick={handleWishlistClick}
+            disabled={isLoading}
+            className="absolute top-3 right-3 bg-white rounded-md p-2 shadow flex items-center justify-center z-20 hover:shadow-md transition-shadow disabled:opacity-50"
+          >
             <Heart
-              className={`w-5 h-5 ${liked ? "text-red-500" : "text-gray-400"}`}
+              className={`w-5 h-5 transition-colors ${
+                liked ? "text-red-500 fill-red-500" : "text-gray-400"
+              }`}
             />
           </button>
         </div>
