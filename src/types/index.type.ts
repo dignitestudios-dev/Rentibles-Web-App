@@ -626,3 +626,13 @@ export interface DeleteBankResponse {
   success: boolean;
   message: string;
 }
+
+// Delete Account
+export interface DeleteAccountPayload {
+  password: string;
+}
+
+export interface DeleteAccountResponse {
+  success: boolean;
+  message: string;
+}

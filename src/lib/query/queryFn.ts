@@ -42,6 +42,8 @@ import {
   AddBankPayload,
   AddBankResponse,
   DeleteBankResponse,
+  DeleteAccountPayload,
+  DeleteAccountResponse,
 } from "@/src/types/index.type";
 import { OtpPayload } from "@/src/schema";
 
@@ -265,5 +267,13 @@ export const addBank = async (payload: AddBankPayload): Promise<AddBankResponse>
 
 export const deleteBank = async (): Promise<DeleteBankResponse> => {
   const { data } = await axiosInstance.delete("/balance/bank");
+  return data;
+};
+
+// delete account
+export const deleteAccount = async (
+  payload: DeleteAccountPayload,
+): Promise<DeleteAccountResponse> => {
+  const { data } = await axiosInstance.post("/auth/delete", payload);
   return data;
 };
