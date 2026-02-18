@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { Suspense } from "react";
 import SwiperProducts from "./swiper-products";
 import { useProducts } from "@/src/lib/api/products";
 import { useSearchParams } from "next/navigation";
