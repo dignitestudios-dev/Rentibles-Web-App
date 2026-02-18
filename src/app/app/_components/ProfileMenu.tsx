@@ -23,6 +23,7 @@ const NAV_LINKS = [
   { label: "Chat Support", href: "/app/chat-support" },
   { label: "Cash Withdrawal", href: "/app/cash-withdrawal" },
   { label: "Product Request", href: "/app/product-request" },
+  { label: "Settings", href: "/app/settings" },
   { label: "Create Product", href: "/app/create-product" },
 ];
 

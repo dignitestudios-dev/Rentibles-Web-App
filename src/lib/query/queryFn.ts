@@ -28,7 +28,20 @@ import {
   SocialRegisterPayload,
   SocialRegisterResponse,
   VerifyIdentityResponse,
+  GetSettingsResponse,
+  UpdateSettingsPayload,
+  UpdateSettingsResponse,
+  ChangePasswordPayload,
+  ChangePasswordResponse,
   VerifyOtpResponse,
+  GetCardsResponse,
+  AddCardPayload,
+  AddCardResponse,
+  DeleteCardResponse,
+  GetBankResponse,
+  AddBankPayload,
+  AddBankResponse,
+  DeleteBankResponse,
 } from "@/src/types/index.type";
 import { OtpPayload } from "@/src/schema";
 
@@ -199,5 +212,58 @@ export const getUsersWithParams = async (
 //store
 export const getStoreById = async (storeId: string) => {
   const { data } = await axiosInstance.get(`/store/${storeId}`);
+  return data;
+};
+
+// settings
+export const getSettings = async (): Promise<GetSettingsResponse> => {
+  const { data } = await axiosInstance.get("/settings");
+  return data;
+};
+
+export const updateSettings = async (
+  payload: UpdateSettingsPayload,
+): Promise<UpdateSettingsResponse> => {
+  const { data } = await axiosInstance.put("/settings", payload);
+  return data;
+};
+
+// auth - change password
+export const changePassword = async (
+  payload: ChangePasswordPayload,
+): Promise<ChangePasswordResponse> => {
+  const { data } = await axiosInstance.post("/auth/changePassword", payload);
+  return data;
+};
+
+// cards
+export const getCards = async (): Promise<GetCardsResponse> => {
+  const { data } = await axiosInstance.get("/user/card");
+  return data;
+};
+
+export const addCard = async (payload: AddCardPayload): Promise<AddCardResponse> => {
+  const { data } = await axiosInstance.post("/user/card", payload);
+  return data;
+};
+
+export const deleteCard = async (id: string): Promise<DeleteCardResponse> => {
+  const { data } = await axiosInstance.delete(`/user/card/${id}`);
+  return data;
+};
+
+// banks
+export const getBank = async (): Promise<GetBankResponse> => {
+  const { data } = await axiosInstance.get("/balance/bank");
+  return data;
+};
+
+export const addBank = async (payload: AddBankPayload): Promise<AddBankResponse> => {
+  const { data } = await axiosInstance.post("/balance/bank", payload);
+  return data;
+};
+
+export const deleteBank = async (): Promise<DeleteBankResponse> => {
+  const { data } = await axiosInstance.delete("/balance/bank");
   return data;
 };

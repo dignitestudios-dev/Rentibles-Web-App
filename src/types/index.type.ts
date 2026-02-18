@@ -527,3 +527,102 @@ export interface GetStoreByIdResponse {
     location?: Location;
   };
 }
+
+// Settings
+export interface SettingsData {
+  _id: string;
+  user?: string;
+  store?: string;
+  notification: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface GetSettingsResponse {
+  success: boolean;
+  message: string;
+  data: SettingsData;
+}
+
+export interface UpdateSettingsPayload {
+  notification?: boolean;
+}
+
+export interface UpdateSettingsResponse {
+  success: boolean;
+  message: string;
+}
+
+// Auth - Change Password
+export interface ChangePasswordPayload {
+  password: string;
+  newPassword: string;
+}
+
+export interface ChangePasswordResponse {
+  success: boolean;
+  message: string;
+}
+
+// Payment cards
+export interface CardItem {
+  _id: string;
+  brand: string;
+  expMonth: number;
+  expYear: number;
+  last4: string;
+  default: boolean;
+  paymentMethodId: string;
+}
+
+export interface GetCardsResponse {
+  success: boolean;
+  message: string;
+  data: CardItem[];
+}
+
+export interface AddCardPayload {
+  paymentMethodId: string;
+}
+
+export interface AddCardResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface DeleteCardResponse {
+  success: boolean;
+  message: string;
+}
+
+// Bank details
+export interface BankItem {
+  bank_name: string;
+  country: string;
+  currency: string;
+  routing_number: string;
+  last4: string;
+  status: "active" | "inactive" | "pending";
+}
+
+export interface GetBankResponse {
+  success: boolean;
+  message: string;
+  data: BankItem | null;
+}
+
+export interface AddBankPayload {
+  accountHolderName: string;
+  routingNumber: string;
+  accountNumber: string;
+}
+
+export interface AddBankResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface DeleteBankResponse {
+  success: boolean;
+  message: string;
+}
