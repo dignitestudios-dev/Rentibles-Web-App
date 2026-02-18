@@ -15,6 +15,7 @@ import Image from "next/image";
 import { logout } from "../../../lib/store/feature/authSlice";
 import { useAppDispatch, useAppSelector } from "../../../lib/store/hooks";
 import { UserProfile } from "@/public/images/export";
+import { ChevronDown } from "lucide-react";
 // import { useMounted } from "@/src/utils/helperFunctions";
 
 const NAV_LINKS = [
@@ -64,6 +65,7 @@ const ProfileMenu = () => {
             </span>
             <span className="text-xs text-muted-foreground">{user.email}</span>
           </div>
+          <ChevronDown className="w-4 h-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
@@ -82,6 +84,7 @@ const ProfileMenu = () => {
               <p className="text-sm font-medium text-foreground">{user.name}</p>
               <p className="text-xs text-muted-foreground">{user.email}</p>
             </div>
+            <ChevronDown className="w-4 h-4" />
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />

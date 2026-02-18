@@ -1,4 +1,3 @@
-import { store } from "./../lib/store/index";
 export type RegisterPayload = {
   fullName: string;
   image: FileList;
@@ -299,6 +298,11 @@ export interface GetSubCategoriesResponse {
 
 // store type defined
 
+export interface ReportStoreConfig {
+  storeId: string;
+  storeName?: string;
+}
+
 export interface Stores {
   _id: string;
   name: string;
@@ -525,5 +529,65 @@ export interface GetStoreByIdResponse {
     country: string;
     zipCode?: number;
     location?: Location;
+  };
+}
+
+// Notifications
+export interface NotificationMetaData {
+  type?: string;
+  product?: {
+    _id: string;
+    name?: string;
+    cover?: string;
+  };
+  user?: {
+    _id: string;
+    name?: string;
+    profilePicture?: string;
+  };
+  booking?: Record<string, unknown> | null;
+}
+
+export interface Notification {
+  _id: string;
+  title: string;
+  description?: string;
+  metaData?: NotificationMetaData;
+  isRead?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NotificationsPagination {
+  itemsPerPage: number;
+  currentPage: number;
+  totalItems: number;
+  totalPages: number;
+}
+
+export interface GetNotificationsResponse {
+  success: boolean;
+  message: string;
+  data: Notification[];
+  unreadCount?: number;
+  pagination: NotificationsPagination;
+}
+
+export interface ReportStorePayload {
+  title: string;
+  description: string;
+  storeId: string;
+}
+
+export interface ReportStoreResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    _id: string;
+    title: string;
+    description: string;
+    storeId: string;
+    createdAt: string;
+    updatedAt: string;
   };
 }
