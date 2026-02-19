@@ -1,127 +1,116 @@
 "use client";
 
-import React, { useState } from "react";
-import { ArrowLeft, Plus } from "lucide-react";
-import ProductRequestCard from "./_components/ProductRequestCard";
-import AddProductRequestModal from "./_components/AddProductRequestModal";
-
-import { mockCategories, mockProductRequests } from "./_components/mockData";
-import { AddProductRequestFormData } from "@/src/types/index.type";
 import { useRouter } from "next/navigation";
+import { Plus, ArrowLeft, Trash2 } from "lucide-react";
+import Link from "next/link";
+import { useProductRequests, useDeleteProductRequest } from "@/src/lib/api/productRequests";
+import Loader from "@/src/components/common/Loader";
+import { useQueryClient } from "@tanstack/react-query";
+import { ErrorToast, SuccessToast } from "@/src/components/common/Toaster";
+import { getAxiosErrorMessage } from "@/src/utils/errorHandlers";
 
-interface DataCategory {
-  id: string;
-  name: string;
-  slug: string;
-}
-
-interface ProductRequest {
-  id: string;
-  productName: string;
-  description: string;
-  storeName: string;
-  status: string;
-  category: DataCategory;
-  createdAt: Date;
-}
-
-const ProductRequestsScreen: React.FC = () => {
+const ProductRequestsScreen = () => {
   const router = useRouter();
-  const [productRequests, setProductRequests] =
-    useState<ProductRequest[]>(mockProductRequests);
-  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+  const queryClient = useQueryClient();
+  const { data, isLoading } = useProductRequests();
+  const deleteProductRequestMutation = useDeleteProductRequest();
+  const productRequests = data?.data ?? [];
 
-  const handleDeleteRequest = (id: string) => {
-    setProductRequests((prev) => prev.filter((request) => request.id !== id));
-  };
-
-  const handleAddRequest = (data: AddProductRequestFormData) => {
-    const selectedCategory = mockCategories.find(
-      (cat) => cat.id === data.categoryId,
-    );
-
-    if (!selectedCategory) return;
-
-    const newRequest: ProductRequest = {
-      id: `req-${Date.now()}`,
-      productName: data.productName,
-      description: data.description,
-      storeName: "Pending Assignment",
-      category: selectedCategory,
-      createdAt: new Date(),
-      status: "pending",
-    };
-
-    setProductRequests((prev) => [newRequest, ...prev]);
-
-    // Show success message
-    alert(`Product request "${data.productName}" has been added successfully!`);
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteProductRequestMutation.mutateAsync(id);
+      SuccessToast("Product request deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["productRequests"] });
+    } catch (error) {
+      const message = getAxiosErrorMessage(error, "Failed to delete product request");
+      ErrorToast(message);
+    }
   };
 
   return (
-    <div className="bg-background min-h-screen">
-      <div className="sticky top-22.75 z-40 bg-background border-b border-border">
-        <div className="flex items-center justify-between px-4 py-4 md:px-6">
+    <div className="bg-background flex flex-col">
+      <Loader show={isLoading || deleteProductRequestMutation.isPending} />
+      {/* Header */}
+      <div className="sticky top-0 z-40 bg-background border-b border-border">
+        <div className="flex items-center justify-between px-4 py-4">
           <button
             onClick={() => router.back()}
             className="p-2 hover:bg-muted rounded-md transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-
-          <h1 className="text-lg font-semibold">Product Requests</h1>
-          <div>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary transition-all active:scale-95 shadow-md hover:shadow-md"
-            >
-              {/* <Plus className="w-5 h-5" /> */}
-              Add Request
-            </button>
-          </div>
+          <h1 className="text-lg font-semibold text-foreground">Product Requests</h1>
+          <Link href="/app/product-request/add" legacyBehavior>
+            <a className="w-full md:w-auto">
+              <button
+                className="w-full md:w-auto px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-all active:scale-95 shadow-md"
+              >
+                Add Request
+              </button>
+            </a>
+          </Link>
         </div>
       </div>
-      <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
-        {/* Product Requests Grid */}
-        {/* {productRequests.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-md p-12 text-center border border-gray-200">
-            <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Plus className="w-10 h-10 text-gray-400" />
+
+      {/* Requests List */}
+      <div className="flex-1 flex flex-col items-center justify-start px-4 pt-8">
+        {productRequests.length === 0 ? (
+          <div className="bg-card rounded-xl shadow-md p-12 text-center border border-border w-full max-w-md mt-16">
+            <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
+              <Plus className="w-10 h-10 text-muted-foreground" />
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <h3 className="text-lg font-semibold text-foreground mb-2">
               No Product Requests
             </h3>
-            <p className="text-gray-600 mb-6">
+            <p className="text-muted-foreground mb-6">
               Get started by adding your first product request
             </p>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-all"
-            >
-              <Plus className="w-5 h-5" />
-              Add Request
-            </button>
+            <Link href="/app/product-request/add" legacyBehavior>
+              <a>
+                <button className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-all">
+                  <Plus className="w-5 h-5" />
+                  Add Request
+                </button>
+              </a>
+            </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="w-full max-w-xl flex flex-col gap-4">
             {productRequests.map((request) => (
-              <ProductRequestCard
-                key={request.id}
-                request={request}
-                onDelete={handleDeleteRequest}
-              />
+              <div
+                key={request._id}
+                className="bg-card rounded-xl p-5 flex items-center justify-between shadow border border-border"
+              >
+                <div>
+                  <div className="text-lg font-bold text-foreground mb-1">{request.name}</div>
+                  <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
+                    {request.category?.name}
+                  </div>
+                  <div className="text-sm text-muted-foreground">{request.description}</div>
+                </div>
+                <button
+                  onClick={() => handleDelete(request._id)}
+                  className="ml-4 p-2 rounded-full bg-destructive/90 hover:bg-destructive transition-colors"
+                  disabled={deleteProductRequestMutation.isPending}
+                >
+                  <Trash2 className="w-5 h-5 text-white" />
+                </button>
+              </div>
             ))}
           </div>
-        )} */}
+        )}
       </div>
 
-      {/* Add Product Request Modal */}
-      <AddProductRequestModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        categories={mockCategories}
-        onSubmit={handleAddRequest}
-      />
+      {/* Add Request Button (Mobile) */}
+      <div className="fixed bottom-0 left-0 right-0 z-30 bg-background px-4 py-4 border-t border-border md:hidden">
+        <Link href="/app/product-request/add" legacyBehavior>
+          <a>
+            <button className="w-full px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-all active:scale-95">
+              Add Request
+            </button>
+          </a>
+        </Link>
+      </div>
     </div>
   );
 };

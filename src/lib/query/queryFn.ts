@@ -1,3 +1,4 @@
+// ...existing code...
 import Cookies from "js-cookie";
 import { axiosInstance } from "../axiosInstance";
 import {
@@ -44,6 +45,13 @@ import {
   DeleteBankResponse,
   DeleteAccountPayload,
   DeleteAccountResponse,
+  SupportTicketPayload,
+  SupportTicketResponse,
+  CreateProductRequestPayload,
+  CreateProductRequestResponse,
+  GetProductRequestsResponse,
+  DeleteProductRequestPayload,
+  DeleteProductRequestResponse,
 } from "@/src/types/index.type";
 import { OtpPayload } from "@/src/schema";
 
@@ -198,6 +206,26 @@ export const getProductById = async (
   return data;
 };
 
+// product requests
+export const createProductRequest = async (
+  payload: CreateProductRequestPayload,
+): Promise<CreateProductRequestResponse> => {
+  const { data } = await axiosInstance.post("/request", payload);
+  return data;
+};
+
+export const getProductRequestsByUser = async (): Promise<GetProductRequestsResponse> => {
+  const { data } = await axiosInstance.get("/request/user");
+  return data;
+};
+
+export const deleteProductRequest = async (
+  productRequestId: DeleteProductRequestPayload,
+): Promise<DeleteProductRequestResponse> => {
+  const { data } = await axiosInstance.delete(`/request/${productRequestId}`);
+  return data;
+};
+
 //users
 export const getUsers = async (): Promise<GetCategoriesResponse> => {
   const { data } = await axiosInstance.get("/user/all");
@@ -244,7 +272,9 @@ export const getCards = async (): Promise<GetCardsResponse> => {
   return data;
 };
 
-export const addCard = async (payload: AddCardPayload): Promise<AddCardResponse> => {
+export const addCard = async (
+  payload: AddCardPayload,
+): Promise<AddCardResponse> => {
   const { data } = await axiosInstance.post("/user/card", payload);
   return data;
 };
@@ -260,7 +290,9 @@ export const getBank = async (): Promise<GetBankResponse> => {
   return data;
 };
 
-export const addBank = async (payload: AddBankPayload): Promise<AddBankResponse> => {
+export const addBank = async (
+  payload: AddBankPayload,
+): Promise<AddBankResponse> => {
   const { data } = await axiosInstance.post("/balance/bank", payload);
   return data;
 };
@@ -276,4 +308,23 @@ export const deleteAccount = async (
 ): Promise<DeleteAccountResponse> => {
   const { data } = await axiosInstance.post("/auth/delete", payload);
   return data;
+};
+
+// support ticket
+export const createSupportTicket = async (
+  payload: SupportTicketPayload,
+): Promise<SupportTicketResponse> => {
+  try {
+    const { data } = await axiosInstance.post("/support", payload);
+    // Optionally validate response structure here
+    return data;
+  } catch (error: any) {
+    // Optionally handle/log error, rethrow for react-query to catch
+    if (error.response && error.response.data) {
+      throw new Error(
+        error.response.data.message || "Failed to create support ticket",
+      );
+    }
+    throw new Error("Failed to create support ticket");
+  }
 };

@@ -1,3 +1,12 @@
+// Support Ticket
+export interface SupportTicketPayload {
+  title: string;
+  description: string;
+}
+export interface SupportTicketResponse {
+  success: boolean;
+  message: string;
+}
 import { store } from "./../lib/store/index";
 export type RegisterPayload = {
   fullName: string;
@@ -250,6 +259,56 @@ export interface AddProductRequestFormData {
   categoryId: string;
   productName: string;
   description: string;
+}
+
+// Product Request API
+export interface CreateProductRequestPayload {
+  name: string;
+  description: string;
+  categoryId: string;
+}
+
+export interface CreateProductRequestResponse {
+  success: boolean;
+  message: string;
+}
+
+export interface ProductRequestItem {
+  _id: string;
+  name: string;
+  description: string;
+  category: {
+    _id: string;
+    name: string;
+    cover?: string;
+  };
+  user: {
+    _id: string;
+    name: string;
+    email: string;
+    profilePicture?: string;
+  };
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GetProductRequestsResponse {
+  success: boolean;
+  message: string;
+  data: ProductRequestItem[];
+  pagination: {
+    itemsPerPage: number;
+    currentPage: number;
+    totalItems: number;
+    totalPages: number;
+  };
+}
+
+export type DeleteProductRequestPayload = string;
+
+export interface DeleteProductRequestResponse {
+  success: boolean;
+  message: string;
 }
 // types/schedule.types.ts
 export interface DaySchedule {

@@ -19,13 +19,17 @@ export default function SettingsLayout({
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Sidebar - Always show on desktop, conditionally on mobile */}
-        <div className={`md:col-span-1 ${!isMainSettings ? "hidden md:block" : ""}`}>
+        <div
+          className={`md:col-span-1 ${!isMainSettings ? "hidden md:block" : ""}`}
+        >
           <SettingsSidebar />
         </div>
 
         {/* Main Content - Show detail pages on mobile, show both sidebar and content on desktop */}
-        <div className={`${isMainSettings ? "hidden md:col-span-2 md:block" : "col-span-1 md:col-span-2"}`}>
-          <div className="bg-card border border-border rounded-lg p-6 md:p-8">
+        <div
+          className={`${isMainSettings ? "hidden md:col-span-2 md:block" : "col-span-1 md:col-span-2"}`}
+        >
+          <div className="bg-card h-full border border-border rounded-lg p-6 md:p-8">
             {children}
           </div>
         </div>
