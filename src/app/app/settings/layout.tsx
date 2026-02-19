@@ -1,7 +1,9 @@
 "use client";
 
+import { ArrowLeft } from "lucide-react";
 import SettingsSidebar from "./_components/SettingsSidebar";
 import { usePathname } from "next/navigation";
+import Link from "next/link";
 
 export default function SettingsLayout({
   children,
@@ -14,7 +16,15 @@ export default function SettingsLayout({
   return (
     <div className="py-6">
       <div className="mb-8 md:block hidden">
-        <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/app/home"
+            className="p-2 hover:bg-muted rounded-md transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </Link>
+          <h1 className="text-3xl font-bold text-foreground mb-2">Settings</h1>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

@@ -3,7 +3,10 @@
 import { useRouter } from "next/navigation";
 import { Plus, ArrowLeft, Trash2 } from "lucide-react";
 import Link from "next/link";
-import { useProductRequests, useDeleteProductRequest } from "@/src/lib/api/productRequests";
+import {
+  useProductRequests,
+  useDeleteProductRequest,
+} from "@/src/lib/api/productRequests";
 import Loader from "@/src/components/common/Loader";
 import { useQueryClient } from "@tanstack/react-query";
 import { ErrorToast, SuccessToast } from "@/src/components/common/Toaster";
@@ -22,7 +25,10 @@ const ProductRequestsScreen = () => {
       SuccessToast("Product request deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["productRequests"] });
     } catch (error) {
-      const message = getAxiosErrorMessage(error, "Failed to delete product request");
+      const message = getAxiosErrorMessage(
+        error,
+        "Failed to delete product request",
+      );
       ErrorToast(message);
     }
   };
@@ -33,18 +39,18 @@ const ProductRequestsScreen = () => {
       {/* Header */}
       <div className="sticky top-0 z-40 bg-background border-b border-border">
         <div className="flex items-center justify-between px-4 py-4">
-          <button
-            onClick={() => router.back()}
+          <Link
+            href="/app/home"
             className="p-2 hover:bg-muted rounded-md transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-          </button>
-          <h1 className="text-lg font-semibold text-foreground">Product Requests</h1>
+          </Link>
+          <h1 className="text-lg font-semibold text-foreground">
+            Product Requests
+          </h1>
           <Link href="/app/product-request/add" legacyBehavior>
             <a className="w-full md:w-auto">
-              <button
-                className="w-full md:w-auto px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-all active:scale-95 shadow-md"
-              >
+              <button className="w-full md:w-auto px-6 py-3 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-all active:scale-95 shadow-md">
                 Add Request
               </button>
             </a>
@@ -82,11 +88,15 @@ const ProductRequestsScreen = () => {
                 className="bg-card rounded-xl p-5 flex items-center justify-between shadow border border-border"
               >
                 <div>
-                  <div className="text-lg font-bold text-foreground mb-1">{request.name}</div>
+                  <div className="text-lg font-bold text-foreground mb-1">
+                    {request.name}
+                  </div>
                   <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
                     {request.category?.name}
                   </div>
-                  <div className="text-sm text-muted-foreground">{request.description}</div>
+                  <div className="text-sm text-muted-foreground">
+                    {request.description}
+                  </div>
                 </div>
                 <button
                   onClick={() => handleDelete(request._id)}

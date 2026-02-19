@@ -198,7 +198,7 @@ export default function AddProductRequest() {
             className="w-full bg-primary hover:bg-primary/90"
             disabled={showSuccess || isLoading}
           >
-            {isLoading ? "Submitting..." : "Add Request"}
+            {isLoading ? "Submitting..." : "Send Request"}
           </Button>
         </div>
       </form>
