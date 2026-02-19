@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import {
   ArrowLeft,
@@ -18,7 +18,11 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, A11y } from "swiper/modules";
 import type { SwiperRef } from "swiper/react";
 import MediaViewer from "./_components/MediaViewer";
-import { useProductById } from "@/src/lib/api/products";
+import { useProductById, useProductReviewById } from "@/src/lib/api/products";
+import { NoDataFound } from "@/public/images/export";
+import { Calendar } from "@/components/ui/calendar";
+import { generateTimeSlots } from "@/src/utils/helperFunctions";
+import { TimeSlot } from "@/src/types/index.type";
 
 const ProductDetailsPage = () => {
   const router = useRouter();
@@ -28,7 +32,31 @@ const ProductDetailsPage = () => {
   const [quantity, setQuantity] = useState(1);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isMediaViewerOpen, setIsMediaViewerOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>();
   const swiperRef = useRef<SwiperRef>(null);
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
+
+  // Handle clicking outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => {
+        document.removeEventListener("mousedown", handleClickOutside);
+      };
+    }
+  }, [isOpen]);
 
   const {
     data: apiResponse,
@@ -36,6 +64,12 @@ const ProductDetailsPage = () => {
     isError,
     error,
   } = useProductById(productId);
+
+  const {
+    data: reviewResponse,
+    isLoading: isReviewLoading,
+    isError: isReviewError,
+  } = useProductReviewById(productId);
 
   // Extract product data from API response
   const product = apiResponse?.data;
@@ -70,6 +104,11 @@ const ProductDetailsPage = () => {
     );
   }
 
+  const { slots, totalHours, pickupLabel, dropOffLabel } = generateTimeSlots(
+    product?.pickupTime,
+    product?.dropOffTime,
+  );
+
   // Handle quantity change with proper validation
   const handleQuantityChange = (change: number) => {
     const newQty = quantity + change;
@@ -86,7 +125,39 @@ const ProductDetailsPage = () => {
 
   // Format availability days
   const availableDays = product.availableDays || [];
+  const formatDate = (date: Date | undefined) => {
+    if (!date) return "Select a date";
+    return new Intl.DateTimeFormat("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric",
+    }).format(date);
+  };
 
+  // Convert day names to day indices (0 = Sunday, 1 = Monday, etc.)
+  const availableDayIndices = availableDays.map((day) => {
+    const dayMap: { [key: string]: number } = {
+      sunday: 0,
+      monday: 1,
+      tuesday: 2,
+      wednesday: 3,
+      thursday: 4,
+      friday: 5,
+      saturday: 6,
+    };
+    return dayMap[day.toLowerCase()] ?? -1;
+  });
+
+  // Check if a date is available based on availableDays
+  const isDateAvailable = (date: Date): boolean => {
+    if (availableDayIndices.length === 0) return true; // If no restrictions, all dates are available
+    return availableDayIndices.includes(date.getDay());
+  };
+
+  const handleDateSelect = (date: Date) => {
+    setSelectedDate(date);
+    setIsOpen(false);
+  };
   return (
     <div className="bg-background min-h-screen">
       {/* Header */}
@@ -250,8 +321,129 @@ const ProductDetailsPage = () => {
 
             <hr className="my-6 border-border" />
 
+            {/* Pricing */}
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-4">Availability</h3>
+
+              <div className="flex  gap-4">
+                <button
+                  onClick={() => setIsOpen(!isOpen)}
+                  className="w-full bg-orange-400/20 dark:bg-orange-900/10 px-6 py-4 rounded-2xl hover:bg-orange-400/30 dark:hover:bg-orange-900/20 transition-colors flex items-center justify-between"
+                >
+                  <div className="text-left flex-1">
+                    <p className="text-2xl font-bold text-primary">
+                      ${product.pricePerHour.toLocaleString()}/
+                      <span className="text-base font-normal text-gray-600 dark:text-gray-400">
+                        hr
+                      </span>
+                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {selectedDate
+                        ? formatDate(selectedDate)
+                        : "Tap to select date"}
+                    </p>
+                  </div>
+                </button>
+
+                <button
+                  onClick={() => setIsOpen(!isOpen)}
+                  className="w-full bg-orange-400/20 dark:bg-orange-900/10 px-6 py-4 rounded-2xl hover:bg-orange-400/30 dark:hover:bg-orange-900/20 transition-colors flex items-center justify-between"
+                >
+                  <p className="text-2xl font-bold text-primary">
+                    ${(product.pricePerDay || 0).toLocaleString()}/
+                    <span className="text-base font-normal text-gray-600 dark:text-gray-400">
+                      day
+                    </span>
+                  </p>
+                </button>
+              </div>
+            </div>
+            {isOpen && (
+              <Calendar
+                selected={selectedDate}
+                onSelect={handleDateSelect}
+                disabled={(date) => {
+                  // Disable past dates
+                  const today = new Date();
+                  today.setHours(0, 0, 0, 0);
+                  date.setHours(0, 0, 0, 0);
+
+                  if (date < today) return true;
+
+                  // Disable dates not in availableDays
+                  return !isDateAvailable(date);
+                }}
+                className="shadow-lg border-2 border-primary/20"
+              />
+            )}
+
+            {isOpen && (
+              <>
+                {slots.length === 0 ? (
+                  <p className="text-sm text-gray-500">
+                    No available time slots.
+                  </p>
+                ) : (
+                  <>
+                    {/* Summary row */}
+                    <div className="flex items-center gap-2 mb-4 text-sm text-gray-500">
+                      <span className="font-medium text-gray-700">
+                        {pickupLabel}
+                      </span>
+                      <span>→</span>
+                      <span className="font-medium text-gray-700">
+                        {dropOffLabel}
+                      </span>
+                      <span className="ml-auto bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
+                        {totalHours % 1 === 0
+                          ? `${totalHours}h`
+                          : `${Math.floor(totalHours)}h ${Math.round((totalHours % 1) * 60)}m`}{" "}
+                        total
+                      </span>
+                    </div>
+
+                    {/* Slot grid */}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {slots.map((slot) => {
+                        const isSelected =
+                          selectedSlot?.startEpoch === slot.startEpoch;
+                        return (
+                          <button
+                            key={slot.startEpoch}
+                            type="button"
+                            // onClick={() => handleSelect(slot)}
+                            className={[
+                              "rounded-xl border px-3 py-2.5 text-sm font-medium transition-all duration-150",
+                              "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1",
+                              isSelected
+                                ? "border-blue-600 bg-blue-600 text-white shadow-sm"
+                                : "border-gray-200 bg-white text-gray-700 hover:border-blue-400 hover:bg-blue-50",
+                            ].join(" ")}
+                          >
+                            <span className="block">{slot.startLabel}</span>
+                            <span className="block text-xs opacity-70">
+                              – {slot.endLabel}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Selected feedback */}
+                    {selectedSlot && (
+                      <p className="mt-3 text-sm text-blue-600 font-medium">
+                        ✓ Selected: {selectedSlot.label}
+                      </p>
+                    )}
+                  </>
+                )}
+              </>
+            )}
+
+            <hr className="my-6 border-border" />
+
             {/* Availability Days */}
-            {availableDays.length > 0 && (
+            {/* {availableDays.length > 0 && (
               <>
                 <div className="mb-6">
                   <h3 className="text-lg font-semibold mb-3">Available Days</h3>
@@ -268,7 +460,7 @@ const ProductDetailsPage = () => {
                 </div>
                 <hr className="my-6 border-border" />
               </>
-            )}
+            )} */}
 
             {/* Quantity */}
             <div className="mb-6">
@@ -315,68 +507,94 @@ const ProductDetailsPage = () => {
                 </p>
               )}
             </div>
-
-            <hr className="my-6 border-border" />
-
-            {/* Pricing */}
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-4">Pricing</h3>
-
-              <div className="flex flex-wrap gap-4">
-                <div className="bg-orange-400/20 dark:bg-orange-900/10 px-6 py-4 rounded-2xl flex-1 min-w-fit">
-                  <p className="text-2xl font-bold text-primary">
-                    ${(product.pricePerHour || 0).toLocaleString()}/
-                    <span className="text-base font-normal text-gray-600 dark:text-gray-400">
-                      hr
-                    </span>
-                  </p>
-                </div>
-
-                <div className="bg-orange-400/20 dark:bg-orange-900/10 px-6 py-4 rounded-2xl flex-1 min-w-fit">
-                  <p className="text-2xl font-bold text-primary">
-                    ${(product.pricePerDay || 0).toLocaleString()}/
-                    <span className="text-base font-normal text-gray-600 dark:text-gray-400">
-                      day
-                    </span>
-                  </p>
-                </div>
-              </div>
-
-              {/* Estimated Total */}
-              <div className="mt-4 p-4 bg-muted rounded-lg">
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                  Estimated total (1 day rental):
-                </p>
-                <p className="text-2xl font-bold">
-                  ${((product.pricePerDay || 0) * quantity).toLocaleString()}
-                </p>
-              </div>
+            {/* Estimated Total */}
+            <div className="mt-4 p-4 bg-muted rounded-lg">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
+                Estimated total (1 day rental):
+              </p>
+              <p className="text-2xl font-bold">
+                ${((product.pricePerDay || 0) * quantity).toLocaleString()}
+              </p>
             </div>
-
-            {/* Status Badges */}
-            {/* <div className="flex flex-wrap gap-2 mb-6">
-              {product.isActive && (
-                <span className="bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 px-3 py-1 rounded-full text-xs font-medium">
-                  Active
-                </span>
-              )}
-              {product.isBooked && (
-                <span className="bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400 px-3 py-1 rounded-full text-xs font-medium">
-                  Currently Booked
-                </span>
-              )}
-              {product.isLiked && (
-                <span className="bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400 px-3 py-1 rounded-full text-xs font-medium">
-                  Liked
-                </span>
-              )}
-            </div> */}
           </div>
         </div>
 
         {/* Reviews Section - Full Width */}
-        {/* Remove this section if you don't have reviews data from API */}
-        {/* You can add it back once you integrate reviews API */}
+        <div className="mt-12 px-4 md:px-0">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-2xl font-semibold">What People Say</h3>
+            {reviewResponse?.data && reviewResponse.data.length > 0 && (
+              <Link
+                href={`/app/products/${product._id}/reviews`}
+                className="text-primary hover:underline"
+              >
+                See All
+              </Link>
+            )}
+          </div>
+
+          {/* Swiper for Reviews */}
+          {reviewResponse?.data && reviewResponse.data.length > 0 ? (
+            <Swiper
+              ref={swiperRef}
+              modules={[Navigation, A11y]}
+              spaceBetween={24}
+              slidesPerView={1}
+              breakpoints={{
+                768: {
+                  slidesPerView: 1.5,
+                },
+                1024: {
+                  slidesPerView: 2,
+                },
+              }}
+              className="reviews-swiper"
+            >
+              {reviewResponse?.data?.map((review) => (
+                <SwiperSlide key={review._id}>
+                  <div className="bg-muted dark:bg-card p-6 rounded-2xl h-full">
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className="w-12 h-12 rounded-full p-1 bg-primary ring-2 ring-primary shrink-0 overflow-hidden">
+                        <img
+                          src={review.user.profilePicture}
+                          alt={review.user.name}
+                          className="w-full h-full object-cover rounded-full"
+                        />
+                      </div>
+
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between gap-2 mb-2">
+                          <h4 className="font-semibold text-lg">
+                            {review.user.name}
+                          </h4>
+                          <div className="flex items-center gap-1">
+                            <Star className="w-5 h-5 fill-primary text-primary" />
+                            <span className="font-semibold text-sm">
+                              {review.stars}
+                            </span>
+                          </div>
+                        </div>
+
+                        <p className="text-gray-600 dark:text-gray-300 text-sm">
+                          {review.description}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          ) : (
+            <div className="flex justify-center items-center w-full mt-10">
+              <div className="flex flex-col justify-center items-center">
+                <Image src={NoDataFound} alt="Review_Search" className="w-48" />
+                <p className="text-foreground mt-2 font-semibold">
+                  No Reviews Available
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Book Now Button - Fixed Bottom */}
@@ -390,7 +608,7 @@ const ProductDetailsPage = () => {
             // Add your booking logic here
           }}
         >
-          Book Now ({quantity})
+          Book Now
         </button>
       </div>
 

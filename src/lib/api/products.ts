@@ -7,6 +7,7 @@ import {
 import {
   getCategories,
   getProductById,
+  getProductReview,
   getProductsWithParams,
   getStoresWithParams,
   getSubCategories,
@@ -14,6 +15,7 @@ import {
 import {
   GetCategoriesResponse,
   GetProductByIdResponse,
+  GetProductReviewResponse,
   GetProductsParams,
   GetProductsResponse,
   GetStoresParams,
@@ -89,6 +91,18 @@ export const useProductById = (
   return useQuery({
     queryKey: ["productById", productId],
     queryFn: () => getProductById(productId!),
+    enabled: !!productId, // Only run query if categoryId exists
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+};
+
+export const useProductReviewById = (
+  productId: string | null,
+): UseQueryResult<GetProductReviewResponse, Error> => {
+  return useQuery({
+    queryKey: ["productReview", productId],
+    queryFn: () => getProductReview(productId!),
     enabled: !!productId, // Only run query if categoryId exists
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,

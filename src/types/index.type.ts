@@ -591,3 +591,56 @@ export interface ReportStoreResponse {
     updatedAt: string;
   };
 }
+
+// review types
+
+export interface IUser {
+  _id: string;
+  name: string;
+  profilePicture: string;
+}
+
+export interface IProductReview {
+  _id: string;
+  user: IUser;
+  stars: number;
+  description: string;
+  isOwn: boolean;
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+}
+
+export interface IPagination {
+  itemsPerPage: number;
+  currentPage: number;
+  totalItems: number;
+  totalPages: number;
+}
+
+export interface GetProductReviewResponse {
+  success: boolean;
+  message: string;
+  data: IProductReview[];
+  pagination: IPagination;
+}
+
+export interface TimeSlot {
+  label: string; // "02:00 PM - 03:00 PM"
+  startEpoch: number; // unix seconds
+  endEpoch: number;
+  startLabel: string; // "02:00 PM"
+  endLabel: string; // "03:00 PM"
+}
+
+export interface TimeSlotResult {
+  slots: TimeSlot[];
+  totalHours: number;
+  pickupLabel: string;
+  dropOffLabel: string;
+}
+
+export interface AvailabilitySlotsProps {
+  pickupTime?: number | null; // product?.pickupTime  (epoch seconds)
+  dropOffTime?: number | null; // product?.dropOffTime (epoch seconds)
+  onSlotSelect?: (slot: TimeSlot) => void;
+}
