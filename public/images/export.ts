@@ -14,6 +14,7 @@ import Rejected_img from "./rejected_img.png";
 import Submitted_img from "./submitted_img.png";
 import Checkmark_orange from "./checkmark_orange.png";
 import ProductSearch from "./searchImg.png";
+import NoDataFound from "./no_data.png";
 
 export {
   OrangeLogo,
@@ -32,4 +33,5 @@ export {
   Submitted_img,
   Checkmark_orange,
   ProductSearch,
+  NoDataFound,
 };

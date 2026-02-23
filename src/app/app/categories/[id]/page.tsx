@@ -5,19 +5,10 @@ import { ArrowLeft } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import ProductCard from "../../home/_components/product-card";
 import { useAppSelector } from "@/src/lib/store/hooks";
+import { useProducts } from "@/src/lib/api/products";
+import Image from "next/image";
+import { NoDataFound } from "@/public/images/export";
 // import { CATEGORIES } from "../../home/_components/categories";
-
-const dummyProducts = Array.from({ length: 8 }).map((_, i) => ({
-  _id: `p-${i}`,
-  name: `Sample Product ${i + 1}`,
-  cover:
-    "https://rentibles-bucket.s3.us-west-2.amazonaws.com/pictures/37b3c72e-c2df-406f-a433-fe8a6da5b1df.jpg",
-  category: { name: "Sample" },
-  pricePerDay: 20 + i * 5,
-  pricePerHour: 5 + i,
-  productReview: 4.2 + (i % 5) * 0.2,
-  isLiked: i % 2 === 0,
-}));
 
 export default function CategoryDetailsPage() {
   const router = useRouter();
@@ -29,6 +20,8 @@ export default function CategoryDetailsPage() {
   );
 
   const category = CATEGORIES.find((c) => c._id === id) ?? { name: "Category" };
+  const { data, isLoading, isError, error } = useProducts({ categoryId: id });
+  console.log("🚀 ~ CategoryDetailsPage ~ data:", data?.data);
 
   return (
     <div className="min-h-screen bg-background">
@@ -51,11 +44,30 @@ export default function CategoryDetailsPage() {
       </div>
 
       <main className="p-4 md:p-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {dummyProducts.map((p) => (
-            <ProductCard key={p._id} product={p} handleWishlist={() => {}} />
-          ))}
-        </div>
+        <>
+          {data?.data && data.data.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {data?.data?.map((p) => (
+                <ProductCard
+                  key={p._id}
+                  product={p}
+                  handleWishlist={() => {}}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="flex justify-center items-center w-full mt-10">
+              <div className="flex flex-col justify-center items-center">
+                <Image
+                  src={NoDataFound}
+                  alt="Product_Search"
+                  className="w-48"
+                />
+                <p className="text-foreground mt-2">No Products Available</p>
+              </div>
+            </div>
+          )}
+        </>
       </main>
     </div>
   );

@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import Image from "next/image";
-import { ArrowLeft, MapPin, Phone } from "lucide-react";
+import { ArrowLeft, MapPin, Phone, TriangleAlert } from "lucide-react";
 import {
   useParams,
   usePathname,
@@ -11,15 +11,18 @@ import {
 } from "next/navigation";
 import CategoryCard from "../../../home/_components/category-card";
 import ProductCard from "../../../home/_components/product-card";
-// import { CATEGORIES } from "../../../home/_components/categories";
-import Link from "next/link";
-import { useAppSelector } from "@/src/lib/store/hooks";
 import { useStoreById } from "@/src/lib/api/store";
 import { useCategories, useProducts } from "@/src/lib/api/products";
 import { useMutation } from "@tanstack/react-query";
 import { createWishlist } from "@/src/lib/query/queryFn";
 import { getAxiosErrorMessage } from "@/src/utils/errorHandlers";
-import { ErrorToast } from "@/src/components/common/Toaster";
+import { ErrorToast, SuccessToast } from "@/src/components/common/Toaster";
+import { TooltipButton } from "@/src/components/common/TooltipButton";
+import ConfirmationModal from "@/src/components/common/ConfirmationModal";
+import { ReportStoreContent } from "./reportStoreOptions";
+import { ReportStoreConfig } from "@/src/types/index.type";
+import ReportStoreModal from "./ReportStoreModal";
+import { reportStore } from "@/src/lib/api/store";
 
 const StoreDetailsContent = () => {
   const router = useRouter();
@@ -27,6 +30,16 @@ const StoreDetailsContent = () => {
   const pathname = usePathname();
   const params = useParams();
   const storeId = params.id as string;
+
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showReportForm, setShowReportForm] = useState(false);
+  const [coverLoaded, setCoverLoaded] = useState(false);
+  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [currentStore, setCurrentStore] = useState<ReportStoreConfig | null>(
+    null,
+  );
+  console.log("🚀 ~ StoreDetailsContent ~ currentStore:", currentStore);
+  const [isReporting, setIsReporting] = useState(false);
 
   // const { categories } = useAppSelector((state) => state.categories);
 
@@ -50,8 +63,8 @@ const StoreDetailsContent = () => {
     router.replace(url);
   };
 
-  const { data: stores, isLoading, isError, error } = useStoreById(storeId);
-  const { data: products, isLoading: productsLoading } = useProducts(
+  const { data: stores } = useStoreById(storeId);
+  const { data: products } = useProducts(
     {
       storeId,
       categoryId: selectedCategoryId !== "all" ? selectedCategoryId : undefined,
@@ -96,8 +109,48 @@ const StoreDetailsContent = () => {
     });
   };
 
-  const [coverLoaded, setCoverLoaded] = useState(false);
-  const [profileLoaded, setProfileLoaded] = useState(false);
+  const handleSubmitReport = useCallback(
+    async (reasonId: string): Promise<void> => {
+      if (!stores?.data || !reasonId) return;
+
+      setIsReporting(true);
+      try {
+        const payload = {
+          title: reasonId,
+          description: reasonId,
+          storeId: stores.data._id,
+        };
+
+        await reportStore(payload);
+        SuccessToast("Store reported successfully");
+        setShowReportForm(false);
+        setCurrentStore(null);
+      } catch (error) {
+        const message = getAxiosErrorMessage(error || "Failed to report store");
+        ErrorToast(message);
+      } finally {
+        setIsReporting(false);
+      }
+    },
+    [stores?.data],
+  );
+
+  const cancelReport = useCallback(() => {
+    setShowConfirmation(false);
+    setShowReportForm(false);
+    setCurrentStore(null);
+  }, []);
+
+  const handleConfirmReport = useCallback(() => {
+    setShowConfirmation(false);
+    setShowReportForm(true);
+    if (stores?.data) {
+      setCurrentStore({
+        storeId: stores.data._id,
+        storeName: stores.data.name,
+      });
+    }
+  }, [stores?.data]);
 
   return (
     <div className="">
@@ -123,6 +176,7 @@ const StoreDetailsContent = () => {
           </div>
 
           <button
+            type="button"
             onClick={() => router.back()}
             className="absolute left-4 top-4 z-40 bg-white/20 backdrop-blur-sm text-white p-2 rounded-md"
             aria-label="Back"
@@ -133,6 +187,13 @@ const StoreDetailsContent = () => {
           <h2 className="absolute left-1/2 -translate-x-1/2 top-4 text-white text-xl font-semibold">
             Store Details
           </h2>
+          <div className="absolute right-8 top-4 z-50">
+            <TooltipButton
+              icon={<TriangleAlert className="w-5 h-5" />}
+              tooltip="Report store"
+              onClick={() => setShowConfirmation(true)}
+            />
+          </div>
 
           <div className="relative z-20 h-full flex-1 flex flex-col justify-end p-5">
             <div className="flex items-center gap-5 text-white">
@@ -224,6 +285,31 @@ const StoreDetailsContent = () => {
           </div>
         </div>
       </div>
+
+      <ConfirmationModal
+        isOpen={showConfirmation}
+        onClose={cancelReport}
+        onConfirm={handleConfirmReport}
+        title="Report Store"
+        message={`Are you sure you want to report ${stores?.data?.name}?`}
+        confirmText="Yes, Continue"
+        cancelText="Cancel"
+        type="danger"
+        isDangerous={false}
+        showIcon={true}
+      />
+      {currentStore && (
+        <ReportStoreModal
+          isOpen={showReportForm}
+          onClose={cancelReport}
+          onSubmit={handleSubmitReport}
+          storeId={currentStore.storeId}
+          storeName={currentStore.storeName}
+          isLoading={isReporting}
+          title="Report Reasons"
+          reasons={ReportStoreContent}
+        />
+      )}
     </div>
   );
 };

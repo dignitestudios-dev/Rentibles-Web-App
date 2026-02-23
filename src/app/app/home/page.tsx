@@ -1,4 +1,4 @@
-import React from "react";
+import React, { Suspense } from "react";
 import LocationAndSearch from "./_components/location-and-search";
 import Stores from "./_components/stores";
 import Categories from "./_components/categories";
@@ -10,7 +10,9 @@ const Home = () => {
       <LocationAndSearch />
       <Stores />
       <Categories />
-      <Products />
+      <Suspense fallback={<div>Loading...</div>}>
+        <Products />
+      </Suspense>
     </main>
   );
 };

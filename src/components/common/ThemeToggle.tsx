@@ -28,11 +28,11 @@ const ThemeToggle = () => {
       className="p-2"
     >
       {theme === "light" ? (
-        <Sun className="h-5 w-5" />
+        <Sun className="h-6 w-6" />
       ) : theme === "dark" ? (
-        <Moon className="h-5 w-5" />
+        <Moon className="h-6 w-6" />
       ) : (
-        <Monitor className="h-5 w-5" />
+        <Monitor className="h-6 w-6" />
       )}
     </Button>
   );

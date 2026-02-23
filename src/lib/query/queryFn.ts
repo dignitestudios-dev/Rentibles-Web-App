@@ -11,6 +11,7 @@ import {
   GetCategoriesParams,
   GetCategoriesResponse,
   GetProductByIdResponse,
+  GetProductReviewResponse,
   GetProductsParams,
   GetProductsResponse,
   GetStoresParams,
@@ -203,6 +204,13 @@ export const getProductById = async (
   const { data } = await axiosInstance.get(
     `/product/${categoryId}?longitude=123&latitude=123`,
   );
+  return data;
+};
+
+export const getProductReview = async (
+  productId: string,
+): Promise<GetProductReviewResponse> => {
+  const { data } = await axiosInstance.get(`/review?productId=${productId}`);
   return data;
 };
 

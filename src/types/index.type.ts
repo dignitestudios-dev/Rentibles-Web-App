@@ -7,7 +7,6 @@ export interface SupportTicketResponse {
   success: boolean;
   message: string;
 }
-import { store } from "./../lib/store/index";
 export type RegisterPayload = {
   fullName: string;
   image: FileList;
@@ -358,6 +357,11 @@ export interface GetSubCategoriesResponse {
 
 // store type defined
 
+export interface ReportStoreConfig {
+  storeId: string;
+  storeName?: string;
+}
+
 export interface Stores {
   _id: string;
   name: string;
@@ -585,6 +589,119 @@ export interface GetStoreByIdResponse {
     zipCode?: number;
     location?: Location;
   };
+}
+
+// Notifications
+export interface NotificationMetaData {
+  type?: string;
+  product?: {
+    _id: string;
+    name?: string;
+    cover?: string;
+  };
+  user?: {
+    _id: string;
+    name?: string;
+    profilePicture?: string;
+  };
+  booking?: Record<string, unknown> | null;
+}
+
+export interface Notification {
+  _id: string;
+  title: string;
+  description?: string;
+  metaData?: NotificationMetaData;
+  isRead?: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NotificationsPagination {
+  itemsPerPage: number;
+  currentPage: number;
+  totalItems: number;
+  totalPages: number;
+}
+
+export interface GetNotificationsResponse {
+  success: boolean;
+  message: string;
+  data: Notification[];
+  unreadCount?: number;
+  pagination: NotificationsPagination;
+}
+
+export interface ReportStorePayload {
+  title: string;
+  description: string;
+  storeId: string;
+}
+
+export interface ReportStoreResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    _id: string;
+    title: string;
+    description: string;
+    storeId: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+}
+
+// review types
+
+export interface IUser {
+  _id: string;
+  name: string;
+  profilePicture: string;
+}
+
+export interface IProductReview {
+  _id: string;
+  user: IUser;
+  stars: number;
+  description: string;
+  isOwn: boolean;
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+}
+
+export interface IPagination {
+  itemsPerPage: number;
+  currentPage: number;
+  totalItems: number;
+  totalPages: number;
+}
+
+export interface GetProductReviewResponse {
+  success: boolean;
+  message: string;
+  data: IProductReview[];
+  pagination: IPagination;
+}
+
+export interface TimeSlot {
+  label: string; // "02:00 PM - 03:00 PM"
+  startEpoch: number; // unix seconds
+  endEpoch: number;
+  startLabel: string; // "02:00 PM"
+  endLabel: string; // "03:00 PM"
+}
+
+export interface TimeSlotResult {
+  slots: TimeSlot[];
+  totalHours: number;
+  pickupLabel: string;
+  dropOffLabel: string;
+}
+
+export interface AvailabilitySlotsProps {
+  pickupTime?: number | null; // product?.pickupTime  (epoch seconds)
+  dropOffTime?: number | null; // product?.dropOffTime (epoch seconds)
+  onSlotSelect?: (slot: TimeSlot) => void;
 }
 
 // Settings
