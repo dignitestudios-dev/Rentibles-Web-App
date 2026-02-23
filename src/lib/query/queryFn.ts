@@ -18,6 +18,13 @@ import {
   GetSubCategoriesResponse,
   GetUserParams,
   GetUserResponse,
+  GetUserProfileResponse,
+  GetWishlistResponse,
+  GetBalanceResponse,
+  GetPayoutsResponse,
+  GetBankResponse,
+  WithdrawalPayload,
+  WithdrawalResponse,
   LoginPayload,
   LoginResponse,
   NewPasswordPayload,
@@ -191,9 +198,48 @@ export const getProductReview = async (
   return data;
 };
 
+// wishlist
+export const getWishlist = async (): Promise<GetWishlistResponse> => {
+  const { data } = await axiosInstance.get("/wishlist");
+  return data;
+};
+
+export const getBalance = async (): Promise<GetBalanceResponse> => {
+  const { data } = await axiosInstance.get("/balance");
+  return data;
+};
+
+export const getPayouts = async (params?: {
+  startDate?: number;
+  endDate?: number;
+  threshold?: number;
+}): Promise<GetPayoutsResponse> => {
+  const { data } = await axiosInstance.get("/balance/payouts", { params });
+  return data;
+};
+
 //users
 export const getUsers = async (): Promise<GetCategoriesResponse> => {
   const { data } = await axiosInstance.get("/user/all");
+  return data;
+};
+
+export const getUserById = async (
+  userId: string,
+): Promise<GetUserProfileResponse> => {
+  const { data } = await axiosInstance.get(`/user?userId=${userId}`);
+  return data;
+};
+
+export const getBank = async (): Promise<GetBankResponse> => {
+  const { data } = await axiosInstance.get("/balance/bank");
+  return data;
+};
+
+export const createWithdrawal = async (
+  payload: WithdrawalPayload,
+): Promise<WithdrawalResponse> => {
+  const { data } = await axiosInstance.post("/balance", payload);
   return data;
 };
 

@@ -11,6 +11,7 @@ import {
   getProductsWithParams,
   getStoresWithParams,
   getSubCategories,
+  getWishlist,
 } from "../query/queryFn";
 import {
   GetCategoriesResponse,
@@ -21,6 +22,7 @@ import {
   GetStoresParams,
   GetStoresResponse,
   GetSubCategoriesResponse,
+  GetWishlistResponse,
 } from "@/src/types/index.type";
 
 export const useCategories = (): UseQueryResult<
@@ -104,6 +106,15 @@ export const useProductReviewById = (
     queryKey: ["productReview", productId],
     queryFn: () => getProductReview(productId!),
     enabled: !!productId, // Only run query if categoryId exists
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+  });
+};
+
+export const useWishlist = (): UseQueryResult<GetWishlistResponse, Error> => {
+  return useQuery({
+    queryKey: ["wishlist"],
+    queryFn: getWishlist,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });

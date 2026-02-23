@@ -1,12 +1,6 @@
 "use client";
 
-export default function Loader({
-  show,
-  
-}: {
-  show: boolean;
-
-}) {
+export default function Loader({ show }: { show: boolean }) {
   if (!show) return null;
 
   return (

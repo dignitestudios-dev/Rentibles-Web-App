@@ -149,3 +149,26 @@ export function generateTimeSlots(
     dropOffLabel: epochToTimeLabel(dropOffEpoch),
   };
 }
+
+export const formatUSAPhoneNumber = (
+  phoneNumber: string | undefined,
+): string => {
+  if (!phoneNumber) return "";
+
+  // Remove all non-digit characters
+  const cleaned = phoneNumber.replace(/\D/g, "");
+
+  // Check if valid USA phone number (10 or 11 digits)
+  if (cleaned.length === 10) {
+    // Format: (347)674-6098
+    return `(${cleaned.slice(0, 3)})${cleaned.slice(3, 6)}-${cleaned.slice(6)}`;
+  }
+
+  if (cleaned.length === 11 && cleaned[0] === "1") {
+    // Format: +1(347)674-6098
+    return `+1(${cleaned.slice(1, 4)})${cleaned.slice(4, 7)}-${cleaned.slice(7)}`;
+  }
+
+  // Return original if invalid
+  return phoneNumber;
+};
