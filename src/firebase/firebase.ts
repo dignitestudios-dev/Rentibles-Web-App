@@ -13,13 +13,23 @@ import { getMessaging, type Messaging } from "firebase/messaging";
  * Firebase config
  */
 const firebaseConfig = {
-  apiKey: "AIzaSyD7uMP3e_Jxw3xSUdOPFcFC8kHB49ThAy4",
-  authDomain: "rentibles-app.firebaseapp.com",
-  projectId: "rentibles-app",
-  storageBucket: "rentibles-app.firebasestorage.app",
-  messagingSenderId: "366992554576",
-  appId: "1:366992554576:web:070673a15453be3e1eef55",
-  measurementId: "G-HL3045S1RH",
+  apiKey:
+    process.env.NEXT_PUBLIC_FIREBASE_API_KEY ||
+    "AIzaSyD7uMP3e_Jxw3xSUdOPFcFC8kHB49ThAy4",
+  authDomain:
+    process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN ||
+    "rentibles-app.firebaseapp.com",
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "rentibles-app",
+  storageBucket:
+    process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET ||
+    "rentibles-app.firebasestorage.app",
+  messagingSenderId:
+    process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "366992554576",
+  appId:
+    process.env.NEXT_PUBLIC_FIREBASE_APP_ID ||
+    "1:366992554576:web:070673a15453be3e1eef55",
+  measurementId:
+    process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-HL3045S1RH",
 };
 
 /**

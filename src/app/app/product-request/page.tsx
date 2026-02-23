@@ -37,7 +37,7 @@ const ProductRequestsScreen = () => {
     <div className="bg-background flex flex-col">
       <Loader show={isLoading || deleteProductRequestMutation.isPending} />
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-background border-b border-border">
+      <div className="sticky top-22.75 z-40 bg-background border-b border-border">
         <div className="flex items-center justify-between px-4 py-4">
           <Link
             href="/app/home"
@@ -59,7 +59,7 @@ const ProductRequestsScreen = () => {
       </div>
 
       {/* Requests List */}
-      <div className="flex-1 flex flex-col items-center justify-start px-4 pt-8">
+      <div className="flex-1 flex flex-col items-center justify-start px-4 pt-8 pb-5">
         {productRequests.length === 0 ? (
           <div className="bg-card rounded-xl shadow-md p-12 text-center border border-border w-full max-w-md mt-16">
             <div className="w-20 h-20 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">

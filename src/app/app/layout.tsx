@@ -15,7 +15,7 @@ const AppLayout = ({
       {/* <IdentityRoute> */}
       <ProtectedRoute>
         <LocationPermission />
-        <div className="px-4 sm:px-6 md:px-10 pb-5">
+        <div className="px-4 sm:px-6 md:px-10">
           <AppNavbar />
           {children}
         </div>
