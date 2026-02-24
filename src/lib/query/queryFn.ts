@@ -47,7 +47,6 @@ import {
   AddCardPayload,
   AddCardResponse,
   DeleteCardResponse,
-  GetBankResponse,
   AddBankPayload,
   AddBankResponse,
   DeleteBankResponse,
@@ -336,12 +335,6 @@ export const addCard = async (
 
 export const deleteCard = async (id: string): Promise<DeleteCardResponse> => {
   const { data } = await axiosInstance.delete(`/user/card/${id}`);
-  return data;
-};
-
-// banks
-export const getBank = async (): Promise<GetBankResponse> => {
-  const { data } = await axiosInstance.get("/balance/bank");
   return data;
 };
 
