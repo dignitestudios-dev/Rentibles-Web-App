@@ -7,9 +7,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Check, CheckCircle2, Download } from "lucide-react";
+import { Check } from "lucide-react";
 import { formatDateToMMDDYYYY } from "@/src/utils/helperFunctions";
 import { WithdrawalDetails } from "@/src/types/index.type";
+import { ErrorToast } from "@/src/components/common/Toaster";
+import { generateWithdrawalPDF } from "../_components/PdfWithDrawal";
 
 interface WithdrawalDetailsModalProps {
   isOpen: boolean;
@@ -22,10 +24,15 @@ const WithdrawalDetailsModal: React.FC<WithdrawalDetailsModalProps> = ({
   onClose,
   details,
 }) => {
-  const handleDownloadPDF = () => {
-    console.log("Downloading PDF for reference:", details?.referenceId);
-    // Implement PDF download logic here
-    alert(`Downloading receipt for ${details?.referenceId}`);
+  const handleDownloadPDF = async () => {
+    if (details) {
+      try {
+        await generateWithdrawalPDF(details);
+      } catch (error) {
+        console.error("Failed to download PDF:", error);
+        ErrorToast("Failed to generate PDF");
+      }
+    }
   };
 
   if (!details) return null;
@@ -42,7 +49,7 @@ const WithdrawalDetailsModal: React.FC<WithdrawalDetailsModalProps> = ({
           </div>
 
           {/* Modal Title */}
-          <DialogTitle className="text-center text-xl sm:text-2xl font-bold text-gray-900">
+          <DialogTitle className="text-center text-xl sm:text-2xl font-bold text-foreground">
             Withdrawal Successful!
           </DialogTitle>
         </DialogHeader>
@@ -50,8 +57,8 @@ const WithdrawalDetailsModal: React.FC<WithdrawalDetailsModalProps> = ({
         {/* Details Section */}
         <div className="space-y-4 mt-6">
           {/* Withdrawal Amount */}
-          <div className="bg-gray-50 rounded-lg p-4 text-center">
-            <p className=" text-gray-600 mb-1">Amount Withdraw</p>
+          <div className="bg-card rounded-lg p-4 text-center">
+            <p className=" text-foreground/60 mb-1">Amount Withdraw</p>
             <p className="text-2xl sm:text-3xl text-primary font-semibold">
               USD ${details.amount}
             </p>
@@ -59,32 +66,31 @@ const WithdrawalDetailsModal: React.FC<WithdrawalDetailsModalProps> = ({
 
           {/* Reference ID */}
           <div className=" pb-3 text-center">
-            <p className="text-sm text-gray-600 mb-1">Reference ID</p>
-            <p className="text-base font-semibold text-gray-900 font-mono">
+            <p className="text-sm text-foreground/60 mb-1">Reference ID</p>
+            <p className="text-base font-semibold text-foreground font-mono">
               {details.referenceId}
             </p>
           </div>
 
           {/* Date */}
           <div className="pb-3 text-center">
-            <p className="text-sm text-gray-600 mb-1">Date</p>
-            <p className="text-base font-semibold text-gray-900">
-              {/* {formatDateToMMDDYYYY(details.date)} */}
-              {details.date}
+            <p className="text-sm text-foreground/60 mb-1">Date</p>
+            <p className="text-base font-semibold text-foreground">
+              {formatDateToMMDDYYYY(details.date)}
             </p>
           </div>
 
           {/* Description */}
           <div className="pb-3 text-center">
-            <p className="text-sm text-gray-600 mb-1">Description</p>
-            <p className="text-base text-gray-900">{details.description}</p>
+            <p className="text-sm text-foreground/60 mb-1">Description</p>
+            <p className="text-base text-foreground">{details.description}</p>
           </div>
 
           {/* Download PDF Button */}
           <div className="pt-2">
             <Button
               onClick={handleDownloadPDF}
-              className="w-full bg-primary hover:bg-primary/80 text-white font-semibold py-6 rounded-lg transition-all active:scale-95"
+              className="w-full bg-primary hover:bg-primary/80  font-semibold py-6 rounded-lg transition-all active:scale-95"
             >
               Download PDF
             </Button>

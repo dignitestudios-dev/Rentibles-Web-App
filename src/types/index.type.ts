@@ -192,6 +192,72 @@ export interface Balance {
   currency: string;
 }
 
+export interface BalanceAmount {
+  amount: number;
+  currency: string;
+}
+
+export interface GetBalanceResponse {
+  success: boolean;
+  message: string;
+  data: {
+    availableBalance: BalanceAmount;
+    pendingBalance: BalanceAmount;
+    instantAvailable: BalanceAmount;
+  };
+}
+
+export interface Payout {
+  _id: string;
+  amount: number;
+  currency: string;
+  status: string;
+  method: string;
+  date: number; // epoch seconds
+  bankName?: string | null;
+  accountHolderName?: string | null;
+  accountNumber?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GetPayoutsResponse {
+  success: boolean;
+  message: string;
+  data: Payout[];
+}
+
+export interface BankDetails {
+  country: string;
+  currency: string;
+  last4: string;
+  status: string;
+}
+
+export interface GetBankResponse {
+  success: boolean;
+  message: string;
+  data: BankDetails;
+}
+
+export interface WithdrawalPayload {
+  amount: number;
+}
+
+export interface WithdrawalResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    _id?: string;
+    amount: number;
+    currency: string;
+    status: string;
+    date: number;
+    createdAt: string;
+    updatedAt: string;
+  };
+}
+
 export enum TransactionStatus {
   COMPLETED = "completed",
   PENDING = "pending",
@@ -421,6 +487,7 @@ export interface GetProductsParams {
   search?: string;
   storeId?: string;
   categoryId?: string;
+  userId?: string;
 }
 
 export interface GetProductsResponse {
@@ -571,6 +638,41 @@ export interface GetUserResponse {
   }[];
 }
 
+// Response type: single user profile object
+export interface GetUserProfileResponse {
+  success: boolean;
+  message: string;
+  data: {
+    _id: string;
+    name: string;
+    email: string;
+    profilePicture: string;
+    phone: string;
+    country: string;
+    address: string;
+    apartment: string;
+    city: string;
+    state: string;
+    zipCode: number;
+    location: {
+      type: string;
+      coordinates: [number, number];
+    };
+    identityStatus: "not-provided" | "pending" | "approved" | "rejected";
+    isEmailVerified: boolean;
+    isPhoneVerified: boolean;
+    isProfileCompleted: boolean;
+    stripeProfileStatus: string;
+    stripeAccountId: string;
+    idFrontImage: string | null;
+    idBackImage: string | null;
+    isOwn: boolean;
+    createdAt: string;
+    updatedAt: string;
+    hasPurchased: boolean;
+  };
+}
+
 export interface GetStoreByIdResponse {
   success: boolean;
   message: string;
@@ -702,6 +804,13 @@ export interface AvailabilitySlotsProps {
   pickupTime?: number | null; // product?.pickupTime  (epoch seconds)
   dropOffTime?: number | null; // product?.dropOffTime (epoch seconds)
   onSlotSelect?: (slot: TimeSlot) => void;
+}
+
+// wishlist types
+export interface GetWishlistResponse {
+  success: boolean;
+  message: string;
+  data: Products[];
 }
 
 // Settings

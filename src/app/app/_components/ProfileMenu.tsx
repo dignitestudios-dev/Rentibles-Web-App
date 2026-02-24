@@ -16,6 +16,7 @@ import { logout } from "../../../lib/store/feature/authSlice";
 import { useAppDispatch, useAppSelector } from "../../../lib/store/hooks";
 import { UserProfile } from "@/public/images/export";
 import { ChevronDown } from "lucide-react";
+import { useRouter } from "next/navigation";
 // import { useMounted } from "@/src/utils/helperFunctions";
 
 const NAV_LINKS = [
@@ -30,6 +31,7 @@ const NAV_LINKS = [
 
 const ProfileMenu = () => {
   // const mounted = useMounted();
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const authState = useAppSelector((state: RootState) => state.auth);
   const { user, isAuthenticated } = authState;
@@ -81,11 +83,14 @@ const ProfileMenu = () => {
                 className="rounded-full"
               />
             )}
-            <div>
+            <div
+              // onClick={() => router.push("/app/users")}
+              className="cursor-pointer"
+            >
               <p className="text-sm font-medium text-foreground">{user.name}</p>
               <p className="text-xs text-muted-foreground">{user.email}</p>
             </div>
-            <ChevronDown className="w-4 h-4" />
+            {/* <ChevronDown className="w-4 h-4" /> */}
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
