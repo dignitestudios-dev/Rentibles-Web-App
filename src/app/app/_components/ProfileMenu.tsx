@@ -84,7 +84,7 @@ const ProfileMenu = () => {
               />
             )}
             <div
-              // onClick={() => router.push("/app/users")}
+              onClick={() => router.push(`/app/users/${user._id}`)}
               className="cursor-pointer"
             >
               <p className="text-sm font-medium text-foreground">{user.name}</p>

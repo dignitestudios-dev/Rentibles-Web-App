@@ -5,6 +5,7 @@ import { ErrorToast } from "@/src/components/common/Toaster";
 
 type CoverImageInputProps = {
   value?: File | null;
+  prefilledImage?: string; // URL from backend
   onChange: (file: File | null) => void;
   error?: string;
   maxSizeMB?: number;
@@ -14,27 +15,41 @@ const VALID_TYPES = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
 
 export const CoverImageInput: React.FC<CoverImageInputProps> = ({
   value,
+  prefilledImage,
   onChange,
   error,
   maxSizeMB = 5,
 }) => {
-  const [preview, setPreview] = React.useState<string | null>(null);
+  const [preview, setPreview] = React.useState<{
+    type: "file" | "url";
+    data: string;
+  } | null>(null);
+  const [showNewUploadOption, setShowNewUploadOption] = React.useState(false);
 
   // Sync preview when value changes (edit mode support)
+  // Handles both prefilled images and new file uploads
   React.useEffect(() => {
-    if (!value) {
-      if (preview) URL.revokeObjectURL(preview);
+    if (!value && !prefilledImage) {
+      if (preview && preview.type === "file") {
+        URL.revokeObjectURL(preview.data);
+      }
       setPreview(null);
       return;
     }
 
-    const url = URL.createObjectURL(value);
-    setPreview(url);
+    // If new file uploaded, use that
+    if (value) {
+      const url = URL.createObjectURL(value);
+      setPreview({ type: "file", data: url });
+      return;
+    }
 
-    return () => {
-      URL.revokeObjectURL(url);
-    };
-  }, [value]);
+    // Otherwise use prefilled image
+    if (prefilledImage) {
+      setPreview({ type: "url", data: prefilledImage });
+      return;
+    }
+  }, [value, prefilledImage]);
 
   const handleUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -55,17 +70,20 @@ export const CoverImageInput: React.FC<CoverImageInputProps> = ({
 
     onChange(file);
     event.target.value = "";
+    setShowNewUploadOption(false);
   };
 
-  const removeImage = () => {
+  const replaceImage = () => {
+    // User can replace prefilled image with new upload
     onChange(null);
+    setShowNewUploadOption(true);
   };
 
   React.useEffect(() => {
     return () => {
-      // Cleanup cover image preview
-      if (preview) {
-        URL.revokeObjectURL(preview);
+      // Cleanup file preview only (not backend URLs)
+      if (preview && preview.type === "file") {
+        URL.revokeObjectURL(preview.data);
       }
     };
   }, []);
@@ -87,28 +105,24 @@ export const CoverImageInput: React.FC<CoverImageInputProps> = ({
           }
         `}
       >
-        {preview ? (
+        {preview && !showNewUploadOption ? (
           <div className="relative w-full h-full group">
             <img
-              src={preview}
+              src={preview.data}
               alt="Cover preview"
               className="w-full h-full object-cover"
             />
 
-            {/* Remove button */}
-            <div className="absolute inset-0 flex items-center justify-center">
+            {/* Action buttons */}
+            <div className="absolute inset-0 flex items-center justify-center gap-3">
               <button
                 type="button"
-                onClick={removeImage}
-                className="opacity-0 group-hover:opacity-100 bg-red-500 hover:bg-red-600 text-white rounded-full p-3 shadow-lg transition"
+                onClick={replaceImage}
+                className="opacity-0 group-hover:opacity-100 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-3 shadow-lg transition px-4 text-sm font-medium"
+                title="Replace with new image"
               >
-                <X className="h-5 w-5" />
+                Replace
               </button>
-            </div>
-
-            {/* Badge */}
-            <div className="absolute top-3 left-3 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-semibold shadow-lg">
-              Cover Image
             </div>
           </div>
         ) : (
@@ -125,7 +139,11 @@ export const CoverImageInput: React.FC<CoverImageInputProps> = ({
               className="flex flex-col items-center justify-center w-full h-full cursor-pointer"
             >
               <Camera size={36} />
-              <p className="mt-3 font-medium">Upload Cover Image</p>
+              <p className="mt-3 font-medium">
+                {showNewUploadOption
+                  ? "Upload New Cover Image"
+                  : "Upload Cover Image"}
+              </p>
               <p className="text-xs mt-1 opacity-70">PNG, JPG, JPEG or WEBP</p>
             </label>
           </>

@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Heart, Star, ChevronRight } from "lucide-react";
+import { Heart, Star, ChevronRight, Ellipsis } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { ProductActionsDropdown } from "./product-actions-dropdown";
 
 type Product = {
   _id?: string;
@@ -12,6 +13,7 @@ type Product = {
   pricePerHour?: number;
   productReview?: number;
   isLiked?: boolean;
+  isActive?: boolean;
 };
 
 interface ProductCardProps {
@@ -19,6 +21,7 @@ interface ProductCardProps {
   handleWishlist: () => void;
   isLiked?: boolean;
   isLoading?: boolean;
+  isUser?: boolean;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
@@ -26,6 +29,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   handleWishlist,
   isLiked: externalIsLiked,
   isLoading = false,
+  isUser = false,
 }) => {
   const cover = product?.cover ?? "";
   const name = product?.name ?? "Product Name";
@@ -52,6 +56,11 @@ const ProductCard: React.FC<ProductCardProps> = ({
           {!imgLoaded && (
             <div className="absolute inset-0 bg-card animate-pulse z-10" />
           )}
+          {product?.isActive === false && (
+            <div className="absolute inset-0 bg-gray-400 bg-opacity-50 z-20 flex items-center justify-center">
+              <span className="text-white text-lg font-semibold">Inactive</span>
+            </div>
+          )}
 
           <Image
             src={cover}
@@ -67,18 +76,22 @@ const ProductCard: React.FC<ProductCardProps> = ({
             <span className="font-semibold">{review}</span>
           </div>
 
-          <button
-            type="button"
-            onClick={handleWishlistClick}
-            disabled={isLoading}
-            className="absolute top-3 right-3 bg-white rounded-md p-2 shadow flex items-center justify-center z-20 hover:shadow-md transition-shadow disabled:opacity-50"
-          >
-            <Heart
-              className={`w-5 h-5 transition-colors ${
-                liked ? "text-red-500 fill-red-500" : "text-gray-400"
-              }`}
-            />
-          </button>
+          {isUser ? (
+            product && <ProductActionsDropdown product={product} />
+          ) : (
+            <button
+              type="button"
+              onClick={handleWishlistClick}
+              disabled={isLoading}
+              className="absolute top-3 right-3 bg-white rounded-md p-2 shadow flex items-center justify-center z-20 hover:shadow-md transition-shadow disabled:opacity-50"
+            >
+              <Heart
+                className={`w-5 h-5 transition-colors ${
+                  liked ? "text-red-500 fill-red-500" : "text-gray-400"
+                }`}
+              />
+            </button>
+          )}
         </div>
 
         <h3 className="mt-4 text-2xl font-bold">{name}</h3>

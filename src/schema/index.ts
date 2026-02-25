@@ -197,3 +197,150 @@ export const createProductSchema = z.object({
 });
 
 export type CreateProductPayload = z.infer<typeof createProductSchema>;
+
+export const updateProductSchema = z
+  .object({
+    productName: z
+      .string()
+      .min(3, { message: "Product name must be at least 3 characters" })
+      .trim(),
+
+    description: z
+      .string()
+      .min(10, { message: "Description must be at least 10 characters" })
+      .trim(),
+
+    quantity: z
+      .string()
+      .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+        message: "Quantity must be a positive number",
+      }),
+
+    hourlyPrice: z
+      .string()
+      .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+        message: "Hourly price must be a positive number",
+      }),
+
+    dailyPrice: z
+      .string()
+      .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+        message: "Daily price must be a positive number",
+      }),
+
+    pickupTime: z.string().min(1, { message: "Pickup time is required" }),
+
+    dropOffTime: z.string().min(1, { message: "Drop-off time is required" }),
+
+    // ✅ NEW: Flexible image validation
+    // Can be empty array - existing images will satisfy the requirement
+    images: z
+      .array(
+        z.instanceof(File, {
+          message: "Each image must be a valid file",
+        }),
+      )
+      .max(10, { message: "Maximum 10 images allowed" })
+      // we always want an array in the output, even if the user uploads nothing
+      // the default ensures the form value is `File[]` instead of `File[] | undefined`
+      .default([]),
+
+    // ✅ NEW: Track remaining prefilled images (URLs)
+    // These are the images that user kept from the original product
+    existingPictures: z
+      .array(z.string().url({ message: "Invalid image URL" }))
+      // default to an empty array so the inferred TypeScript type is string[]
+      .default([]),
+
+    // ✅ NEW: Optional cover image (only if user changes it)
+    // If not provided, the existing cover image is kept
+    coverImage: z
+      .instanceof(File, {
+        message: "Cover image must be a valid file",
+      })
+      .refine((file) => file.size > 0, { message: "Cover image is required" })
+      .refine(
+        (file) => ["image/jpeg", "image/png", "image/webp"].includes(file.type),
+        { message: "Cover image must be JPEG, PNG, or WebP" },
+      )
+      .optional()
+      .nullable(),
+
+    category: z.string().min(1, { message: "Category is required" }).optional(),
+
+    subCategory: z
+      .string()
+      .min(1, { message: "Sub-category is required" })
+      .optional(),
+
+    availableDays: z
+      .array(z.string())
+      .min(1, { message: "At least one day must be selected" })
+      .optional(),
+
+    location: z
+      .object({
+        lat: z
+          .number()
+          .min(-90, { message: "Invalid latitude" })
+          .max(90, { message: "Invalid latitude" }),
+        lng: z
+          .number()
+          .min(-180, { message: "Invalid longitude" })
+          .max(180, { message: "Invalid longitude" }),
+        address: z.string().optional(),
+        city: z.string().optional(),
+        state: z.string().optional(),
+        country: z.string().optional(),
+      })
+      .refine(
+        (location) => {
+          return (
+            location.lat !== 0 &&
+            location.lng !== 0 &&
+            !isNaN(location.lat) &&
+            !isNaN(location.lng) &&
+            location.lat >= -90 &&
+            location.lat <= 90 &&
+            location.lng >= -180 &&
+            location.lng <= 180
+          );
+        },
+        {
+          message:
+            "Location is required. Please select a valid address on the map.",
+        },
+      )
+      .optional(),
+  })
+  // ✅ Main validation: Total images (existing + new) must be at least 4
+  .refine(
+    (data) => {
+      const existingCount = data.existingPictures?.length || 0;
+      const newCount = data.images?.length || 0;
+      const totalImages = existingCount + newCount;
+
+      return totalImages >= 4;
+    },
+    {
+      message:
+        "Total images must be at least 4. Current: existing images + new uploads.",
+      path: ["images"], // Error will be associated with 'images' field
+    },
+  )
+  // ✅ Secondary validation: Maximum 10 total images
+  .refine(
+    (data) => {
+      const existingCount = data.existingPictures?.length || 0;
+      const newCount = data.images?.length || 0;
+      const totalImages = existingCount + newCount;
+
+      return totalImages <= 10;
+    },
+    {
+      message: "Total images cannot exceed 10.",
+      path: ["images"], // Error will be associated with 'images' field
+    },
+  );
+
+export type UpdateProductPayload = z.infer<typeof updateProductSchema>;

@@ -5,36 +5,80 @@ import { ErrorToast } from "@/src/components/common/Toaster";
 
 type ProductImagesInputProps = {
   value?: File[];
+  prefilledImages?: string[]; // URLs from backend
   onChange: (images: File[]) => void;
+  onRemainingImages?: (remainingUrls: string[]) => void; // Track remaining prefilled images
   error?: string;
   maxImages?: number;
 };
 
 const VALID_TYPES = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
 
+interface ImagePreview {
+  type: "file" | "url";
+  data: string;
+  sourceUrl?: string; // Original URL for prefilled images
+}
+
 export const ProductImagesInput: React.FC<ProductImagesInputProps> = ({
   value = [],
+  prefilledImages = [],
   onChange,
+  onRemainingImages,
   error,
   maxImages = 10,
 }) => {
-  const [imagePreviews, setImagePreviews] = React.useState<string[]>([]);
+  const [imagePreviews, setImagePreviews] = React.useState<ImagePreview[]>([]);
+  const [removedPrefilled, setRemovedPrefilled] = React.useState<string[]>([]); // Track removed prefilled image URLs
 
-  // Sync previews when value changes (important for edit forms)
+  // Sync previews and notify parent about remaining images
   React.useEffect(() => {
-    const previews = value.map((file) => URL.createObjectURL(file));
+    const previews: ImagePreview[] = [];
+
+    // Add prefilled images (from backend) - except removed ones
+    prefilledImages.forEach((url) => {
+      if (!removedPrefilled.includes(url)) {
+        previews.push({ type: "url", data: url, sourceUrl: url });
+      }
+    });
+
+    // Add new file uploads
+    value.forEach((file) => {
+      const fileUrl = URL.createObjectURL(file);
+      previews.push({ type: "file", data: fileUrl });
+    });
+
     setImagePreviews(previews);
 
+    // Notify parent about remaining prefilled images
+    const remainingPrefilled = prefilledImages.filter(
+      (url) => !removedPrefilled.includes(url),
+    );
+    if (onRemainingImages) {
+      onRemainingImages(remainingPrefilled);
+    }
+
     return () => {
-      previews.forEach((url) => URL.revokeObjectURL(url));
+      previews.forEach((preview) => {
+        if (preview.type === "file") {
+          URL.revokeObjectURL(preview.data);
+        }
+      });
     };
-  }, [value]);
+  }, [value, prefilledImages]);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
 
-    if (value.length + files.length > maxImages) {
-      ErrorToast(`Maximum ${maxImages} images allowed`);
+    // Calculate total: remaining prefilled + new uploads + new files
+    const remainingPrefilledCount =
+      prefilledImages.length - removedPrefilled.length;
+    const totalImages = remainingPrefilledCount + value.length + files.length;
+
+    if (totalImages > maxImages) {
+      ErrorToast(
+        `Maximum ${maxImages} images allowed. Current: ${remainingPrefilledCount + value.length}`,
+      );
       event.target.value = "";
       return;
     }
@@ -54,18 +98,37 @@ export const ProductImagesInput: React.FC<ProductImagesInputProps> = ({
   };
 
   const removeImage = (index: number) => {
-    const updatedImages = value.filter((_, i) => i !== index);
+    const remainingPrefilled = prefilledImages.filter(
+      (url) => !removedPrefilled.includes(url),
+    );
+    const prefilledCount = remainingPrefilled.length;
 
-    URL.revokeObjectURL(imagePreviews[index]);
+    // If removing a prefilled image
+    if (index < prefilledCount) {
+      const urlToRemove = remainingPrefilled[index];
+      setRemovedPrefilled([...removedPrefilled, urlToRemove]);
+      return;
+    }
+
+    // If removing a newly uploaded image
+    const newImageIndex = index - prefilledCount;
+    const updatedImages = value.filter((_, i) => i !== newImageIndex);
     onChange(updatedImages);
   };
 
   React.useEffect(() => {
     return () => {
       // Cleanup product images previews
-      imagePreviews.forEach((preview) => URL.revokeObjectURL(preview));
+      imagePreviews.forEach((preview) => {
+        if (preview.type === "file") {
+          URL.revokeObjectURL(preview.data);
+        }
+      });
     };
-  }, []);
+  }, [imagePreviews]);
+
+  const totalImages =
+    prefilledImages.length - removedPrefilled.length + value.length;
 
   return (
     <div className="space-y-4">
@@ -82,34 +145,49 @@ export const ProductImagesInput: React.FC<ProductImagesInputProps> = ({
         {imagePreviews.length > 0 && (
           <div className="w-full overflow-x-auto pb-2">
             <div className="flex gap-3 min-w-min">
-              {imagePreviews.map((preview, index) => (
-                <div
-                  key={index}
-                  className="relative group flex-shrink-0 w-28 h-28 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition"
-                >
-                  <img
-                    src={preview}
-                    alt={`Preview ${index + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeImage(index)}
-                    className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
+              {imagePreviews.map((preview, index) => {
+                const isPreFilled = preview.type === "url";
+
+                return (
+                  <div
+                    key={preview.sourceUrl || index}
+                    className="relative group flex-shrink-0 w-28 h-28 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition"
                   >
-                    <X className="h-3 w-3" />
-                  </button>
-                  <div className="absolute bottom-1 left-1 bg-white bg-opacity-90 px-1.5 py-0.5 rounded text-xs font-semibold text-gray-700">
-                    {index + 1}
+                    <img
+                      src={preview.data}
+                      alt={`Preview ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+
+                    {/* Remove button - available for both prefilled and new uploads */}
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+
+                    {/* Image number badge */}
+                    <div className="absolute bottom-1 left-1 bg-white bg-opacity-90 px-1.5 py-0.5 rounded text-xs font-semibold text-gray-700">
+                      {index + 1}
+                    </div>
+
+                    {/* Prefilled indicator badge */}
+                    {isPreFilled && (
+                      <div className="absolute top-1 left-1 bg-green-500 text-white px-1.5 py-0.5 rounded text-xs font-semibold shadow-md">
+                        ✓
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
 
-        {/* Upload */}
-        {value.length < maxImages && (
+        {/* Upload section - show only if limit not reached */}
+        {totalImages < maxImages && (
           <div className="relative w-full mt-4">
             <Input
               id="product-images"
@@ -125,8 +203,19 @@ export const ProductImagesInput: React.FC<ProductImagesInputProps> = ({
             >
               <Camera size={36} />
               <p className="mt-3 font-medium">Upload Product Images</p>
-              <p className="text-xs mt-1 opacity-70">PNG, JPG supported</p>
+              <p className="text-xs mt-1 opacity-70">
+                PNG, JPG supported • {totalImages}/{maxImages}
+              </p>
             </label>
+          </div>
+        )}
+
+        {/* Show message when max reached */}
+        {totalImages >= maxImages && (
+          <div className="w-full text-center py-4">
+            <p className="text-sm font-semibold text-gray-600">
+              Maximum {maxImages} images reached
+            </p>
           </div>
         )}
       </div>

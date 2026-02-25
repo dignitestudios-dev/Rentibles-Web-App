@@ -60,10 +60,10 @@ export default function AddBankPage() {
         accountNumber: data.accountNumber,
         routingNumber: data.routingNumber,
       });
-      
+
       // Invalidate the bank query to fetch updated data
       await queryClient.invalidateQueries({ queryKey: ["bank"] });
-      
+
       setShowSuccessDialog(true);
     } catch (err) {
       ErrorToast(getAxiosErrorMessage(err, "Failed to add bank account"));
@@ -81,7 +81,10 @@ export default function AddBankPage() {
     <div>
       <SettingsBackButton link="/app/settings/bank-details" />
       <Loader show={isLoading} />
-      <BankSuccessDialog open={showSuccessDialog} onClose={handleSuccessDialogClose} />
+      <BankSuccessDialog
+        open={showSuccessDialog}
+        onClose={handleSuccessDialogClose}
+      />
 
       <Link
         href="/app/settings/bank-details"

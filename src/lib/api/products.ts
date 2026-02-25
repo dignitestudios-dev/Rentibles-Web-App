@@ -1,8 +1,10 @@
 "use client";
 import {
   useQuery,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
+  useMutation,
 } from "@tanstack/react-query";
 import {
   getCategories,
@@ -13,6 +15,7 @@ import {
   getSubCategories,
   getWishlist,
 } from "../query/queryFn";
+import { axiosInstance } from "../axiosInstance";
 import {
   GetCategoriesResponse,
   GetProductByIdResponse,
@@ -117,5 +120,94 @@ export const useWishlist = (): UseQueryResult<GetWishlistResponse, Error> => {
     queryFn: getWishlist,
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
+  });
+};
+
+// Toggle product activation
+export interface ToggleActivationPayload {
+  productId: string;
+  isActive: boolean;
+}
+
+export interface ToggleActivationResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    _id: string;
+    isActive: boolean;
+  };
+}
+
+export const useToggleProductActivation = (): UseMutationResult<
+  ToggleActivationResponse,
+  Error,
+  ToggleActivationPayload
+> => {
+  return useMutation({
+    mutationFn: async (payload: ToggleActivationPayload) => {
+      const response = await axiosInstance.post<ToggleActivationResponse>(
+        "/product/toggleActivation",
+        payload,
+      );
+      return response.data;
+    },
+  });
+};
+
+// -- product deletion -------------------------------------------------------
+export interface DeleteProductPayload {
+  productId: string;
+}
+
+export interface DeleteProductResponse {
+  success: boolean;
+  message: string;
+}
+
+export const useDeleteProduct = (): UseMutationResult<
+  DeleteProductResponse,
+  Error,
+  DeleteProductPayload
+> => {
+  return useMutation({
+    mutationFn: async (payload: DeleteProductPayload) => {
+      // Axios delete expecting `data` property when body is required
+      const response = await axiosInstance.delete<DeleteProductResponse>(
+        "/product",
+        { data: payload },
+      );
+      return response.data;
+    },
+  });
+};
+
+// ---------------------------------------------------------------------------
+// availability helper & hook
+// ---------------------------------------------------------------------------
+export const getProductAvailability = async (
+  productId: string,
+  date: number,
+) => {
+  const response = await axiosInstance.get<GetProductAvailabilityResponse>(
+    "/product/availability",
+    {
+      params: {
+        productId,
+        date,
+      },
+    },
+  );
+  return response.data;
+};
+
+export const useProductAvailability = (
+  productId: string | null,
+  date: number | null,
+): UseQueryResult<GetProductAvailabilityResponse, Error> => {
+  return useQuery({
+    queryKey: ["productAvailability", productId, date],
+    queryFn: () => getProductAvailability(productId!, date!),
+    enabled: !!productId && !!date,
+    staleTime: 2 * 60 * 1000,
   });
 };

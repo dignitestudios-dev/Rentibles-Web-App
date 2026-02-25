@@ -158,6 +158,12 @@ export const createProduct = async (formData: FormData) => {
   return response.data;
 };
 
+// update existing product
+export const updateProduct = async (formData: FormData) => {
+  const response = await axiosInstance.put("/product", formData);
+  return response.data;
+};
+
 // add favorite
 export const createWishlist = async (payload: {
   productId: string;

@@ -14,24 +14,24 @@ export interface ReportReason {
   description?: string;
 }
 
-export interface ReportStoreModalProps {
+export interface ReportUserModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (reasonId: string) => void | Promise<void>;
-  storeId: string;
-  storeName?: string;
+  userId: string;
+  userName?: string;
   reasons?: ReportReason[];
   isLoading?: boolean;
   title?: string;
 }
 
-const ReportStoreModal: React.FC<ReportStoreModalProps> = ({
+const ReportUserModal: React.FC<ReportUserModalProps> = ({
   isOpen,
   onClose,
   onSubmit,
   reasons,
   isLoading = false,
-  title = "Report Store",
+  title = "Report User",
 }) => {
   const [selectedReason, setSelectedReason] = useState<string>("");
   const [internalLoading, setInternalLoading] = useState(false);
@@ -83,7 +83,7 @@ const ReportStoreModal: React.FC<ReportStoreModalProps> = ({
         {/* Reasons Section */}
         <div className=" space-y-4">
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Please select a reason for reporting this store:
+            Please select a reason for reporting this user:
           </p>
 
           <div className="space-y-3 max-h-96 overflow-y-auto">
@@ -139,15 +139,6 @@ const ReportStoreModal: React.FC<ReportStoreModalProps> = ({
 
         {/* Footer with Actions */}
         <DialogFooter className="gap-3 sm:gap-2 flex-col-reverse sm:flex-row pt-6 border-t border-gray-200 dark:border-gray-700">
-          {/* <Button
-            type="button"
-            variant="outline"
-            onClick={onClose}
-            disabled={internalLoading || isLoading}
-            className="w-full sm:w-auto"
-          >
-            Cancel
-          </Button> */}
           <Button
             type="button"
             onClick={handleSubmit}
@@ -162,4 +153,4 @@ const ReportStoreModal: React.FC<ReportStoreModalProps> = ({
   );
 };
 
-export default ReportStoreModal;
+export default ReportUserModal;

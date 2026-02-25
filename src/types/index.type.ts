@@ -428,6 +428,52 @@ export interface ReportStoreConfig {
   storeName?: string;
 }
 
+// configuration used when showing the user report modal
+export interface ReportUserConfig {
+  userId: string;
+  userName?: string;
+}
+
+// payload/response for reporting a store
+export interface ReportStorePayload {
+  title: string;
+  description: string;
+  storeId: string;
+}
+
+export interface ReportStoreResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    _id: string;
+    title: string;
+    description: string;
+    storeId: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+}
+
+// payload/response for reporting a user
+export interface ReportUserPayload {
+  title: string;
+  description: string;
+  userId: string;
+}
+
+export interface ReportUserResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    _id: string;
+    title: string;
+    description: string;
+    userId: string;
+    createdAt: string;
+    updatedAt: string;
+  };
+}
+
 export interface Stores {
   _id: string;
   name: string;
@@ -569,6 +615,16 @@ export interface GetProductByIdResponse {
   success: boolean;
   message: string;
   data: IProductDetails;
+}
+
+// used when deleting a product via DELETE /product with request body
+export interface DeleteProductPayload {
+  productId: string;
+}
+
+export interface DeleteProductResponse {
+  success: boolean;
+  message: string;
 }
 
 export interface Location {
@@ -791,6 +847,11 @@ export interface TimeSlot {
   endEpoch: number;
   startLabel: string; // "02:00 PM"
   endLabel: string; // "03:00 PM"
+  /**
+   * optional quantity available for this slot. not every consumer of
+   * TimeSlot will set it, so it remains optional.
+   */
+  availableQuantity?: number;
 }
 
 export interface TimeSlotResult {
@@ -798,6 +859,27 @@ export interface TimeSlotResult {
   totalHours: number;
   pickupLabel: string;
   dropOffLabel: string;
+}
+
+// --- product availability API ------------------------------------------------
+export interface ProductAvailabilitySlot {
+  start: number; // epoch seconds
+  end: number; // epoch seconds
+  availableQuantity: number;
+}
+
+export interface ProductAvailabilityDay {
+  date: number; // epoch seconds for midnight of the day
+  minQuantity: number;
+  dayStartAt: number;
+  dayEndAt: number;
+  slots: ProductAvailabilitySlot[];
+}
+
+export interface GetProductAvailabilityResponse {
+  success: boolean;
+  message: string;
+  data: ProductAvailabilityDay[];
 }
 
 export interface AvailabilitySlotsProps {

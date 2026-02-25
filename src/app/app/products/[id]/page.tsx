@@ -23,6 +23,8 @@ import { NoDataFound } from "@/public/images/export";
 import { Calendar } from "@/components/ui/calendar";
 import { generateTimeSlots } from "@/src/utils/helperFunctions";
 import { TimeSlot } from "@/src/types/index.type";
+import { ProductAvailability } from "./_components/product-availability";
+import { useForm } from "react-hook-form";
 
 const ProductDetailsPage = () => {
   const router = useRouter();
@@ -38,6 +40,9 @@ const ProductDetailsPage = () => {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
+  const [rentalDate, setRentalDate] = useState<Date | undefined>(undefined);
+  const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
+  const [rentalType, setRentalType] = useState<"day" | "hour">("day");
 
   // Handle clicking outside to close dropdown
   useEffect(() => {
@@ -148,16 +153,38 @@ const ProductDetailsPage = () => {
     return dayMap[day.toLowerCase()] ?? -1;
   });
 
-  // Check if a date is available based on availableDays
-  const isDateAvailable = (date: Date): boolean => {
-    if (availableDayIndices.length === 0) return true; // If no restrictions, all dates are available
-    return availableDayIndices.includes(date.getDay());
+  const handleSlotSelect = (slots: TimeSlot[]) => {
+    setTimeSlots(slots);
   };
 
-  const handleDateSelect = (date: Date) => {
-    setSelectedDate(date);
-    setIsOpen(false);
+  const handleDaySelect = (date: Date) => {
+    setRentalDate(date);
   };
+
+  // const { setValue, watch } = useForm({
+  //   defaultValues: {
+  //     rentalDate: undefined,
+  //     timeSlots: [],
+  //     rentalType: "day", // "day" or "hour"
+  //   },
+  // });
+
+  // const handleSlotSelect = (slots: TimeSlot[]) => {
+  //   // Store slots in form
+  //   setValue("timeSlots", slots, {
+  //     shouldValidate: true,
+  //     shouldDirty: true,
+  //   });
+  // };
+
+  // const handleDaySelect = (date: Date) => {
+  //   // Store date in form
+  //   setValue("rentalDate", date, {
+  //     shouldValidate: true,
+  //     shouldDirty: true,
+  //   });
+  // };
+
   return (
     <div className="bg-background min-h-screen">
       {/* Header */}
@@ -322,123 +349,13 @@ const ProductDetailsPage = () => {
             <hr className="my-6 border-border" />
 
             {/* Pricing */}
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-4">Availability</h3>
 
-              <div className="flex  gap-4">
-                <button
-                  onClick={() => setIsOpen(!isOpen)}
-                  className="w-full bg-orange-400/20 dark:bg-orange-900/10 px-6 py-4 rounded-2xl hover:bg-orange-400/30 dark:hover:bg-orange-900/20 transition-colors flex items-center justify-between"
-                >
-                  <div className="text-left flex-1">
-                    <p className="text-2xl font-bold text-primary">
-                      ${product.pricePerHour.toLocaleString()}/
-                      <span className="text-base font-normal text-gray-600 dark:text-gray-400">
-                        hr
-                      </span>
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      {selectedDate
-                        ? formatDate(selectedDate)
-                        : "Tap to select date"}
-                    </p>
-                  </div>
-                </button>
-
-                <button
-                  onClick={() => setIsOpen(!isOpen)}
-                  className="w-full bg-orange-400/20 dark:bg-orange-900/10 px-6 py-4 rounded-2xl hover:bg-orange-400/30 dark:hover:bg-orange-900/20 transition-colors flex items-center justify-between"
-                >
-                  <p className="text-2xl font-bold text-primary">
-                    ${(product.pricePerDay || 0).toLocaleString()}/
-                    <span className="text-base font-normal text-gray-600 dark:text-gray-400">
-                      day
-                    </span>
-                  </p>
-                </button>
-              </div>
-            </div>
-            {isOpen && (
-              <Calendar
-                selected={selectedDate}
-                onSelect={handleDateSelect}
-                disabled={(date) => {
-                  // Disable past dates
-                  const today = new Date();
-                  today.setHours(0, 0, 0, 0);
-                  date.setHours(0, 0, 0, 0);
-
-                  if (date < today) return true;
-
-                  // Disable dates not in availableDays
-                  return !isDateAvailable(date);
-                }}
-                className="shadow-lg border-2 border-primary/20"
-              />
-            )}
-
-            {isOpen && (
-              <>
-                {slots.length === 0 ? (
-                  <p className="text-sm text-gray-500">
-                    No available time slots.
-                  </p>
-                ) : (
-                  <>
-                    {/* Summary row */}
-                    <div className="flex items-center gap-2 mb-4 text-sm text-gray-500">
-                      <span className="font-medium text-gray-700">
-                        {pickupLabel}
-                      </span>
-                      <span>→</span>
-                      <span className="font-medium text-gray-700">
-                        {dropOffLabel}
-                      </span>
-                      <span className="ml-auto bg-gray-100 text-gray-600 text-xs font-medium px-2 py-0.5 rounded-full">
-                        {totalHours % 1 === 0
-                          ? `${totalHours}h`
-                          : `${Math.floor(totalHours)}h ${Math.round((totalHours % 1) * 60)}m`}{" "}
-                        total
-                      </span>
-                    </div>
-
-                    {/* Slot grid */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {slots.map((slot) => {
-                        const isSelected =
-                          selectedSlot?.startEpoch === slot.startEpoch;
-                        return (
-                          <button
-                            key={slot.startEpoch}
-                            type="button"
-                            // onClick={() => handleSelect(slot)}
-                            className={[
-                              "rounded-xl border px-3 py-2.5 text-sm font-medium transition-all duration-150",
-                              "focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1",
-                              isSelected
-                                ? "border-blue-600 bg-blue-600 text-white shadow-sm"
-                                : "border-gray-200 bg-white text-gray-700 hover:border-blue-400 hover:bg-blue-50",
-                            ].join(" ")}
-                          >
-                            <span className="block">{slot.startLabel}</span>
-                            <span className="block text-xs opacity-70">
-                              – {slot.endLabel}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {/* Selected feedback */}
-                    {selectedSlot && (
-                      <p className="mt-3 text-sm text-blue-600 font-medium">
-                        ✓ Selected: {selectedSlot.label}
-                      </p>
-                    )}
-                  </>
-                )}
-              </>
-            )}
+            <ProductAvailability
+              product={product}
+              productId={product._id}
+              onSlotSelect={handleSlotSelect}
+              onDaySelect={handleDaySelect}
+            />
 
             <hr className="my-6 border-border" />
 

@@ -9,6 +9,8 @@ import {
   UseQueryResult,
 } from "@tanstack/react-query";
 import { getUsersWithParams, getUserById } from "../query/queryFn";
+import { ReportUserPayload, ReportUserResponse } from "@/src/types/index.type";
+import { axiosInstance } from "../axiosInstance";
 
 export const useUsers = (
   params?: GetUserParams,
@@ -50,4 +52,22 @@ export const useUser = (
     gcTime: 10 * 60 * 1000,
     ...options,
   });
+};
+
+// -----------------------------------------------------------------------------
+// Reporting helper
+// -----------------------------------------------------------------------------
+
+/**
+ * Send a report about a user to the backend.  The same endpoint is shared with
+ * store reports, but the payload contains a `userId` instead of `storeId`.
+ */
+export const reportUser = async (
+  payload: ReportUserPayload,
+): Promise<ReportUserResponse> => {
+  const response = await axiosInstance.post<ReportUserResponse>(
+    "/report",
+    payload,
+  );
+  return response.data;
 };

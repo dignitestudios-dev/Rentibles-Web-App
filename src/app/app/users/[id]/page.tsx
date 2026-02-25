@@ -1,58 +1,130 @@
 "use client";
 
 import React, { useState } from "react";
-import { ArrowLeft, Info, MapPin, Phone, TriangleAlert } from "lucide-react";
+import { ArrowLeft, MapPin, Phone, TriangleAlert } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import ProductCard from "../../home/_components/product-card";
 import Image from "next/image";
 import { TooltipButton } from "@/src/components/common/TooltipButton";
 import { useProducts } from "@/src/lib/api/products";
-import { useUser } from "@/src/lib/api/user";
+import { useUser, reportUser } from "@/src/lib/api/user";
 import { formatUSAPhoneNumber } from "@/src/utils/helperFunctions";
+import { useMutation } from "@tanstack/react-query";
+import { createWishlist } from "@/src/lib/query/queryFn";
+import { getAxiosErrorMessage } from "@/src/utils/errorHandlers";
+import { ErrorToast, SuccessToast } from "@/src/components/common/Toaster";
+
+import ConfirmationModal from "@/src/components/common/ConfirmationModal";
+import ReportUserModal from "./_components/ReportUserModal";
+import { ReportUserContent } from "./_components/reportUserOptions";
+import { ReportUserConfig } from "@/src/types/index.type";
 
 type Tab = "information" | "listing";
-
-const dummyProducts = Array.from({ length: 8 }).map((_, i) => ({
-  _id: `p-${i}`,
-  name: `Sample Product ${i + 1}`,
-  cover:
-    "https://rentibles-bucket.s3.us-west-2.amazonaws.com/pictures/37b3c72e-c2df-406f-a433-fe8a6da5b1df.jpg",
-  category: { name: "Sample" },
-  pricePerDay: 20 + i * 5,
-  pricePerHour: 5 + i,
-  productReview: 4.2 + (i % 5) * 0.2,
-  isLiked: i % 2 === 0,
-}));
 
 export default function UserProfilePage() {
   const router = useRouter();
   const params = useParams();
+
   const [activeTab, setActiveTab] = useState<Tab>("information");
-  const [coverLoaded, setCoverLoaded] = useState(false);
-  const [profileLoaded, setProfileLoaded] = useState(false);
+  const [profileLoaded] = useState(false); // state controlled by image onLoad (still potentially used later)
 
-  const {
-    data: products,
-    isLoading,
-    isError,
-    error,
-  } = useProducts({
-    userId: "6878ee557e8c6f22d396b5fd" || undefined,
+  const userId = typeof params?.id === "string" ? params.id : undefined;
+
+  const { data: products } = useProducts({
+    userId: userId,
   });
-  console.log("🚀 ~ UserProfilePage ~ products:", products);
 
-  const {
-    data: userData,
-    isLoading: usersLoading,
-    isError: usersError,
-    error: usersErrorMsg,
-  } = useUser("6878ee557e8c6f22d396b5fd", { enabled: true });
+  const { data: userData, isLoading: usersLoading } = useUser(userId ?? "", {
+    enabled: Boolean(userId),
+  });
   console.log("🚀 ~ UserProfilePage ~ userData:", userData);
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "information", label: "Information" },
     { id: "listing", label: "Listing" },
   ];
+
+  const [wishlistItems, setWishlistItems] = useState<{
+    [key: string]: boolean;
+  }>({});
+
+  // reporting state
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [showReportForm, setShowReportForm] = useState(false);
+  const [currentUserReport, setCurrentUserReport] =
+    useState<ReportUserConfig | null>(null);
+  const [isReporting, setIsReporting] = useState(false);
+
+  const wishlistMutation = useMutation({
+    mutationFn: async (payload: { productId: string; value: boolean }) => {
+      const formData = {
+        productId: payload.productId,
+        value: payload.value,
+      };
+      return createWishlist(formData);
+    },
+    onSuccess: (data, variables) => {
+      setWishlistItems((prev) => ({
+        ...prev,
+        [variables.productId]: variables.value,
+      }));
+    },
+    onError: (err) => {
+      const message = getAxiosErrorMessage(err || "Failed to update wishlist");
+      ErrorToast(message);
+    },
+  });
+
+  const onWishlist = (productId: string, currentLiked: boolean) => {
+    const newValue = !currentLiked;
+    wishlistMutation.mutate({
+      productId,
+      value: newValue,
+    });
+  };
+
+  // report handlers
+  const handleSubmitReport = React.useCallback(
+    async (reasonId: string): Promise<void> => {
+      if (!userId || !reasonId) return;
+
+      setIsReporting(true);
+      try {
+        const payload = {
+          title: reasonId,
+          description: reasonId,
+          userId: userId,
+        };
+        await reportUser(payload);
+        SuccessToast("User reported successfully");
+        setShowReportForm(false);
+        setCurrentUserReport(null);
+      } catch (error) {
+        const message = getAxiosErrorMessage(error || "Failed to report user");
+        ErrorToast(message);
+      } finally {
+        setIsReporting(false);
+      }
+    },
+    [userId],
+  );
+
+  const cancelReport = React.useCallback(() => {
+    setShowConfirmation(false);
+    setShowReportForm(false);
+    setCurrentUserReport(null);
+  }, []);
+
+  const handleConfirmReport = React.useCallback(() => {
+    setShowConfirmation(false);
+    setShowReportForm(true);
+    if (userData?.data) {
+      setCurrentUserReport({
+        userId: userData.data._id,
+        userName: userData.data.name,
+      });
+    }
+  }, [userData?.data]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -80,8 +152,8 @@ export default function UserProfilePage() {
           <div className="absolute right-8 top-4 z-50">
             <TooltipButton
               icon={<TriangleAlert className="w-5 h-5" />}
-              tooltip="Report store"
-              // onClick={() => setShowConfirmation(true)}
+              tooltip="Report User"
+              onClick={() => setShowConfirmation(true)}
             />
           </div>
 
@@ -215,7 +287,15 @@ export default function UserProfilePage() {
                     <ProductCard
                       key={p._id}
                       product={p}
-                      handleWishlist={() => {}}
+                      isLiked={wishlistItems[p._id || ""] ?? p.isLiked ?? false}
+                      handleWishlist={() =>
+                        onWishlist(
+                          p._id || "",
+                          wishlistItems[p._id || ""] ?? p.isLiked ?? false,
+                        )
+                      }
+                      isLoading={wishlistMutation.isPending}
+                      isUser={true}
                     />
                   ))}
                 </div>
@@ -241,6 +321,33 @@ export default function UserProfilePage() {
           </main>
         </div>
       </div>
+
+      {/* modals for reporting (still inside root) */}
+      <ConfirmationModal
+        isOpen={showConfirmation}
+        onClose={cancelReport}
+        onConfirm={handleConfirmReport}
+        title="Report User"
+        message={`Are you sure you want to report ${userData?.data?.name}?`}
+        confirmText="Yes, Continue"
+        cancelText="Cancel"
+        type="danger"
+        isDangerous={false}
+        showIcon={true}
+      />
+
+      {currentUserReport && (
+        <ReportUserModal
+          isOpen={showReportForm}
+          onClose={cancelReport}
+          onSubmit={handleSubmitReport}
+          userId={currentUserReport.userId}
+          userName={currentUserReport.userName}
+          isLoading={isReporting}
+          title="Report Reasons"
+          reasons={ReportUserContent}
+        />
+      )}
     </div>
   );
 }
