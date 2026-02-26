@@ -18,6 +18,7 @@ import {
 import { axiosInstance } from "../axiosInstance";
 import {
   GetCategoriesResponse,
+  GetProductAvailabilityResponse,
   GetProductByIdResponse,
   GetProductReviewResponse,
   GetProductsParams,

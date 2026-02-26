@@ -72,7 +72,7 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
   // Availability Data Setup
   const availabilityByDate = React.useMemo(() => {
     const map = new Map<number, ProductAvailabilityDay>();
-    availabilityResp?.data?.data?.forEach((day: ProductAvailabilityDay) =>
+    availabilityResp?.data?.forEach((day: ProductAvailabilityDay) =>
       map.set(day.date, day),
     );
     return map;

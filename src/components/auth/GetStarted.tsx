@@ -21,6 +21,10 @@ const GetStarted = () => {
     mutationFn: socialRegister,
     onSuccess: (response) => {
       const userInfo = response?.data;
+      const normalizedUser = {
+        ...userInfo.user,
+        _id: userInfo.user.id,
+      };
 
       dispatch(
         singUp({
@@ -28,7 +32,7 @@ const GetStarted = () => {
             access: userInfo.token,
             refresh: userInfo.token,
           },
-          user: userInfo.user,
+          user: normalizedUser,
         }),
       );
       SuccessToast(response?.message);

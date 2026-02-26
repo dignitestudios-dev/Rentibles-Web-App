@@ -54,6 +54,10 @@ const Page = () => {
 
     onSuccess: (response) => {
       const userInfo = response?.data;
+      const normalizedUser = {
+        ...response.data.user,
+        _id: response.data.user.id,
+      };
 
       dispatch(
         singUp({
@@ -61,7 +65,7 @@ const Page = () => {
             access: userInfo.token,
             refresh: userInfo.token,
           },
-          user: response.data.user,
+          user: normalizedUser,
         }),
       );
       SuccessToast(response.message);

@@ -228,6 +228,7 @@ export interface GetPayoutsResponse {
 }
 
 export interface BankDetails {
+  bank_name?: string;
   country: string;
   currency: string;
   last4: string;
@@ -237,7 +238,7 @@ export interface BankDetails {
 export interface GetBankResponse {
   success: boolean;
   message: string;
-  data: BankDetails;
+  data: BankDetails | null;
 }
 
 export interface WithdrawalPayload {
@@ -488,6 +489,8 @@ export interface GetStoresParams {
   page?: number;
   limit?: number;
   search?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface GetStoresResponse {
@@ -534,6 +537,8 @@ export interface GetProductsParams {
   storeId?: string;
   categoryId?: string;
   userId?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface GetProductsResponse {
@@ -970,12 +975,6 @@ export interface BankItem {
   routing_number: string;
   last4: string;
   status: "active" | "inactive" | "pending";
-}
-
-export interface GetBankResponse {
-  success: boolean;
-  message: string;
-  data: BankItem | null;
 }
 
 export interface AddBankPayload {

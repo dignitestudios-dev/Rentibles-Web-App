@@ -352,7 +352,6 @@ const ProductDetailsPage = () => {
 
             <ProductAvailability
               product={product}
-              productId={product._id}
               onSlotSelect={handleSlotSelect}
               onDaySelect={handleDaySelect}
             />

@@ -31,8 +31,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
   isLoading = false,
   isUser = false,
 }) => {
-  const cover = product?.cover;
-  const hasCover = Boolean(cover);
+  const coverSrc: string | null = product?.cover ?? null;
+  const hasCover = coverSrc !== null;
   const name = product?.name ?? "Product Name";
   const category = product?.category?.name ?? "Furniture";
   const price = product?.pricePerDay ?? product?.pricePerHour ?? 0;
@@ -65,7 +65,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
           {hasCover ? (
             <Image
-              src={cover}
+              src={coverSrc}
               alt={name}
               width={1000}
               height={1000}

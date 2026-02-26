@@ -44,6 +44,10 @@ const LoginForm = () => {
     onSuccess: (response) => {
       invalidateAll();
       const userInfo = response?.data;
+      const normalizedUser = {
+        ...userInfo.user,
+        _id: userInfo.user.id,
+      };
 
       dispatch(
         singUp({
@@ -51,7 +55,7 @@ const LoginForm = () => {
             access: userInfo.token,
             refresh: userInfo.token,
           },
-          user: userInfo.user,
+          user: normalizedUser,
         }),
       );
       SuccessToast(response?.message);
