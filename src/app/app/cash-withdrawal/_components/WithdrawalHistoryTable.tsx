@@ -1,5 +1,4 @@
 // components/WithdrawalHistoryTable.tsx
-import DateFilter from "@/src/components/common/DateFilter";
 import {
   TransactionRecord,
   TransactionStatus,
@@ -13,7 +12,6 @@ import React, { useState } from "react";
 interface WithdrawalHistoryTableProps {
   data: WithdrawalRecord[];
   handleRowClick: (record: TransactionRecord) => void;
-  onFilterChange?: (value: { startDate: string; endDate: string }) => void;
 }
 
 const WithdrawalHistoryTable: React.FC<WithdrawalHistoryTableProps> = ({

@@ -266,6 +266,35 @@ export enum TransactionStatus {
   PROCESSING = "processing",
 }
 
+// raw transaction item returned by /transaction endpoint
+export interface TransactionItem {
+  _id: string;
+  shortCode?: string;
+  productName?: string;
+  amount: number;
+  reason: string;
+  card?: {
+    brand: string;
+    last4: string;
+  };
+  type: "debit" | "credit";
+  date: number; // unix timestamp in seconds
+  status?: TransactionStatus; // some endpoints may include status
+}
+
+export interface GetTransactionsResponse {
+  success: boolean;
+  message: string;
+  data: TransactionItem[];
+}
+
+export interface GetTransactionsParams {
+  limit?: number;
+  page?: number;
+  startDate?: number;
+  endDate?: number;
+}
+
 export interface WithdrawalRecord {
   id: string;
   date: string;
@@ -276,6 +305,8 @@ export interface WithdrawalRecord {
 
 export interface TransactionRecord {
   id: string;
+  productName?: string;
+  shortCode?: string;
   date: string;
   status: TransactionStatus;
   amount: number;

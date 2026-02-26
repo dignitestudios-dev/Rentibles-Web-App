@@ -55,7 +55,7 @@ const DateFilter: React.FC<DateFilterProps> = ({ onFilterChange }) => {
           <Funnel className=" text-white " />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end">
+      <PopoverContent align="end" className="w-108 p-4">
         <div className="flex gap-5 justify-between items-center border-b border-b-gray-200 pb-3 ">
           <p className="text-xl font-semibold">Filter</p>
           <PopoverClose asChild>
@@ -71,7 +71,7 @@ const DateFilter: React.FC<DateFilterProps> = ({ onFilterChange }) => {
             <InputField
               placeholder="Select Date"
               type={"date"}
-              className={"w-40 h-14"}
+              className={"w-48 h-14"}
               value={startDate}
               onChange={(e) => setStartDate(e.target.value)}
             />
@@ -82,7 +82,7 @@ const DateFilter: React.FC<DateFilterProps> = ({ onFilterChange }) => {
             <InputField
               placeholder="Select Date"
               type={"date"}
-              className={"w-40 h-14"}
+              className={"w-48 h-14"}
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
             />

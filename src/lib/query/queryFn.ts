@@ -24,6 +24,8 @@ import {
   GetBalanceResponse,
   GetPayoutsResponse,
   GetBankResponse,
+  GetTransactionsResponse,
+  GetTransactionsParams,
   WithdrawalPayload,
   WithdrawalResponse,
   LoginPayload,
@@ -243,6 +245,13 @@ export const getPayouts = async (params?: {
   threshold?: number;
 }): Promise<GetPayoutsResponse> => {
   const { data } = await axiosInstance.get("/balance/payouts", { params });
+  return data;
+};
+
+export const getTransactions = async (
+  params?: GetTransactionsParams,
+): Promise<GetTransactionsResponse> => {
+  const { data } = await axiosInstance.get("/transaction", { params });
   return data;
 };
 

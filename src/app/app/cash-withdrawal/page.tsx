@@ -12,11 +12,13 @@ import {
   WithdrawalDetails,
 } from "@/src/types/index.type";
 import useBalance, { usePayouts } from "@/src/lib/api/balance";
+import { useTransactions } from "@/src/lib/api/transactions";
 import Loader from "@/src/components/common/Loader";
 import WithdrawalDetailsModal from "./_components/WithdrawalDetailsModal";
 import DateFilter from "@/src/components/common/DateFilter";
 import WithdrawModal from "./_components/WithdrawModal";
 import { generatePayoutsPDF } from "./_components/PayoutsPDF";
+import { generateTransactionPDF } from "./_components/TransactionsPDF";
 
 // balance will be fetched from API via useBalance
 
@@ -40,8 +42,21 @@ const CashWithdrawalPage = () => {
     | undefined
   >(undefined);
 
+  const [transactionParams, setTransactionParams] = useState<
+    | {
+        limit?: number;
+        page?: number;
+        startDate?: number;
+        endDate?: number;
+      }
+    | undefined
+  >(undefined);
+
   const { data: payoutsResponse, isLoading: payoutsLoading } =
     usePayouts(payoutParams);
+
+  const { data: transactionsResponse, isLoading: transactionsLoading } =
+    useTransactions(transactionParams);
 
   const availableAmount = balanceResponse?.data?.availableBalance?.amount ?? 0;
   const pendingAmount = balanceResponse?.data?.pendingBalance?.amount ?? 0;
@@ -81,6 +96,16 @@ const CashWithdrawalPage = () => {
     startDate: string;
     endDate: string;
   }) => {
+    let params:
+      | {
+          startDate: number;
+          endDate: number;
+          limit?: number;
+          page?: number;
+          threshold?: number;
+        }
+      | undefined;
+
     if (filterData.startDate && filterData.endDate) {
       const start = Math.floor(
         new Date(filterData.startDate + "T00:00:00").getTime() / 1000,
@@ -88,27 +113,45 @@ const CashWithdrawalPage = () => {
       const end = Math.floor(
         new Date(filterData.endDate + "T23:59:59").getTime() / 1000,
       );
-      setPayoutParams({
+      params = {
         startDate: start,
         endDate: end,
-        threshold: 10,
-      });
+        limit: 10,
+        page: 1,
+      };
     } else {
-      setPayoutParams(undefined);
+      params = undefined;
+    }
+
+    if (activeTab === "withdrawal") {
+      setPayoutParams(params);
+    } else {
+      setTransactionParams(params);
     }
   };
 
   const handleDownloadPDF = async () => {
     try {
-      const payouts = payoutsResponse?.data || [];
-      if (payouts.length === 0) {
-        alert("No payout data available to download");
-        return;
+      if (activeTab === "transaction") {
+        const transactions = transactionsResponse?.data || [];
+        if (transactions.length === 0) {
+          alert("No transaction data available to download");
+          return;
+        }
+        await generateTransactionPDF(transactions, currency);
+      } else {
+        const payouts = payoutsResponse?.data || [];
+        if (payouts.length === 0) {
+          alert("No payout data available to download");
+          return;
+        }
+        await generatePayoutsPDF(payouts, currency);
       }
-      await generatePayoutsPDF(payouts, currency);
     } catch (error) {
       console.error("Failed to download PDF:", error);
-      alert("Failed to download payout report");
+      alert(
+        `Failed to download ${activeTab === "transaction" ? "transaction" : "payout"} report`,
+      );
     }
   };
 
@@ -215,10 +258,13 @@ const CashWithdrawalPage = () => {
                     <button
                       onClick={handleDownloadPDF}
                       disabled={
-                        payoutsLoading || !payoutsResponse?.data?.length
+                        activeTab === "withdrawal"
+                          ? payoutsLoading || !payoutsResponse?.data?.length
+                          : transactionsLoading ||
+                            !transactionsResponse?.data?.length
                       }
                       className="bg-primary/20 p-1.5 rounded-md hover:bg-primary/30 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                      title="Download payout report as PDF"
+                      title={`Download ${activeTab === "transaction" ? "transaction" : "payout"} report as PDF`}
                     >
                       <FileDown className="text-primary" />
                     </button>
@@ -226,55 +272,51 @@ const CashWithdrawalPage = () => {
                     <DateFilter onFilterChange={handleFilterChange} />
                   </div>
                 </div>
-                {payoutsLoading ? (
+                {activeTab === "withdrawal" ? (
+                  payoutsLoading ? (
+                    <div className="py-8">
+                      <Loader show={true} />
+                    </div>
+                  ) : (
+                    (() => {
+                      const payouts = payoutsResponse?.data || [];
+
+                      const mappedWithdrawals = payouts.map((p) => ({
+                        id: p._id,
+                        date: new Date(p.date * 1000).toISOString(),
+                        status: p.status as TransactionStatus,
+                        amount: p.amount,
+                        type: "debit" as const,
+                      }));
+
+                      return (
+                        <WithdrawalHistoryTable
+                          data={mappedWithdrawals}
+                          handleRowClick={handleRowClick}
+                        />
+                      );
+                    })()
+                  )
+                ) : transactionsLoading ? (
                   <div className="py-8">
                     <Loader show={true} />
                   </div>
                 ) : (
                   (() => {
-                    const payouts = payoutsResponse?.data || [];
+                    const txs = transactionsResponse?.data || [];
+                    console.log("🚀 ~ CashWithdrawalPage ~ txs:", txs);
 
-                    const mappedWithdrawals = payouts.map((p) => ({
+                    const mappedTransactions = txs.map((p) => ({
                       id: p._id,
                       date: new Date(p.date * 1000).toISOString(),
-                      status: p.status as TransactionStatus,
+                      productName: p.productName,
+                      shortCode: p.shortCode,
+                      status: p.status ?? TransactionStatus.PENDING,
                       amount: p.amount,
-                      type: "debit" as const,
+                      type: p.type as "debit" | "credit",
                     }));
 
-                    const mappedTransactions = payouts.map((p) => ({
-                      id: p._id,
-                      date: new Date(p.date * 1000).toISOString(),
-                      status: p.status as TransactionStatus,
-                      amount: p.amount,
-                      type: "debit" as const,
-                    }));
-
-                    return activeTab === "withdrawal" ? (
-                      <WithdrawalHistoryTable
-                        data={mappedWithdrawals}
-                        handleRowClick={handleRowClick}
-                        onFilterChange={(val) => {
-                          if (val.startDate && val.endDate) {
-                            const start = Math.floor(
-                              new Date(val.startDate + "T00:00:00").getTime() /
-                                1000,
-                            );
-                            const end = Math.floor(
-                              new Date(val.endDate + "T23:59:59").getTime() /
-                                1000,
-                            );
-                            setPayoutParams({
-                              startDate: start,
-                              endDate: end,
-                              threshold: 10,
-                            });
-                          } else {
-                            setPayoutParams(undefined);
-                          }
-                        }}
-                      />
-                    ) : (
+                    return (
                       <TransactionHistoryTable
                         data={mappedTransactions}
                         handleRowClick={handleRowClick}
