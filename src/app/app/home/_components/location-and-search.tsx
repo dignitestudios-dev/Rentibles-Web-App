@@ -23,7 +23,6 @@ const LocationAndSearch = () => {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
-
         try {
           const addr = await getAddressFromLatLng(latitude, longitude);
           setAddress(addr);
@@ -41,7 +40,12 @@ const LocationAndSearch = () => {
   return (
     <div className="w-full flex justify-between gap-10">
       <div className="flex gap-2 text-sm items-center">
-        <MapPin className="text-primary size-4" /> <span className={address === "Loading..." ? "text-muted-foreground" : ""}>{address}</span>
+        <MapPin className="text-primary size-4" />{" "}
+        <span
+          className={address === "Loading..." ? "text-muted-foreground" : ""}
+        >
+          {address}
+        </span>
       </div>
 
       <Link href="/app/search">

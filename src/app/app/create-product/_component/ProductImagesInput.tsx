@@ -65,7 +65,7 @@ export const ProductImagesInput: React.FC<ProductImagesInputProps> = ({
         }
       });
     };
-  }, [value, prefilledImages]);
+  }, [value, prefilledImages, removedPrefilled]);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);
@@ -174,11 +174,11 @@ export const ProductImagesInput: React.FC<ProductImagesInputProps> = ({
                     </div>
 
                     {/* Prefilled indicator badge */}
-                    {isPreFilled && (
+                    {/* {isPreFilled && (
                       <div className="absolute top-1 left-1 bg-green-500 text-white px-1.5 py-0.5 rounded text-xs font-semibold shadow-md">
                         ✓
                       </div>
-                    )}
+                    )} */}
                   </div>
                 );
               })}

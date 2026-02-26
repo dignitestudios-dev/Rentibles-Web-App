@@ -9,8 +9,8 @@ const Home = () => {
     <main className="py-5">
       <LocationAndSearch />
       <Stores />
-      <Categories />
       <Suspense fallback={<div>Loading...</div>}>
+        <Categories />
         <Products />
       </Suspense>
     </main>

@@ -14,19 +14,24 @@ import Loader from "@/src/components/common/Loader";
 import { useBank, useWithdraw } from "@/src/lib/api/balance";
 import { AlertCircle, Banknote } from "lucide-react";
 import { SuccessToast } from "@/src/components/common/Toaster";
+import { WithdrawalResponse } from "@/src/types/index.type";
+import { useRouter } from "next/navigation";
 
 interface WithdrawModalProps {
   isOpen: boolean;
   onClose: () => void;
   availableBalance: number;
+  onSuccess?: (data: WithdrawalResponse) => void;
 }
 
 const WithdrawModal: React.FC<WithdrawModalProps> = ({
   isOpen,
   onClose,
   availableBalance,
+  onSuccess,
 }) => {
   const queryClient = useQueryClient();
+  const router = useRouter();
 
   const {
     data: bankResponse,
@@ -56,7 +61,11 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
     withdraw(
       { amount },
       {
-        onSuccess: () => {
+        onSuccess: (res) => {
+          // Call the onSuccess callback if provided
+          if (onSuccess) {
+            onSuccess(res);
+          }
           // Invalidate balance and payouts queries to refetch updated data
           queryClient.invalidateQueries({ queryKey: ["balance"] });
           queryClient.invalidateQueries({ queryKey: ["payouts"] });
@@ -88,18 +97,39 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
         <div className="space-y-6 py-4">
           {bankLoading ? (
             <div className="flex justify-center py-8">
-              <Loader show={true} />
+              <div className="flex flex-col items-center gap-4 rounded-xl bg-zinc-900 px-8 py-6 shadow-xl">
+                <div className="flex items-end gap-2 h-8">
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <span
+                      key={i}
+                      className="w-2 h-full origin-bottom rounded-full bg-orange-500"
+                      style={{
+                        animation: "pulseBar 1s ease-in-out infinite",
+                        animationDelay: `${i * 0.15}s`,
+                      }}
+                    />
+                  ))}
+                </div>
+
+                <p className="text-sm text-zinc-300">loading....</p>
+              </div>
             </div>
           ) : bankError || !bankDetails ? (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex gap-3">
               <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
               <div>
-                <p className="text-red-800 font-semibold">
-                  Unable to load bank details
+                <p className="text-red-800 font-semibold mb-2">
+                  No bank account connected
                 </p>
-                <p className="text-red-700 text-sm mt-1">
+                {/* <p className="text-red-700 text-sm mt-1">
                   {bankError?.message || "Please try again later"}
-                </p>
+                </p> */}
+                <Button
+                  variant="outline"
+                  onClick={() => router.push("/app/settings/bank-details/add")}
+                >
+                  Connect Bank Account
+                </Button>
               </div>
             </div>
           ) : (

@@ -106,10 +106,6 @@ const AddProductRequestModal: React.FC<AddProductRequestModalProps> = ({
 
   const handleDaysChange = (days: DaysOfWeek) => {
     setSelectedDays(days);
-    console.log(
-      "Selected days:",
-      days.filter((d) => d.enabled).map((d) => d.day),
-    );
   };
 
   return (

@@ -29,15 +29,11 @@ const FavoritePage = () => {
       };
       return createWishlist(formData);
     },
-    onSuccess: (data, variables) => {
-      console.log("🚀 ~ FavoritePage ~ variables:", variables);
-      console.log("🚀 ~ FavoritePage ~ data:", data);
+    onSuccess: () => {
       // Update local state on success
       queryClient.invalidateQueries({
         queryKey: ["wishlist"],
       });
-
-      console.log("Wishlist updated successfully");
     },
     onError: (err) => {
       const message = getAxiosErrorMessage(err || "Failed to update wishlist");

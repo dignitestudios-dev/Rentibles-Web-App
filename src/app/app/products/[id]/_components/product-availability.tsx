@@ -67,7 +67,6 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
   // API call to fetch availability data for the month
   const { data: availabilityResp, isLoading: availabilityLoading } =
     useProductAvailability(product._id, queryDate);
-  console.log("🚀 ~ ProductAvailability ~ availabilityResp:", availabilityResp);
 
   // Availability Data Setup
   const availabilityByDate = React.useMemo(() => {

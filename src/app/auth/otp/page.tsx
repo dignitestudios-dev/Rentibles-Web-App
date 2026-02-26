@@ -20,7 +20,6 @@ const Page = () => {
   const router = useRouter();
   const [timer, setTimer] = useState(55);
   const [email, setEmail] = useState<string | null>(null);
-  console.log("🚀 ~ Page ~ email:", email);
 
   useEffect(() => {
     if (timer === 0) return;
@@ -37,7 +36,6 @@ const Page = () => {
     resolver: zodResolver(ForgotOtpSchema),
     defaultValues: { otp: "", email: "", role: "user" },
   });
-  console.log("🚀 ~ Page ~ errors:", errors);
 
   useEffect(() => {
     const storedEmail = localStorage.getItem("email");

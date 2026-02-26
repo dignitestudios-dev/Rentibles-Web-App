@@ -37,7 +37,6 @@ export default function UserProfilePage() {
   const { data: userData, isLoading: usersLoading } = useUser(userId ?? "", {
     enabled: Boolean(userId),
   });
-  console.log("🚀 ~ UserProfilePage ~ userData:", userData);
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "information", label: "Information" },

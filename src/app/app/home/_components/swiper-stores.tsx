@@ -41,11 +41,7 @@ const SwiperStores: React.FC<SwiperStoresProps> = ({
         <h2 className="font-semibold text-2xl mb-4">Stores</h2>
         <div className="flex justify-center items-center w-full mt-10">
           <div className="flex flex-col justify-center items-center">
-            <Image
-              src={NoDataFound}
-              alt="No_Stores"
-              className="w-48"
-            />
+            <Image src={NoDataFound} alt="No_Stores" className="w-48" />
             <p className="text-foreground mt-2">No Stores Available</p>
           </div>
         </div>

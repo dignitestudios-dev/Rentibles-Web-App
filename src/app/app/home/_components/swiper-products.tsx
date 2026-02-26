@@ -52,7 +52,6 @@ const SwiperProducts: React.FC<SwiperProductsProps> = ({
         ...prev,
         [variables.productId]: variables.value,
       }));
-      console.log("Wishlist updated successfully");
     },
     onError: (err) => {
       const message = getAxiosErrorMessage(err || "Failed to update wishlist");

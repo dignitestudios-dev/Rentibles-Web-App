@@ -22,10 +22,7 @@ const ProductsContent = () => {
   // Get selected category from URL params
   const selectedCategory = searchParams?.get("category");
 
-  const {
-    data: products,
-    isLoading,
-  } = useProducts({
+  const { data: products, isLoading } = useProducts({
     categoryId: selectedCategory || undefined,
   });
 
@@ -48,7 +45,6 @@ const ProductsContent = () => {
         ...prev,
         [variables.productId]: variables.value,
       }));
-      console.log("Wishlist updated successfully");
     },
     onError: (err) => {
       const message = getAxiosErrorMessage(err || "Failed to update wishlist");

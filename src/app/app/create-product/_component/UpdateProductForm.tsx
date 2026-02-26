@@ -12,7 +12,7 @@ import { useForm, SubmitHandler, Resolver } from "react-hook-form";
 import DaySelector from "./DaySelector";
 import { DaysOfWeek, User } from "@/src/types/index.type";
 import { useAppDispatch, useAppSelector } from "@/src/lib/store/hooks";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateProduct } from "@/src/lib/query/queryFn";
 import {
   setCategoriesError,
@@ -80,6 +80,7 @@ const mapAvailableDaysToSchedule = (
 
 const UpdateProductForm: React.FC<Props> = ({ productId }) => {
   const dispatch = useAppDispatch();
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<User | undefined>(undefined);
   const [isMap, setIsMap] = useState<boolean>(false);
   const router = useRouter();
@@ -92,7 +93,6 @@ const UpdateProductForm: React.FC<Props> = ({ productId }) => {
 
   const { data: productResp, isLoading: loadingProduct } =
     useProductById(productId);
-  console.log("🚀 ~ UpdateProductForm ~ productResp:", productResp);
 
   const [location, setLocation] = useState<{
     lat: number;
@@ -219,10 +219,10 @@ const UpdateProductForm: React.FC<Props> = ({ productId }) => {
 
   const updateProductMutation = useMutation({
     mutationFn: updateProduct,
-    onSuccess: (res) => {
-      console.log("🚀 ~ UpdateProductForm ~ res:", res);
+    onSuccess: () => {
       SuccessToast("Product updated");
       // navigate to updated product page
+      queryClient.invalidateQueries({ queryKey: ["productById"] });
       router.push(`/app/products/${productId}`);
     },
     onError: (err) => {

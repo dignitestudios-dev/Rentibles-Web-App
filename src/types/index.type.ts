@@ -250,10 +250,14 @@ export interface WithdrawalResponse {
   message: string;
   data?: {
     _id?: string;
+    accountHolderName?: string | null;
+    accountNumber?: string;
     amount: number;
+    bankName?: string | null;
     currency: string;
-    status: string;
     date: number;
+    method?: string;
+    status: string;
     createdAt: string;
     updatedAt: string;
   };

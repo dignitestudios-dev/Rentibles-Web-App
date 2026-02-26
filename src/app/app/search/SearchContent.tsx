@@ -37,10 +37,10 @@ const SearchContent = () => {
   const debouncedSearch = useDebounce(searchQuery, 500);
   const hasSearch = !!debouncedSearch?.trim();
 
-  const {
-    data: userData,
-    isLoading: usersLoading,
-  } = useUsers({ search: debouncedSearch }, { enabled: hasSearch });
+  const { data: userData, isLoading: usersLoading } = useUsers(
+    { search: debouncedSearch },
+    { enabled: hasSearch },
+  );
 
   const { data: productsData, isLoading: productsLoading } = useProducts(
     { search: debouncedSearch },
@@ -78,13 +78,12 @@ const SearchContent = () => {
       };
       return createWishlist(formData);
     },
-    onSuccess: (data, variables) => {
+    onSuccess: (variables) => {
       // Update local state on success
       setWishlistItems((prev) => ({
         ...prev,
         [variables.productId]: variables.value,
       }));
-      console.log("Wishlist updated successfully");
     },
     onError: (err) => {
       const message = getAxiosErrorMessage(err || "Failed to update wishlist");

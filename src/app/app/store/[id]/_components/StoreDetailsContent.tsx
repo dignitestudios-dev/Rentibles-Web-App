@@ -25,6 +25,7 @@ import ReportStoreModal from "./ReportStoreModal";
 import { reportStore } from "@/src/lib/api/store";
 import { UserProfile } from "@/public/images/export";
 import { useRequireLogin } from "@/src/hooks/useRequireLogin";
+import Loader from "@/src/components/common/Loader";
 
 const StoreDetailsContent = () => {
   const router = useRouter();
@@ -41,7 +42,7 @@ const StoreDetailsContent = () => {
   const [currentStore, setCurrentStore] = useState<ReportStoreConfig | null>(
     null,
   );
-  console.log("🚀 ~ StoreDetailsContent ~ currentStore:", currentStore);
+
   const [isReporting, setIsReporting] = useState(false);
 
   // const { categories } = useAppSelector((state) => state.categories);
@@ -66,8 +67,8 @@ const StoreDetailsContent = () => {
     router.replace(url);
   };
 
-  const { data: stores } = useStoreById(storeId);
-  const { data: products } = useProducts(
+  const { data: stores, isLoading: isStoresLoading } = useStoreById(storeId);
+  const { data: products, isLoading: isProductsLoading } = useProducts(
     {
       storeId,
       categoryId: selectedCategoryId !== "all" ? selectedCategoryId : undefined,
@@ -75,7 +76,7 @@ const StoreDetailsContent = () => {
     { enabled: true },
   );
 
-  const { data: categories } = useCategories();
+  const { data: categories, isLoading: isCategoriesLoading } = useCategories();
 
   // Track wishlist state locally
   const [wishlistItems, setWishlistItems] = useState<{
@@ -161,161 +162,167 @@ const StoreDetailsContent = () => {
 
   return (
     <div className="">
-      <div className="sticky top-0">
-        <div className="relative flex flex-col min-h-72 md:min-h-92 h-fit">
-          <div className="absolute inset-0">
-            {!coverLoaded && (
-              <div className="absolute inset-0 bg-card animate-pulse" />
-            )}
-
-            <Image
-              src={stores?.data?.coverPicture || UserProfile}
-              alt="cover"
-              width={1000}
-              height={1000}
-              onLoadingComplete={() => setCoverLoaded(true)}
-              className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${coverLoaded ? "opacity-100" : "opacity-0"}`}
-            />
-
-            {coverLoaded && (
-              <div className="absolute inset-0 bg-linear-to-b from-black/40 to-black/95" />
-            )}
-          </div>
-
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="absolute left-4 top-4 z-40 bg-white/20 backdrop-blur-sm text-white p-2 rounded-md"
-            aria-label="Back"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-
-          <h2 className="absolute left-1/2 -translate-x-1/2 top-4 text-white text-xl font-semibold">
-            Store Details
-          </h2>
-          <div className="absolute right-8 top-4 z-50">
-            <TooltipButton
-              icon={<TriangleAlert className="w-5 h-5" />}
-              tooltip="Report store"
-              onClick={() => setShowConfirmation(true)}
-            />
-          </div>
-
-          <div className="relative z-20 h-full flex-1 flex flex-col justify-end p-5">
-            <div className="flex items-center gap-5 text-white">
-              <div className="w-20 h-20 rounded-full p-1 bg-white ring-4 ring-primary relative overflow-hidden">
-                {!profileLoaded && (
-                  <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-full" />
+      {isCategoriesLoading || isStoresLoading || isProductsLoading ? (
+        <Loader show={true} />
+      ) : (
+        <>
+          <div className="sticky top-0">
+            <div className="relative flex flex-col min-h-72 md:min-h-92 h-fit">
+              <div className="absolute inset-0">
+                {!coverLoaded && (
+                  <div className="absolute inset-0 bg-card animate-pulse" />
                 )}
 
                 <Image
-                  src={stores?.data?.profilePicture || UserProfile}
-                  alt="profile"
+                  src={stores?.data?.coverPicture || UserProfile}
+                  alt="cover"
                   width={1000}
                   height={1000}
-                  onLoadingComplete={() => setProfileLoaded(true)}
-                  className={`w-full h-full object-cover rounded-full transition-opacity duration-300 ${profileLoaded ? "opacity-100" : "opacity-0"}`}
+                  onLoadingComplete={() => setCoverLoaded(true)}
+                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${coverLoaded ? "opacity-100" : "opacity-0"}`}
+                />
+
+                {coverLoaded && (
+                  <div className="absolute inset-0 bg-linear-to-b from-black/40 to-black/95" />
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => router.back()}
+                className="absolute left-4 top-4 z-40 bg-white/20 backdrop-blur-sm text-white p-2 rounded-md"
+                aria-label="Back"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+
+              <h2 className="absolute left-1/2 -translate-x-1/2 top-4 text-white text-xl font-semibold">
+                Store Details
+              </h2>
+              <div className="absolute right-8 top-4 z-50">
+                <TooltipButton
+                  icon={<TriangleAlert className="w-5 h-5" />}
+                  tooltip="Report store"
+                  onClick={() => setShowConfirmation(true)}
                 />
               </div>
 
-              <div>
-                <div className="text-2xl font-semibold">
-                  {stores?.data?.name}
+              <div className="relative z-20 h-full flex-1 flex flex-col justify-end p-5">
+                <div className="flex items-center gap-5 text-white">
+                  <div className="w-20 h-20 rounded-full p-1 bg-white ring-4 ring-primary relative overflow-hidden">
+                    {!profileLoaded && (
+                      <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-full" />
+                    )}
+
+                    <Image
+                      src={stores?.data?.profilePicture || UserProfile}
+                      alt="profile"
+                      width={1000}
+                      height={1000}
+                      onLoadingComplete={() => setProfileLoaded(true)}
+                      className={`w-full h-full object-cover rounded-full transition-opacity duration-300 ${profileLoaded ? "opacity-100" : "opacity-0"}`}
+                    />
+                  </div>
+
+                  <div>
+                    <div className="text-2xl font-semibold">
+                      {stores?.data?.name}
+                    </div>
+                    <div className="opacity-90">{stores?.data?.email}</div>
+                  </div>
                 </div>
-                <div className="opacity-90">{stores?.data?.email}</div>
+
+                <div className="mt-6 mb-12">
+                  <div className="flex items-center gap-6 text-white text-sm">
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-primary" />
+                      <span>{stores?.data?.address}</span>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Phone className="w-4 h-4 text-primary" />
+                      <span>{stores?.data?.phone}</span>
+                    </div>
+                  </div>
+
+                  <p className="mt-4 text-gray-300">
+                    {stores?.data?.description &&
+                      (stores?.data?.description?.length > 680
+                        ? `${stores?.data?.description.slice(0, 680)}...`
+                        : stores?.data?.description)}
+                  </p>
+                </div>
               </div>
             </div>
+          </div>
 
-            <div className="mt-6 mb-12">
-              <div className="flex items-center gap-6 text-white text-sm">
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-primary" />
-                  <span>{stores?.data?.address}</span>
-                </div>
+          <div className="relative z-20 -mt-10">
+            <div className="bg-background rounded-t-[42px] pt-8 pb-12 px-6">
+              <h3 className="text-2xl font-semibold mb-4">Categories</h3>
 
-                <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-primary" />
-                  <span>{stores?.data?.phone}</span>
-                </div>
+              <div className="flex gap-3 overflow-x-auto py-2 mb-6 scrollbar-light">
+                {categories?.data?.map((cat) => (
+                  <div key={cat._id} className="shrink-0">
+                    <CategoryCard
+                      category={{
+                        _id: cat._id,
+                        name: cat.name,
+                        cover: "",
+                        createdAt: "",
+                        updatedAt: "",
+                      }}
+                      selected={cat._id === selectedCategoryId}
+                      onClick={() => handleSelect(cat._id)}
+                    />
+                  </div>
+                ))}
               </div>
 
-              <p className="mt-4 text-gray-300">
-                {stores?.data?.description &&
-                  (stores?.data?.description?.length > 680
-                    ? `${stores?.data?.description.slice(0, 680)}...`
-                    : stores?.data?.description)}
-              </p>
+              <h3 className="text-2xl font-semibold mb-4">Products</h3>
+
+              <div className="grid grid-cols-4 gap-4">
+                {products?.data?.map((p) => (
+                  <ProductCard
+                    key={p._id}
+                    product={p}
+                    isLiked={wishlistItems[p._id || ""] ?? p.isLiked ?? false}
+                    handleWishlist={() =>
+                      onWishlist(
+                        p._id || "",
+                        wishlistItems[p._id || ""] ?? p.isLiked ?? false,
+                      )
+                    }
+                  />
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div className="relative z-20 -mt-10">
-        <div className="bg-background rounded-t-[42px] pt-8 pb-12 px-6">
-          <h3 className="text-2xl font-semibold mb-4">Categories</h3>
-
-          <div className="flex gap-3 overflow-x-auto py-2 mb-6 scrollbar-light">
-            {categories?.data?.map((cat) => (
-              <div key={cat._id} className="shrink-0">
-                <CategoryCard
-                  category={{
-                    _id: cat._id,
-                    name: cat.name,
-                    cover: "",
-                    createdAt: "",
-                    updatedAt: "",
-                  }}
-                  selected={cat._id === selectedCategoryId}
-                  onClick={() => handleSelect(cat._id)}
-                />
-              </div>
-            ))}
-          </div>
-
-          <h3 className="text-2xl font-semibold mb-4">Products</h3>
-
-          <div className="grid grid-cols-4 gap-4">
-            {products?.data?.map((p) => (
-              <ProductCard
-                key={p._id}
-                product={p}
-                isLiked={wishlistItems[p._id || ""] ?? p.isLiked ?? false}
-                handleWishlist={() =>
-                  onWishlist(
-                    p._id || "",
-                    wishlistItems[p._id || ""] ?? p.isLiked ?? false,
-                  )
-                }
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-
-      <ConfirmationModal
-        isOpen={showConfirmation}
-        onClose={cancelReport}
-        onConfirm={handleConfirmReport}
-        title="Report Store"
-        message={`Are you sure you want to report ${stores?.data?.name}?`}
-        confirmText="Yes, Continue"
-        cancelText="Cancel"
-        type="danger"
-        isDangerous={false}
-        showIcon={true}
-      />
-      {currentStore && (
-        <ReportStoreModal
-          isOpen={showReportForm}
-          onClose={cancelReport}
-          onSubmit={handleSubmitReport}
-          storeId={currentStore.storeId}
-          storeName={currentStore.storeName}
-          isLoading={isReporting}
-          title="Report Reasons"
-          reasons={ReportStoreContent}
-        />
+          <ConfirmationModal
+            isOpen={showConfirmation}
+            onClose={cancelReport}
+            onConfirm={handleConfirmReport}
+            title="Report Store"
+            message={`Are you sure you want to report ${stores?.data?.name}?`}
+            confirmText="Yes, Continue"
+            cancelText="Cancel"
+            type="danger"
+            isDangerous={false}
+            showIcon={true}
+          />
+          {currentStore && (
+            <ReportStoreModal
+              isOpen={showReportForm}
+              onClose={cancelReport}
+              onSubmit={handleSubmitReport}
+              storeId={currentStore.storeId}
+              storeName={currentStore.storeName}
+              isLoading={isReporting}
+              title="Report Reasons"
+              reasons={ReportStoreContent}
+            />
+          )}
+        </>
       )}
     </div>
   );

@@ -10,6 +10,7 @@ import {
   TransactionRecord,
   TransactionStatus,
   WithdrawalDetails,
+  WithdrawalResponse,
 } from "@/src/types/index.type";
 import useBalance, { usePayouts } from "@/src/lib/api/balance";
 import { useTransactions } from "@/src/lib/api/transactions";
@@ -85,6 +86,23 @@ const CashWithdrawalPage = () => {
 
     setSelectedTransaction(details);
     setIsModalOpen(true);
+  };
+
+  const handleWithdrawalSuccess = (response: WithdrawalResponse) => {
+    const withdrawalData = response.data;
+    if (withdrawalData) {
+      const details: WithdrawalDetails = {
+        id: withdrawalData._id || "",
+        amount: withdrawalData.amount,
+        currency: (withdrawalData.currency ?? "USD").toUpperCase(),
+        referenceId: withdrawalData._id || "",
+        date: new Date(withdrawalData.date * 1000).toISOString(),
+        description: `Withdrawal to ${withdrawalData.accountNumber || "bank account"} via ${withdrawalData.method || "standard"} method`,
+        status: withdrawalData.status,
+      };
+      setSelectedTransaction(details);
+      setIsModalOpen(true);
+    }
   };
 
   const handleCloseModal = () => {
@@ -304,7 +322,6 @@ const CashWithdrawalPage = () => {
                 ) : (
                   (() => {
                     const txs = transactionsResponse?.data || [];
-                    console.log("🚀 ~ CashWithdrawalPage ~ txs:", txs);
 
                     const mappedTransactions = txs.map((p) => ({
                       id: p._id,
@@ -338,6 +355,7 @@ const CashWithdrawalPage = () => {
         isOpen={isWithdrawModalOpen}
         onClose={() => setIsWithdrawModalOpen(false)}
         availableBalance={availableAmount}
+        onSuccess={handleWithdrawalSuccess}
       />
     </div>
   );

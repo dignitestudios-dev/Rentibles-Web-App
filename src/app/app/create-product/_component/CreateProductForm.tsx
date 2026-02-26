@@ -221,7 +221,6 @@ const CreateProductForm = () => {
   });
 
   const onsubmit = (data: CreateProductPayload) => {
-    console.log("🚀 ~ onsubmit ~ data:", data);
     const formData = new FormData();
 
     // Basic fields
@@ -311,8 +310,6 @@ const CreateProductForm = () => {
     });
 
     clearErrors("location");
-
-    console.log("📍 Profile location applied:", userData);
   };
 
   const handleClearLocation = () => {
