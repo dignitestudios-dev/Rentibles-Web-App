@@ -44,9 +44,10 @@ const LoginForm = () => {
     onSuccess: (response) => {
       invalidateAll();
       const userInfo = response?.data;
+      console.log("🚀 ~ LoginForm ~ userInfo:", userInfo);
       const normalizedUser = {
         ...userInfo.user,
-        _id: userInfo.user.id,
+        _id: userInfo.user._id,
       };
 
       dispatch(

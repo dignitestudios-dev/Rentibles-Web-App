@@ -38,6 +38,7 @@ const ProfileMenu = () => {
   const [isLoading, setIsLoading] = useState(false);
   const authState = useAppSelector((state: RootState) => state.auth);
   const { user, isAuthenticated } = authState;
+  console.log("🚀 ~ ProfileMenu ~ user:", user);
 
   if (!isAuthenticated || !user) {
     return null;
@@ -73,38 +74,42 @@ const ProfileMenu = () => {
               />
             </div>
 
-          <div className="hidden md:flex flex-col items-start gap-0">
-            <span className="text-sm font-medium text-foreground">
-              {user.name}
-            </span>
-            <span className="text-xs text-muted-foreground">{user.email}</span>
-          </div>
-          <ChevronDown className="w-4 h-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>
-          <div className="flex flex-col gap-2">
-            {user.image && (
-              <Image
-                src={user.image}
-                alt={user.name}
-                width={48}
-                height={48}
-                className="rounded-full"
-              />
-            )}
-            <div
-              onClick={() => router.push(`/app/users/${user._id}`)}
-              className="cursor-pointer"
-            >
-              <p className="text-sm font-medium text-foreground">{user.name}</p>
-              <p className="text-xs text-muted-foreground">{user.email}</p>
+            <div className="hidden md:flex flex-col items-start gap-0">
+              <span className="text-sm font-medium text-foreground">
+                {user.name}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {user.email}
+              </span>
             </div>
-            {/* <ChevronDown className="w-4 h-4" /> */}
-          </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
+            <ChevronDown className="w-4 h-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuLabel>
+            <div className="flex flex-col gap-2">
+              {user.image && (
+                <Image
+                  src={user.image}
+                  alt={user.name}
+                  width={48}
+                  height={48}
+                  className="rounded-full"
+                />
+              )}
+              <div
+                onClick={() => router.push(`/app/users/${user._id}`)}
+                className="cursor-pointer"
+              >
+                <p className="text-sm font-medium text-foreground">
+                  {user.name}
+                </p>
+                <p className="text-xs text-muted-foreground">{user.email}</p>
+              </div>
+              {/* <ChevronDown className="w-4 h-4" /> */}
+            </div>
+          </DropdownMenuLabel>
+          <DropdownMenuSeparator />
 
           {/* Navigation Links */}
           {NAV_LINKS.map((link) => (
