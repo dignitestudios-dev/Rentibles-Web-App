@@ -1,5 +1,6 @@
 "use client";
 import { RootState } from "@/src/lib/store";
+import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
 import { useSelector } from "react-redux";
@@ -9,32 +10,41 @@ interface PublicRoutesProps {
 }
 const PublicRoutes = ({ children }: PublicRoutesProps) => {
   const router = useRouter();
-  const { isAuthenticated, user, isVerified } = useSelector(
+  const pathname = usePathname();
+  const { isAuthenticated, user, isGuestMode } = useSelector(
     (state: RootState) => state.auth,
   );
+  const isLoggedIn = Boolean(isAuthenticated && user);
+
   useEffect(() => {
-    if (!isAuthenticated || !user) return;
+    if (isGuestMode && !isLoggedIn && pathname === "/auth/get-started") {
+      router.push("/app/home");
+      return;
+    }
+
+    if (!isLoggedIn || !user) return;
+
     if (user.isEmailVerified === false || user.isPhoneVerified === false) {
       router.push("/auth/select-otp");
       return;
     }
-    if (isVerified) {
-      switch (user.identityStatus) {
-        case "not-provided":
-          router.push("/auth/identity-verification");
-          return;
 
-        case "pending":
-        case "rejected":
-          router.push("/auth/profile-status");
-          return;
+    switch (user.identityStatus) {
+      case "not-provided":
+        router.push("/auth/identity-verification");
+        return;
 
-        case "approved":
-          router.push("/app/home");
-          return;
-      }
+      case "pending":
+      case "rejected":
+        router.push("/auth/profile-status");
+        return;
+
+      case "approved":
+      default:
+        router.push("/app/home");
+        return;
     }
-  }, [isAuthenticated, user, router]);
+  }, [isLoggedIn, user, isGuestMode, pathname, router]);
 
   return <>{children}</>;
 };

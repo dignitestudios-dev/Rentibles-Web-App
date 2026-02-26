@@ -36,7 +36,7 @@ export default function ConfirmDialog({
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent className="rounded-2xl" size="sm">
-        <AlertDialogHeader>
+        <AlertDialogHeader className="items-center justify-center text-center">
           <AlertDialogTitle>{title}</AlertDialogTitle>
           {description && (
             <AlertDialogDescription className="mt-2">
@@ -45,7 +45,7 @@ export default function ConfirmDialog({
           )}
         </AlertDialogHeader>
 
-        <AlertDialogFooter>
+        <AlertDialogFooter className="flex-row justify-center gap-3 sm:justify-center">
           <AlertDialogCancel className="rounded-lg" disabled={!!loading}>
             {cancelLabel}
           </AlertDialogCancel>

@@ -6,6 +6,8 @@ import { Navigation, A11y } from "swiper/modules";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import StoreCard from "./store-card";
 import Loader from "@/src/components/common/Loader";
+import Image from "next/image";
+import { NoDataFound } from "@/public/images/export";
 
 type Store = {
   _id: string;
@@ -24,6 +26,33 @@ const SwiperStores: React.FC<SwiperStoresProps> = ({
   stores = [],
   isLoading,
 }) => {
+  if (isLoading) {
+    return (
+      <div className="my-5">
+        <h2 className="font-semibold text-2xl mb-4">Stores</h2>
+        <Loader show={isLoading} />
+      </div>
+    );
+  }
+
+  if (stores.length === 0) {
+    return (
+      <div className="my-5">
+        <h2 className="font-semibold text-2xl mb-4">Stores</h2>
+        <div className="flex justify-center items-center w-full mt-10">
+          <div className="flex flex-col justify-center items-center">
+            <Image
+              src={NoDataFound}
+              alt="No_Stores"
+              className="w-48"
+            />
+            <p className="text-foreground mt-2">No Stores Available</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const storeCount = stores.length || 5;
 
   return (

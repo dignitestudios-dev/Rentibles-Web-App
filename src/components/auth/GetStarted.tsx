@@ -11,7 +11,7 @@ import { signInWithPopup } from "firebase/auth";
 import { auth, googleProvider } from "@/src/firebase/firebase";
 import Loader from "../common/Loader";
 import { useDispatch } from "react-redux";
-import { singUp } from "@/src/lib/store/feature/authSlice";
+import { setGuestMode, singUp } from "@/src/lib/store/feature/authSlice";
 import { useRouter } from "next/navigation";
 
 const GetStarted = () => {
@@ -95,6 +95,10 @@ const GetStarted = () => {
               hover:border-orange-400
               cursor-pointer
             "
+            onClick={() => {
+              dispatch(setGuestMode(true));
+              router.push("/app/home");
+            }}
           >
             Continue with Guest Mode
           </Button>

@@ -17,7 +17,9 @@ import { useAppDispatch, useAppSelector } from "../../../lib/store/hooks";
 import { UserProfile } from "@/public/images/export";
 import { ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
-// import { useMounted } from "@/src/utils/helperFunctions";
+import { useState } from "react";
+import { useInvalidateAllQueries } from "@/src/hooks/useInvalidateAllQueries";
+import ConfirmDialog from "@/src/components/common/ConfirmDialog";
 
 const NAV_LINKS = [
   { label: "Home", href: "/app/home" },
@@ -26,41 +28,50 @@ const NAV_LINKS = [
   { label: "Cash Withdrawal", href: "/app/cash-withdrawal" },
   { label: "Product Request", href: "/app/product-request" },
   { label: "Settings", href: "/app/settings" },
-  { label: "Create Product", href: "/app/create-product" },
 ];
 
 const ProfileMenu = () => {
-  // const mounted = useMounted();
   const router = useRouter();
   const dispatch = useAppDispatch();
+  const { invalidateAll } = useInvalidateAllQueries();
+  const [openConfirm, setOpenConfirm] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const authState = useAppSelector((state: RootState) => state.auth);
   const { user, isAuthenticated } = authState;
-  // if (!mounted) return null;
 
   if (!isAuthenticated || !user) {
     return null;
   }
 
-  const handleLogout = () => {
-    dispatch(logout());
+  const handleConfirmLogout = async () => {
+    setIsLoading(true);
+    try {
+      invalidateAll();
+      dispatch(logout());
+      router.push("/auth/login");
+    } finally {
+      setIsLoading(false);
+      setOpenConfirm(false);
+    }
   };
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className="flex items-center gap-2 p-2 hover:bg-transparent"
-        >
-          <div className="w-10 h-10 rounded-full overflow-hidden">
-            <Image
-              src={user.image || UserProfile}
-              alt={user.name}
-              width={100}
-              height={100}
-              className="h-full w-full object-cover"
-            />
-          </div>
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            className="flex items-center gap-2 p-2 hover:bg-transparent"
+          >
+            <div className="w-10 h-10 rounded-full overflow-hidden">
+              <Image
+                src={user.image || UserProfile}
+                alt={user.name}
+                width={100}
+                height={100}
+                className="h-full w-full object-cover"
+              />
+            </div>
 
           <div className="hidden md:flex flex-col items-start gap-0">
             <span className="text-sm font-medium text-foreground">
@@ -95,26 +106,37 @@ const ProfileMenu = () => {
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
 
-        {/* Navigation Links */}
-        {NAV_LINKS.map((link) => (
-          <DropdownMenuItem key={link.href} asChild>
-            <Link href={link.href} className="cursor-pointer">
-              {link.label}
-            </Link>
+          {/* Navigation Links */}
+          {NAV_LINKS.map((link) => (
+            <DropdownMenuItem key={link.href} asChild>
+              <Link href={link.href} className="cursor-pointer">
+                {link.label}
+              </Link>
+            </DropdownMenuItem>
+          ))}
+
+          <DropdownMenuSeparator />
+
+          {/* Logout */}
+          <DropdownMenuItem
+            onClick={() => setOpenConfirm(true)}
+            className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive"
+          >
+            Logout
           </DropdownMenuItem>
-        ))}
-
-        <DropdownMenuSeparator />
-
-        {/* Logout */}
-        <DropdownMenuItem
-          onClick={handleLogout}
-          className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive"
-        >
-          Logout
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <ConfirmDialog
+        open={openConfirm}
+        onOpenChange={setOpenConfirm}
+        title="Log out"
+        description="Are you sure you want to log out?"
+        confirmLabel="Yes"
+        cancelLabel="No"
+        onConfirm={handleConfirmLogout}
+        loading={isLoading}
+      />
+    </>
   );
 };
 

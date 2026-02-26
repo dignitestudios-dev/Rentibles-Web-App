@@ -10,7 +10,7 @@ import React, { useEffect, useState } from "react";
 const libraries: Libraries = ["places"];
 
 const LocationAndSearch = () => {
-  const [address, setAddress] = useState<string>("");
+  const [address, setAddress] = useState<string>("Loading...");
 
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
@@ -18,23 +18,30 @@ const LocationAndSearch = () => {
   });
 
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition(async (position) => {
-      if (!isLoaded) return;
-      const { latitude, longitude } = position.coords;
+    if (!isLoaded) return;
 
-      try {
-        const addr = await getAddressFromLatLng(latitude, longitude);
-        setAddress(addr);
-      } catch (err) {
-        ErrorToast(String(err));
-      }
-    });
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+
+        try {
+          const addr = await getAddressFromLatLng(latitude, longitude);
+          setAddress(addr);
+        } catch (err) {
+          ErrorToast(String(err));
+          setAddress("");
+        }
+      },
+      () => {
+        setAddress("");
+      },
+    );
   }, [isLoaded]);
 
   return (
     <div className="w-full flex justify-between gap-10">
       <div className="flex gap-2 text-sm items-center">
-        <MapPin className="text-primary size-4" /> <span>{address}</span>
+        <MapPin className="text-primary size-4" /> <span className={address === "Loading..." ? "text-muted-foreground" : ""}>{address}</span>
       </div>
 
       <Link href="/app/search">

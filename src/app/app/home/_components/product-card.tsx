@@ -31,7 +31,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
   isLoading = false,
   isUser = false,
 }) => {
-  const cover = product?.cover ?? "";
+  const cover = product?.cover;
+  const hasCover = Boolean(cover);
   const name = product?.name ?? "Product Name";
   const category = product?.category?.name ?? "Furniture";
   const price = product?.pricePerDay ?? product?.pricePerHour ?? 0;
@@ -53,7 +54,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     <div className="bg-card rounded-3xl overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 h-96 hover:-translate-y-2">
       <div className="p-4 h-full flex flex-col">
         <div className="relative rounded-2xl overflow-hidden bg-card h-56">
-          {!imgLoaded && (
+          {hasCover && !imgLoaded && (
             <div className="absolute inset-0 bg-card animate-pulse z-10" />
           )}
           {product?.isActive === false && (
@@ -62,14 +63,18 @@ const ProductCard: React.FC<ProductCardProps> = ({
             </div>
           )}
 
-          <Image
-            src={cover}
-            alt={name}
-            width={1000}
-            height={1000}
-            onLoadingComplete={() => setImgLoaded(true)}
-            className={`w-full h-full object-cover transition-opacity duration-300 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
-          />
+          {hasCover ? (
+            <Image
+              src={cover}
+              alt={name}
+              width={1000}
+              height={1000}
+              onLoadingComplete={() => setImgLoaded(true)}
+              className={`w-full h-full object-cover transition-opacity duration-300 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
+            />
+          ) : (
+            <div className="w-full h-full bg-muted" />
+          )}
 
           <div className="absolute top-3 left-3 bg-gray-800 text-white rounded-md px-2 py-1 flex items-center gap-2 text-sm z-20">
             <Star className="w-4 h-4 text-yellow-400" />

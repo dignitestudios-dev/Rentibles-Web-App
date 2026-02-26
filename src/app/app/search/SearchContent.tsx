@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { ArrowLeft, Search as SearchIcon, X, ChevronRight } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import ProductCard from "../home/_components/product-card";
 import StoreCard from "../home/_components/store-card";
@@ -16,12 +16,14 @@ import { getAxiosErrorMessage } from "@/src/utils/errorHandlers";
 import { ErrorToast } from "@/src/components/common/Toaster";
 import { createWishlist } from "@/src/lib/query/queryFn";
 import Loader from "@/src/components/common/Loader";
+import { useRequireLogin } from "@/src/hooks/useRequireLogin";
+import { UserProfile } from "@/public/images/export";
 
 type Tab = "all" | "users" | "stores" | "products";
 
 const SearchContent = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const { requireLogin } = useRequireLogin();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState<Tab>("all");
 
@@ -38,8 +40,6 @@ const SearchContent = () => {
   const {
     data: userData,
     isLoading: usersLoading,
-    isError: usersError,
-    error: usersErrorMsg,
   } = useUsers({ search: debouncedSearch }, { enabled: hasSearch });
 
   const { data: productsData, isLoading: productsLoading } = useProducts(
@@ -94,9 +94,13 @@ const SearchContent = () => {
 
   const onWishlist = (productId: string, currentLiked: boolean) => {
     const newValue = !currentLiked;
-    wishlistMutation.mutate({
-      productId,
-      value: newValue,
+    requireLogin({
+      onAuthenticated: () => {
+        wishlistMutation.mutate({
+          productId,
+          value: newValue,
+        });
+      },
     });
   };
 
@@ -193,7 +197,7 @@ const SearchContent = () => {
                         <div className="relative w-18 h-18 rounded-full">
                           <div className="w-full h-full rounded-full ring-4 ring-primary p-1 bg-white">
                             <Image
-                              src={user.profilePicture ?? ""}
+                              src={user.profilePicture || UserProfile}
                               alt={user.name ?? "profile"}
                               width={500}
                               height={500}
@@ -220,7 +224,7 @@ const SearchContent = () => {
                         <div className="relative w-18 h-18 rounded-full">
                           <div className="w-full h-full rounded-full ring-4 ring-primary p-1 bg-white">
                             <Image
-                              src={user.profilePicture ?? ""}
+                              src={user.profilePicture || UserProfile}
                               alt={user.name ?? "profile"}
                               width={500}
                               height={500}

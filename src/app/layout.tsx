@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Manrope, Poppins } from "next/font/google";
+import { Poppins } from "next/font/google";
 import "./globals.css";
 
 // Import Swiper styles
@@ -10,6 +10,7 @@ import { ReduxProvider } from "../lib/store/provider";
 import ThemeProvider from "../lib/theme/ThemeProvider";
 import ReactQueryProvider from "../lib/query/ReactQueryProvider";
 import { Toaster } from "react-hot-toast";
+import { LoginRequiredProvider } from "../lib/auth/LoginRequiredProvider";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -38,13 +39,15 @@ export default function RootLayout({
         <ThemeProvider>
           <ReduxProvider>
             <ReactQueryProvider>
-              <Toaster
-                position="bottom-right"
-                toastOptions={{
-                  duration: 3000,
-                }}
-              />
-              {children}
+              <LoginRequiredProvider>
+                <Toaster
+                  position="bottom-right"
+                  toastOptions={{
+                    duration: 3000,
+                  }}
+                />
+                {children}
+              </LoginRequiredProvider>
             </ReactQueryProvider>
           </ReduxProvider>
         </ThemeProvider>

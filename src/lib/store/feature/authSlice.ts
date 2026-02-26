@@ -18,12 +18,17 @@ interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isVerified: boolean;
+  isGuestMode: boolean;
 }
 const token =
   typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
 const user =
   typeof window !== "undefined" ? localStorage.getItem("user") : null;
+
+const isGuestMode =
+  typeof window !== "undefined" && localStorage.getItem("guest_mode") === "true";
+
 export const initialState: AuthState = {
   accessToken: token,
   refreshToken: token,
@@ -33,6 +38,7 @@ export const initialState: AuthState = {
       ? true
       : false,
   isVerified: false,
+  isGuestMode: !token && isGuestMode,
 };
 
 const authSlice = createSlice({
@@ -47,11 +53,13 @@ const authSlice = createSlice({
       }>,
     ) => {
       state.isAuthenticated = true;
+      state.isGuestMode = false;
       state.accessToken = action.payload.token.access;
       state.refreshToken = action.payload.token.refresh;
       state.user = action.payload.user;
       localStorage.setItem("user", JSON.stringify(action.payload.user));
       localStorage.setItem("token", action.payload.token.access);
+      localStorage.removeItem("guest_mode");
     },
     setAccessToken: (state, action: PayloadAction<string>) => {
       state.accessToken = action.payload;
@@ -62,20 +70,33 @@ const authSlice = createSlice({
     setUser: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
     },
+    setGuestMode: (state, action: PayloadAction<boolean>) => {
+      state.isGuestMode = action.payload;
+
+      if (typeof window !== "undefined") {
+        if (action.payload) {
+          localStorage.setItem("guest_mode", "true");
+        } else {
+          localStorage.removeItem("guest_mode");
+        }
+      }
+    },
     logout: (state) => {
       state.accessToken = null;
       state.refreshToken = null;
       state.user = null;
       state.isAuthenticated = false;
-      state.isVerified === false;
+      state.isVerified = false;
+      state.isGuestMode = false;
       if (typeof window !== "undefined") {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
+        localStorage.removeItem("guest_mode");
       }
     },
   },
 });
 
-export const { singUp, setAccessToken, setUser, logout, setVerified } =
+export const { singUp, setAccessToken, setUser, logout, setVerified, setGuestMode } =
   authSlice.actions;
 export default authSlice.reducer;

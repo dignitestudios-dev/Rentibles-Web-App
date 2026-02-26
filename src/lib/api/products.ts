@@ -27,6 +27,11 @@ import {
   GetSubCategoriesResponse,
   GetWishlistResponse,
 } from "@/src/types/index.type";
+import { useAppSelector } from "@/src/lib/store/hooks";
+
+// Default fallback coordinates (Karachi)
+const DEFAULT_LAT = 24.8607;
+const DEFAULT_LNG = 67.0011;
 
 export const useCategories = (): UseQueryResult<
   GetCategoriesResponse,
@@ -59,8 +64,18 @@ export const useStores = (
     "queryKey" | "queryFn"
   >,
 ): UseQueryResult<GetStoresResponse, Error> => {
+  const { isGuestMode } = useAppSelector((state) => state.auth);
+
+  // Inject default location for guest mode
+  const enrichedParams: GetStoresParams = {
+    ...params,
+    ...(isGuestMode && !params?.latitude && !params?.longitude
+      ? { latitude: DEFAULT_LAT, longitude: DEFAULT_LNG }
+      : {}),
+  };
+
   return useQuery({
-    queryKey: ["stores", params], // include params in the key
+    queryKey: ["stores", enrichedParams],
     queryFn: ({ queryKey }) => {
       const [, queryParams] = queryKey as [string, GetStoresParams?];
       return getStoresWithParams(queryParams);
@@ -78,8 +93,18 @@ export const useProducts = (
     "queryKey" | "queryFn"
   >,
 ): UseQueryResult<GetProductsResponse, Error> => {
+  const { isGuestMode } = useAppSelector((state) => state.auth);
+
+  // Inject default location for guest mode
+  const enrichedParams: GetProductsParams = {
+    ...params,
+    ...(isGuestMode && !params?.latitude && !params?.longitude
+      ? { latitude: DEFAULT_LAT, longitude: DEFAULT_LNG }
+      : {}),
+  };
+
   return useQuery<GetProductsResponse, Error>({
-    queryKey: ["products", params],
+    queryKey: ["products", enrichedParams],
     queryFn: ({ queryKey }) => {
       const [, queryParams] = queryKey as [string, GetProductsParams?];
       return getProductsWithParams(queryParams);

@@ -9,6 +9,7 @@ import { useMutation } from "@tanstack/react-query";
 import { createWishlist } from "@/src/lib/query/queryFn";
 import { getAxiosErrorMessage } from "@/src/utils/errorHandlers";
 import { ErrorToast } from "@/src/components/common/Toaster";
+import { useRequireLogin } from "@/src/hooks/useRequireLogin";
 
 type Product = {
   _id: string;
@@ -30,7 +31,7 @@ const SwiperProducts: React.FC<SwiperProductsProps> = ({
   products = [],
   isLoading,
 }) => {
-  const productCount = products.length || 8;
+  const { requireLogin } = useRequireLogin();
 
   // Track wishlist state locally
   const [wishlistItems, setWishlistItems] = useState<{
@@ -61,9 +62,13 @@ const SwiperProducts: React.FC<SwiperProductsProps> = ({
 
   const onWishlist = (productId: string, currentLiked: boolean) => {
     const newValue = !currentLiked;
-    wishlistMutation.mutate({
-      productId,
-      value: newValue,
+    requireLogin({
+      onAuthenticated: () => {
+        wishlistMutation.mutate({
+          productId,
+          value: newValue,
+        });
+      },
     });
   };
 

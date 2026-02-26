@@ -21,10 +21,12 @@ import { useDispatch } from "react-redux";
 import { ErrorToast, SuccessToast } from "../common/Toaster";
 import { firebaseLogin, firebaseSignup } from "@/src/firebase/getIdToken";
 import { singUp } from "@/src/lib/store/feature/authSlice";
+import { useInvalidateAllQueries } from "@/src/hooks/useInvalidateAllQueries";
 
 const RegisterForm = () => {
   const router = useRouter();
   const dispatch = useDispatch();
+  const { invalidateAll } = useInvalidateAllQueries();
   const [preview, setPreview] = useState<string | null>(null);
   const [fireBaseLoading, setFirebaseLoading] = useState(false);
   const [location, setLocation] = useState<{
@@ -128,6 +130,7 @@ const RegisterForm = () => {
     mutationFn: (payload: FormData) => RegisterUser(payload),
 
     onSuccess: (response) => {
+      invalidateAll();
       const userInfo = response?.data;
 
       dispatch(

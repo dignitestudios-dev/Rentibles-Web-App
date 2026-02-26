@@ -1,5 +1,4 @@
 import axios from "axios";
-import Cookies from "js-cookie";
 import FingerprintJS from "@fingerprintjs/fingerprintjs";
 
 const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL;
@@ -59,11 +58,17 @@ axiosInstance.interceptors.response.use(
     }
 
     if (error.response?.status === 401) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
+      const token =
+        typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
-      if (typeof window !== "undefined") {
-        window.location.href = "/";
+      if (token) {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        localStorage.removeItem("guest_mode");
+
+        if (typeof window !== "undefined") {
+          window.location.href = "/auth/login";
+        }
       }
     }
 

@@ -23,9 +23,12 @@ import { ReportStoreContent } from "./reportStoreOptions";
 import { ReportStoreConfig } from "@/src/types/index.type";
 import ReportStoreModal from "./ReportStoreModal";
 import { reportStore } from "@/src/lib/api/store";
+import { UserProfile } from "@/public/images/export";
+import { useRequireLogin } from "@/src/hooks/useRequireLogin";
 
 const StoreDetailsContent = () => {
   const router = useRouter();
+  const { requireLogin } = useRequireLogin();
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const params = useParams();
@@ -103,9 +106,13 @@ const StoreDetailsContent = () => {
 
   const onWishlist = (productId: string, currentLiked: boolean) => {
     const newValue = !currentLiked;
-    wishlistMutation.mutate({
-      productId,
-      value: newValue,
+    requireLogin({
+      onAuthenticated: () => {
+        wishlistMutation.mutate({
+          productId,
+          value: newValue,
+        });
+      },
     });
   };
 
@@ -162,7 +169,7 @@ const StoreDetailsContent = () => {
             )}
 
             <Image
-              src={stores?.data?.coverPicture ?? ""}
+              src={stores?.data?.coverPicture || UserProfile}
               alt="cover"
               width={1000}
               height={1000}
@@ -203,7 +210,7 @@ const StoreDetailsContent = () => {
                 )}
 
                 <Image
-                  src={stores?.data?.profilePicture ?? ""}
+                  src={stores?.data?.profilePicture || UserProfile}
                   alt="profile"
                   width={1000}
                   height={1000}

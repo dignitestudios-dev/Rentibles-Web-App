@@ -12,10 +12,12 @@ import { createWishlist } from "@/src/lib/query/queryFn";
 import { getAxiosErrorMessage } from "@/src/utils/errorHandlers";
 import { ErrorToast } from "@/src/components/common/Toaster";
 import Loader from "@/src/components/common/Loader";
+import { useRequireLogin } from "@/src/hooks/useRequireLogin";
 
 const ProductsContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { requireLogin } = useRequireLogin();
 
   // Get selected category from URL params
   const selectedCategory = searchParams?.get("category");
@@ -23,8 +25,6 @@ const ProductsContent = () => {
   const {
     data: products,
     isLoading,
-    isError,
-    error,
   } = useProducts({
     categoryId: selectedCategory || undefined,
   });
@@ -58,9 +58,13 @@ const ProductsContent = () => {
 
   const onWishlist = (productId: string, currentLiked: boolean) => {
     const newValue = !currentLiked;
-    wishlistMutation.mutate({
-      productId,
-      value: newValue,
+    requireLogin({
+      onAuthenticated: () => {
+        wishlistMutation.mutate({
+          productId,
+          value: newValue,
+        });
+      },
     });
   };
 

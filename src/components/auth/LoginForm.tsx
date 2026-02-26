@@ -15,13 +15,14 @@ import { ErrorToast, SuccessToast } from "../common/Toaster";
 import Loader from "../common/Loader";
 import { useDispatch } from "react-redux";
 import { singUp } from "@/src/lib/store/feature/authSlice";
+import { useInvalidateAllQueries } from "@/src/hooks/useInvalidateAllQueries";
 
 const LoginForm = () => {
   const router = useRouter();
   const dispatch = useDispatch();
+  const { invalidateAll } = useInvalidateAllQueries();
   const {
     register,
-    setError,
     handleSubmit,
     formState: { errors },
   } = useForm<LoginPayload>({
@@ -41,6 +42,7 @@ const LoginForm = () => {
   const loginMutation = useMutation({
     mutationFn: loginUser,
     onSuccess: (response) => {
+      invalidateAll();
       const userInfo = response?.data;
 
       dispatch(
