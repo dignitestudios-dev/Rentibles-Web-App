@@ -5,7 +5,7 @@ interface User {
   name: string;
   email: string;
   image?: string;
-  phone: number;
+  phone: string;
   isPhoneVerified?: boolean;
   isEmailVerified?: boolean;
   identityStatus?: "not-provided" | "pending" | "approved" | "rejected";
@@ -27,7 +27,8 @@ const user =
   typeof window !== "undefined" ? localStorage.getItem("user") : null;
 
 const isGuestMode =
-  typeof window !== "undefined" && localStorage.getItem("guest_mode") === "true";
+  typeof window !== "undefined" &&
+  localStorage.getItem("guest_mode") === "true";
 
 export const initialState: AuthState = {
   accessToken: token,
@@ -97,6 +98,12 @@ const authSlice = createSlice({
   },
 });
 
-export const { singUp, setAccessToken, setUser, logout, setVerified, setGuestMode } =
-  authSlice.actions;
+export const {
+  singUp,
+  setAccessToken,
+  setUser,
+  logout,
+  setVerified,
+  setGuestMode,
+} = authSlice.actions;
 export default authSlice.reducer;

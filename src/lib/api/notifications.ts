@@ -2,9 +2,19 @@
 import { axiosInstance } from "../axiosInstance";
 import { GetNotificationsResponse } from "@/src/types/index.type";
 import { useQuery } from "@tanstack/react-query";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 // import { fetchNotifications } from "./services/notification";
 import { Notification } from "@/src/types/index.type";
+import { useMutation, UseMutationResult } from "@tanstack/react-query";
+
+export interface MarkNotificationAsReadPayload {
+  notificationId: string;
+}
+
+export interface MarkNotificationAsReadResponse {
+  success: boolean;
+  message: string;
+}
 
 const fetchNotifications = async (
   page: number,
@@ -21,6 +31,7 @@ const LIMIT = 5;
 
 export const useNotifications = () => {
   const [page, setPage] = useState(1);
+  const [allNotifications, setAllNotifications] = useState<Notification[]>([]);
 
   const { data, isLoading, isFetching } = useQuery<
     GetNotificationsResponse,
@@ -44,4 +55,26 @@ export const useNotifications = () => {
     hasNextPage,
     loadMore: () => setPage((prev) => prev + 1),
   };
+};
+
+export const markNotificationAsRead = async (
+  payload: MarkNotificationAsReadPayload,
+): Promise<MarkNotificationAsReadResponse> => {
+  const { data } = await axiosInstance.post<MarkNotificationAsReadResponse>(
+    "/notification/read",
+    payload,
+  );
+
+  return data;
+};
+
+export const useMarkNotificationAsRead = (): UseMutationResult<
+  MarkNotificationAsReadResponse,
+  Error,
+  MarkNotificationAsReadPayload,
+  unknown
+> => {
+  return useMutation({
+    mutationFn: markNotificationAsRead,
+  });
 };

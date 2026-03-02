@@ -4,10 +4,11 @@ export const loginSchema = z.object({
   email: z
     .string()
     .min(1, "Email is required")
+    .email({ message: "Invalid email address" })
     .refine((val) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
       message: "Invalid email address",
     }),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().min(1, "Password is required"),
 });
 
 export type LoginPayload = z.infer<typeof loginSchema>;
@@ -52,19 +53,45 @@ export const NewPasswordSchema = z
   });
 
 export type NewPasswordPayload = z.infer<typeof NewPasswordSchema>;
-
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 export const RegisterSchema = z
   .object({
-    fullName: z.string().min(2, "Full name is required"),
-    email: z.string().email("Invalid email address"),
-    phone: z.string().min(7, "Invalid phone number"),
+    fullName: z
+      .string()
+      .trim()
+      .min(1, "Full name is required")
+      .min(2, "Full name must be at least 2 characters"),
+    email: z
+      .string()
+      .min(1, "Email is required") // empty check
+      .refine((val) => emailRegex.test(val), {
+        message: "Invalid email address",
+      }),
+    phone: z
+      .string()
+      .trim()
+      .min(1, "Phone number is required")
+      .min(7, "Phone number must be at least 7 digits"),
     fcmToken: z.string().optional(),
 
-    zipCode: z.string().min(3, "Zip code is required"),
+    zipCode: z
+      .string()
+      .trim()
+      .min(1, "Zip code is required")
+      .min(5, "Zip code must be at least 5 characters"),
     apartmentNo: z.string().min(1, "Apartment number is required"),
 
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    confirmPassword: z.string().min(6, "Confirm your password"),
+    password: z
+      .string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+      .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+      .regex(/[0-9]/, "Password must contain at least one number")
+      .regex(
+        /[^A-Za-z0-9]/,
+        "Password must contain at least one special character",
+      ),
+    confirmPassword: z.string().min(8, "Confirm your password"),
 
     image: z
       .any()

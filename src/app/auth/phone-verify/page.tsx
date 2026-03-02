@@ -15,6 +15,7 @@ import { getAxiosErrorMessage } from "@/src/utils/errorHandlers";
 import { useDispatch } from "react-redux";
 import { setUser } from "@/src/lib/store/feature/authSlice";
 import { useRouter } from "next/navigation";
+import { formatUSAPhoneNumber } from "@/src/utils/helperFunctions";
 
 const Page = () => {
   const router = useRouter();
@@ -77,8 +78,10 @@ const Page = () => {
       <h2 className="text-3xl font-bold mt-6">Number Verification</h2>
 
       <p className="text-gray-400 mt-2 text-center">
-        Enter the OTP code sent to
-        <span className="text-foreground mx-2">{user?.phone}</span>
+        Enter the OTP sent to
+        <span className="text-foreground mx-2">
+          +1{formatUSAPhoneNumber(user?.phone || "")}
+        </span>
       </p>
 
       <OtpForm

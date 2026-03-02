@@ -94,7 +94,7 @@ const Page = () => {
       <h2 className="text-3xl font-bold mt-6">Verify OTP</h2>
 
       <p className="text-gray-400 mt-2 text-center">
-        The code was sent to{" "}
+        The OTP was sent to{" "}
         <span className="text-foreground font-normal">{email}</span>
       </p>
 

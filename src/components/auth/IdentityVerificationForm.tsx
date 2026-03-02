@@ -27,6 +27,7 @@ const IdentityVerificationPage = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
   const [facePreview, setFacePreview] = useState<string | null>(null);
+
   const [frontPreview, setFrontPreview] = useState<string | null>(null);
   const [backPreview, setBackPreview] = useState<string | null>(null);
   const [showCamera, setShowCamera] = useState(false);
@@ -94,7 +95,11 @@ const IdentityVerificationPage = () => {
             <div className="flex items-center gap-5">
               <div className="h-19.5 w-19.5 rounded-full border-2 border-dashed border-orange-500 overflow-hidden">
                 <Image
-                  src={facePreview}
+                  src={
+                    facePreview && facePreview.startsWith("data:image/")
+                      ? facePreview
+                      : Profile_img
+                  }
                   alt="Face"
                   width={78}
                   height={78}
@@ -115,7 +120,12 @@ const IdentityVerificationPage = () => {
         </label>
 
         <div>
-          <InputField placeholder="Legal Name" {...register("name")} />
+          <InputField
+            inputType="letter"
+            placeholder="Legal Name"
+            {...register("name")}
+            maxLength={40}
+          />
           {errors.name && (
             <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>
           )}

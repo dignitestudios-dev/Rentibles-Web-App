@@ -1,7 +1,9 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 import { Bell } from "lucide-react";
 import {
   DropdownMenu,
@@ -10,7 +12,10 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { useNotifications } from "@/src/lib/api/notifications";
+import {
+  useNotifications,
+  markNotificationAsRead,
+} from "@/src/lib/api/notifications";
 import { Notification as TNotification } from "@/src/types/index.type";
 import { Button } from "@/components/ui/button";
 
@@ -18,22 +23,36 @@ interface NotificationDropdownProps {
   onItemClick?: (item: TNotification) => void;
 }
 
-const formatTimeAgo = (iso?: string) => {
-  if (!iso) return "";
-  const diff = Date.now() - new Date(iso).getTime();
-  const minutes = Math.floor(diff / 60000);
-  if (minutes < 60) return `${minutes}m`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h`;
-  const days = Math.floor(hours / 24);
-  return `${days}d`;
-};
-
 const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   onItemClick,
 }) => {
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
   const { notifications, isLoading, isFetching, hasNextPage, loadMore } =
     useNotifications();
+
+  const handleClick = async (n: TNotification) => {
+    // mark read if not already
+    if (!n.isRead) {
+      try {
+        await markNotificationAsRead({ notificationId: n._id });
+        queryClient.invalidateQueries({ queryKey: ["notifications"] });
+      } catch (e) {
+        console.error("failed to mark notification read", e);
+      }
+    }
+
+    // navigate based on type/metaData
+    const metaType = n.metaData?.type;
+    if (metaType === "product" && n.metaData?.product?._id) {
+      router.push(`/app/products/${n.metaData.product._id}`);
+    } else if (metaType === "booking" && n.metaData?.booking?._id) {
+      router.push(`/app/rental-tracking/${n.metaData.booking._id}`);
+    }
+
+    onItemClick?.(n);
+  };
 
   return (
     <DropdownMenu>
@@ -69,10 +88,10 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
               return (
                 <DropdownMenuItem
                   key={n._id}
-                  onClick={() => onItemClick?.(n)}
+                  onClick={() => handleClick(n)}
                   className="cursor-pointer"
                 >
-                  <div className="flex gap-3 p-2 w-full">
+                  <div className="flex items-center gap-3 p-2 w-full">
                     <div className="w-10 h-10 rounded-md overflow-hidden bg-gray-100">
                       {img ? (
                         <Image
@@ -93,6 +112,11 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
                         {n.description}
                       </p>
                     </div>
+
+                    {/* unread indicator */}
+                    {!n.isRead && (
+                      <span className="w-2 h-2 bg-primary rounded-full" />
+                    )}
                   </div>
                 </DropdownMenuItem>
               );

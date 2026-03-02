@@ -47,8 +47,9 @@ const ForgotPasswordForm = () => {
     <form className="w-full mt-6" onSubmit={handleSubmit(onSubmit)} action="">
       <div>
         <InputField
+          inputType="email"
           label="Email Address"
-          type="email"
+          // type="email"
           placeholder="Enter your email"
           error={errors.email?.message}
           {...register("email")}

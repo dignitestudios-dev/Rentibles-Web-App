@@ -50,6 +50,7 @@ const NewPasswordForm = () => {
   return (
     <form className="w-full mt-6 space-y-6" onSubmit={handleSubmit(onSubmit)}>
       <InputField
+        inputType="password"
         label="New Password"
         type="password"
         placeholder="New Password"
@@ -58,6 +59,7 @@ const NewPasswordForm = () => {
       />
 
       <InputField
+        inputType="password"
         label="Confirm Password"
         type="password"
         placeholder="Confirm Password"

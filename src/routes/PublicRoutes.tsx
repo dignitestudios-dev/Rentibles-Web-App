@@ -25,7 +25,7 @@ const PublicRoutes = ({ children }: PublicRoutesProps) => {
     if (!isLoggedIn || !user) return;
 
     if (user.isEmailVerified === false || user.isPhoneVerified === false) {
-      router.push("/auth/select-otp");
+      // router.push("/auth/select-otp");
       return;
     }
 

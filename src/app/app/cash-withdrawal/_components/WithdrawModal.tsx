@@ -190,7 +190,7 @@ const WithdrawModal: React.FC<WithdrawModalProps> = ({
                   Withdrawal Amount (USD)
                 </label>
                 <InputField
-                  type="number"
+                  inputType="numeric"
                   placeholder="Enter amount"
                   value={withdrawAmount}
                   onChange={(e) => setWithdrawAmount(e.target.value)}

@@ -79,7 +79,7 @@ const Page = () => {
       <h2 className="text-3xl font-bold mt-6">Email Verification</h2>
 
       <p className="text-gray-400 mt-2 text-center">
-        Enter the OTP code sent to
+        Enter the OTP sent to
         <span className="text-foreground mx-1">{user?.email}</span>
       </p>
 

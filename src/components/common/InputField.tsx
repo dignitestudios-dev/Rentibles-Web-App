@@ -8,10 +8,12 @@ import { useState, forwardRef } from "react";
 interface InputFieldProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
+  inputType?: string;
 }
 
+// eslint-disable-next-line react/display-name
 export const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
-  ({ label, type = "text", error, className, ...props }, ref) => {
+  ({ label, type = "text", error, className, inputType, ...props }, ref) => {
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const isPassword = type === "password";
 
@@ -23,6 +25,43 @@ export const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
           <RadixInput
             ref={ref}
             {...props}
+            onChange={(e) => {
+              let value = e.target.value;
+
+              switch (inputType) {
+                case "letter":
+                  value = value.replace(/[^A-Za-z\s]/g, "");
+                  value = value
+                    .toLowerCase()
+                    .replace(/\b\w/g, (char) => char.toUpperCase());
+                  break;
+
+                case "email":
+                  value = value.replace(/\s+/g, "");
+                  break;
+
+                case "numeric":
+                  value = value.replace(/[^0-9]/g, "");
+                  break;
+
+                case "password":
+                  // no transformation
+                  break;
+
+                default:
+                  // Sentence Case (first letter uppercase, rest lowercase)
+                  value =
+                    value.charAt(0).toUpperCase() +
+                    value.slice(1).toLowerCase();
+                  break;
+              }
+
+              value = value.replace(/^\s+/, "").replace(/\s{2,}/g, " ");
+              console.log("🚀 ~ value 60:", value);
+
+              e.target.value = value;
+              props.onChange?.(e);
+            }}
             type={isPassword ? (isPasswordVisible ? "text" : "password") : type}
             className={`
               text-foreground

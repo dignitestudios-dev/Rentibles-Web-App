@@ -11,6 +11,7 @@ interface PhoneInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: string;
 }
 
+// eslint-disable-next-line react/display-name
 const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
   ({ countryCode = "+1", error, className, onChange, ...props }, ref) => {
     const [value, setValue] = useState("");

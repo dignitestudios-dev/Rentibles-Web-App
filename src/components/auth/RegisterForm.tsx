@@ -23,6 +23,8 @@ import { firebaseLogin, firebaseSignup } from "@/src/firebase/getIdToken";
 import { singUp } from "@/src/lib/store/feature/authSlice";
 import { useInvalidateAllQueries } from "@/src/hooks/useInvalidateAllQueries";
 
+const MAX_FILE_SIZE = 20 * 1024 * 1024;
+
 const RegisterForm = () => {
   const router = useRouter();
   const dispatch = useDispatch();
@@ -43,6 +45,14 @@ const RegisterForm = () => {
     if (!file) return;
 
     if (!file.type.startsWith("image/")) return;
+
+    if (file.size > MAX_FILE_SIZE) {
+      ErrorToast(
+        `File size must not exceed 20 MB. Current: ${(file.size / 1024 / 1024).toFixed(2)} MB`,
+      );
+      e.target.value = ""; // Reset input
+      return;
+    }
 
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -120,12 +130,14 @@ const RegisterForm = () => {
       await registerMutation.mutateAsync(formData);
     } catch (err: any) {
       const message = err?.message || "Signup failed. Please try again.";
+      console.log("🚀 ~ onSubmit ~ message: 133", message);
       setError("root", { type: "manual", message });
-      ErrorToast(message);
+      // ErrorToast(message);
     } finally {
       setFirebaseLoading(false);
     }
   };
+
   const registerMutation = useMutation({
     mutationFn: (payload: FormData) => RegisterUser(payload),
 
@@ -184,7 +196,7 @@ const RegisterForm = () => {
               <img
                 src={preview}
                 alt="profile preview"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
               />
             </div>
           ) : (
@@ -203,7 +215,7 @@ const RegisterForm = () => {
         <input
           id="profile-upload"
           type="file"
-          accept="image/*"
+          accept=".jpg,.jpeg,.png"
           hidden
           {...register("image", {
             onChange: (e) => handleImageChange(e),
@@ -219,13 +231,17 @@ const RegisterForm = () => {
           placeholder="Full Name"
           error={errors.fullName?.message}
           {...register("fullName")}
+          inputType="letter"
+          maxLength={50}
         />
 
         <InputField
           placeholder="Email Address"
-          type="email"
+          // type="email"
           error={errors.email?.message}
           {...register("email")}
+          inputType="email"
+          maxLength={35}
         />
 
         <div className="md:col-span-2">
@@ -250,6 +266,8 @@ const RegisterForm = () => {
           placeholder="Zip Code"
           error={errors.zipCode?.message}
           {...register("zipCode")}
+          maxLength={5}
+          inputType="numeric"
         />
 
         <InputField
@@ -264,6 +282,8 @@ const RegisterForm = () => {
           placeholder="Password"
           error={errors.password?.message}
           {...register("password")}
+          maxLength={16}
+          inputType="password"
         />
 
         <InputField
@@ -271,6 +291,8 @@ const RegisterForm = () => {
           placeholder="Confirm Password"
           error={errors.confirmPassword?.message}
           {...register("confirmPassword")}
+          maxLength={16}
+          inputType="password"
         />
       </div>
       <div className="flex items-start gap-2 my-2 text-[13px] text-gray-400 leading-tight">
@@ -280,7 +302,7 @@ const RegisterForm = () => {
           className="mt-1 h-4 w-4 accent-[#F85E00]"
         />
         <p>
-          I Agree To The{" "}
+          I agree to the{" "}
           <Link
             href="https://www.rentibles.com/terms"
             target="_blank"
@@ -298,8 +320,7 @@ const RegisterForm = () => {
           >
             Privacy Policy
           </Link>
-          , And I Authorize The Collection And Use Of Phone Number For
-          Two-Factor Authentication
+          , and authorize my phone number for two-factor authentication
         </p>
       </div>
       {errors.terms && (

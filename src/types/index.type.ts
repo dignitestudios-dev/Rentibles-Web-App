@@ -51,7 +51,7 @@ export type ResendEmailPaylod = {
   email?: string;
 };
 export type ResendPhonePaylod = {
-  phone?: number;
+  phone?: string;
 };
 export type CheckEmailResponse = {
   success: boolean;
@@ -81,7 +81,7 @@ export type LoginResponse = {
       name: string;
       email: string;
       image?: string;
-      phone: number;
+      phone: string;
       identityStatus?: "not-provided" | "pending" | "approved" | "rejected";
       isPhoneVerified: boolean;
       isEmailVerified: boolean;

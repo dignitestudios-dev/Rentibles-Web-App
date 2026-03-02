@@ -44,7 +44,7 @@ const LoginForm = () => {
     onSuccess: (response) => {
       invalidateAll();
       const userInfo = response?.data;
-      console.log("🚀 ~ LoginForm ~ userInfo:", userInfo);
+
       const normalizedUser = {
         ...userInfo.user,
         _id: userInfo.user._id,
@@ -84,7 +84,8 @@ const LoginForm = () => {
     },
     onError: (err) => {
       const message = getAxiosErrorMessage(err || "Login failed");
-      ErrorToast(message);
+      console.log("🚀 ~ LoginForm ~ message:", message);
+      ErrorToast("Invalid email or password provided.");
     },
   });
   return (
@@ -94,8 +95,9 @@ const LoginForm = () => {
     >
       <div className="w-full flex flex-col gap-1">
         <InputField
+          inputType="email"
           label="Email Address"
-          type="email"
+          // type="email"
           placeholder="Enter your email"
           error={errors.email?.message}
           {...register("email")}
@@ -104,6 +106,7 @@ const LoginForm = () => {
 
       <div className="w-full flex flex-col gap-1 relative">
         <InputField
+          inputType="password"
           id="password"
           label="Password"
           type="password"

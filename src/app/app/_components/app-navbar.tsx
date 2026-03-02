@@ -41,6 +41,7 @@ const AppNavbar = () => {
               aria-label="Tracking"
               title="Tracking"
               className="p-0"
+              onClick={() => router.push("/app/rental-tracking")}
             >
               <FileClock className="w-6 h-6" />
             </Button>

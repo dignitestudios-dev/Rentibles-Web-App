@@ -1,6 +1,13 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, Mail, Phone } from "lucide-react";
+import {
+  ArrowLeft,
+  ChevronRight,
+  Loader,
+  LogOut,
+  Mail,
+  Phone,
+} from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import AcountVerified from "./AcountVerified";
@@ -9,16 +16,53 @@ import { Checkmark_orange, Otp_Icon } from "@/public/images/export";
 import { useSelector } from "react-redux";
 import { RootState } from "@/src/lib/store";
 import { useDispatch } from "react-redux";
+import { useRouter } from "next/navigation";
+import { useInvalidateAllQueries } from "@/src/hooks/useInvalidateAllQueries";
+import { logout } from "@/src/lib/store/feature/authSlice";
 
 const SelectOtp = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const [showVerified, setShowVerified] = useState(false);
+  const router = useRouter();
+  const dispatch = useDispatch();
+  const { invalidateAll } = useInvalidateAllQueries();
+  const [isLoading, setIsLoading] = useState(false);
+  const handleConfirmLogout = async () => {
+    setIsLoading(true);
+    try {
+      invalidateAll();
+      dispatch(logout());
+      router.push("/auth/login");
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <div className="w-full ">
       {showVerified ? (
         <AcountVerified />
       ) : (
         <>
+          <div className=" top-4 left-4">
+            <button
+              onClick={() => router.back()}
+              className="p-2 hover:bg-muted rounded-md transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 " />
+            </button>
+          </div>
+          <div className="top-4 right-6 absolute">
+            <button
+              onClick={() => handleConfirmLogout()}
+              className="p-2 hover:bg-muted-foreground rounded-md transition-colors bg-accent"
+            >
+              {isLoading ? (
+                <Loader className="w-5 h-5 animate-spin" />
+              ) : (
+                <LogOut className="w-5 h-5 " />
+              )}
+            </button>
+          </div>
           <div className="flex justify-center items-center">
             <Image src={Otp_Icon} alt="otp" className="w-40 " />
           </div>
@@ -27,8 +71,10 @@ const SelectOtp = () => {
             Verify your email <br /> and phone number
           </h2>
           <Link
-            href={"/auth/email-verify"}
-            className={`mb-4 flex items-center cursor-pointer   justify-between p-4 rounded-2xl shadow-sm ${user?.isEmailVerified ? "border-2 border-orange-400" : ""}`}
+            href={
+              user?.isEmailVerified ? "/auth/select-otp" : "/auth/email-verify"
+            }
+            className={`mb-4 flex items-center cursor-pointer justify-between p-4 rounded-2xl shadow-sm ${user?.isEmailVerified ? "border-2 border-orange-400" : ""}`}
           >
             <div className="flex items-center gap-3 justify-between w-full">
               <div className="flex items-center gap-2">
@@ -56,7 +102,9 @@ const SelectOtp = () => {
             </div>
           </Link>
           <Link
-            href={"/auth/phone-verify"}
+            href={
+              user?.isPhoneVerified ? "/auth/select-otp" : "/auth/phone-verify"
+            }
             className={`mb-4 flex items-center cursor-pointer   justify-between p-4 rounded-2xl shadow-sm ${user?.isPhoneVerified ? "border-2 border-orange-400" : ""}`}
           >
             <div className="flex items-center gap-3 justify-between w-full">

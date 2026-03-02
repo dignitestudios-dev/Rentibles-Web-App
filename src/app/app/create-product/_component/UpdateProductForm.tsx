@@ -348,7 +348,7 @@ const UpdateProductForm: React.FC<Props> = ({ productId }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <InputField
-              type="number"
+              inputType="numeric"
               label="Quantity"
               placeholder="Enter Quantity"
               error={errors.quantity?.message}
@@ -430,14 +430,14 @@ const UpdateProductForm: React.FC<Props> = ({ productId }) => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
           <InputField
-            type="number"
+            inputType="numeric"
             label="Hourly Price"
             placeholder="Enter Price"
             error={errors.hourlyPrice?.message}
             {...register("hourlyPrice")}
           />
           <InputField
-            type="number"
+            inputType="numeric"
             label="Daily Price"
             placeholder="Enter Price"
             error={errors.dailyPrice?.message}

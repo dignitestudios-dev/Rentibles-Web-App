@@ -48,7 +48,7 @@ const OtpForm = ({
             className={`font-medium cursor-pointer ${
               isResendingOtp || timer > 0
                 ? "opacity-50 pointer-events-none"
-                : ""
+                : "text-primary"
             }`}
             onClick={onResendOtp}
           >
