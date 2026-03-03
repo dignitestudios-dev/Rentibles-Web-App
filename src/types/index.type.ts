@@ -33,7 +33,7 @@ export type RegisterResponse = {
       name: string;
       email: string;
       image?: string;
-      phone: number;
+      phone: string;
     };
   };
 };
@@ -100,7 +100,7 @@ export type ForgotVerifyOtpResponse = {
       name: string;
       email: string;
       image?: string;
-      phone: number;
+      phone: string;
     };
   };
 };
@@ -158,7 +158,7 @@ export type SocialRegisterResponse = {
       name: string;
       email: string;
       image?: string;
-      phone: number;
+      phone: string;
     };
   };
 };
@@ -598,7 +598,7 @@ export interface IUser {
   _id: string;
   name: string;
   email: string;
-  phone?: number;
+  phone?: string;
   profilePicture: string;
 }
 
