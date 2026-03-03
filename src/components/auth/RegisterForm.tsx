@@ -163,6 +163,7 @@ const RegisterForm = () => {
     },
     onError: (err) => {
       const message = getAxiosErrorMessage(err);
+      console.log("🚀 ~ RegisterForm ~ message:", message);
       setError("root", { type: "manual", message });
       ErrorToast(message);
     },

@@ -45,7 +45,7 @@ const SelectOtp = () => {
         <>
           <div className=" top-4 left-4">
             <button
-              onClick={() => router.back()}
+              onClick={() => router.push("/auth/register")}
               className="p-2 hover:bg-muted rounded-md transition-colors"
             >
               <ArrowLeft className="w-5 h-5 " />

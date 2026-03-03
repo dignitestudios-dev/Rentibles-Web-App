@@ -16,6 +16,7 @@ import Loader from "../common/Loader";
 import { useDispatch } from "react-redux";
 import { singUp } from "@/src/lib/store/feature/authSlice";
 import { useInvalidateAllQueries } from "@/src/hooks/useInvalidateAllQueries";
+import { ArrowLeft } from "lucide-react";
 
 const LoginForm = () => {
   const router = useRouter();
@@ -93,6 +94,14 @@ const LoginForm = () => {
       onSubmit={handleSubmit(onSubmit)}
       className="w-full md:w-98.25 mt-5 flex flex-col justify-start items-start gap-4"
     >
+      <div className=" absolute top-1/8 left-1/3 pl-4">
+        <button
+          onClick={() => router.push("/auth/get-started")}
+          className="p-2 hover:bg-muted rounded-md transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5 " />
+        </button>
+      </div>
       <div className="w-full flex flex-col gap-1">
         <InputField
           inputType="email"

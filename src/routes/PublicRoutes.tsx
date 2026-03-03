@@ -14,6 +14,7 @@ const PublicRoutes = ({ children }: PublicRoutesProps) => {
   const { isAuthenticated, user, isGuestMode } = useSelector(
     (state: RootState) => state.auth,
   );
+  console.log("🚀 ~ PublicRoutes ~ user:", user);
   const isLoggedIn = Boolean(isAuthenticated && user);
 
   useEffect(() => {
@@ -22,7 +23,17 @@ const PublicRoutes = ({ children }: PublicRoutesProps) => {
       return;
     }
 
-    if (!isLoggedIn || !user) return;
+    if (!isLoggedIn || !user) {
+      if (
+        pathname !== "/auth/forgot-password" &&
+        pathname !== "/auth/register" &&
+        pathname !== "/auth/otp" &&
+        pathname !== "/auth/get-started"
+      ) {
+        router.push("/auth/login");
+      }
+      return;
+    }
 
     if (user.isEmailVerified === false || user.isPhoneVerified === false) {
       // router.push("/auth/select-otp");
@@ -36,7 +47,13 @@ const PublicRoutes = ({ children }: PublicRoutesProps) => {
 
       case "pending":
       case "rejected":
-        router.push("/auth/profile-status");
+        // ✅ Allow both routes
+        if (
+          pathname !== "/auth/profile-status" &&
+          pathname !== "/auth/identity-verification"
+        ) {
+          router.push("/auth/profile-status");
+        }
         return;
 
       case "approved":

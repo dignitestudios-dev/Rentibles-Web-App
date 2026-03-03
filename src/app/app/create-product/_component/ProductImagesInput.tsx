@@ -31,8 +31,31 @@ export const ProductImagesInput: React.FC<ProductImagesInputProps> = ({
   const [imagePreviews, setImagePreviews] = React.useState<ImagePreview[]>([]);
   const [removedPrefilled, setRemovedPrefilled] = React.useState<string[]>([]); // Track removed prefilled image URLs
 
-  // Sync previews and notify parent about remaining images
   React.useEffect(() => {
+    const previews: ImagePreview[] = [];
+
+    // Add new file uploads
+    value.forEach((file) => {
+      const fileUrl = URL.createObjectURL(file);
+      previews.push({ type: "file", data: fileUrl });
+    });
+
+    setImagePreviews(previews);
+
+    return () => {
+      previews.forEach((preview) => {
+        if (preview.type === "file") {
+          URL.revokeObjectURL(preview.data);
+        }
+      });
+    };
+  }, [value]);
+
+  // Effect 2: Handle prefilled images (for UPDATE product - with prefilled images)
+  React.useEffect(() => {
+    // Only run if there are prefilled images
+    if (prefilledImages.length === 0) return;
+
     const previews: ImagePreview[] = [];
 
     // Add prefilled images (from backend) - except removed ones
@@ -65,7 +88,7 @@ export const ProductImagesInput: React.FC<ProductImagesInputProps> = ({
         }
       });
     };
-  }, [value, prefilledImages, removedPrefilled]);
+  }, [value, prefilledImages, removedPrefilled, onRemainingImages]);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(event.target.files || []);

@@ -7,7 +7,7 @@ import { SelectField } from "@/src/components/common/SelectField";
 import { UpdateProductPayload, updateProductSchema } from "@/src/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, Plus } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm, SubmitHandler, Resolver } from "react-hook-form";
 import DaySelector from "./DaySelector";
 import { DaysOfWeek, User } from "@/src/types/index.type";
@@ -209,13 +209,19 @@ const UpdateProductForm: React.FC<Props> = ({ productId }) => {
   }, [productResp, reset]);
 
   // Handle remaining images from component
-  const handleRemainingImages = (remainingUrls: string[]) => {
+  const handleRemainingImages = useCallback((remainingUrls: string[]) => {
     setExistingPictures(remainingUrls);
     setValue("existingPictures", remainingUrls, {
       shouldValidate: true,
       shouldDirty: true,
     });
-  };
+  }, []);
+
+  const handleImageChange = useCallback(
+    (files: File[]) =>
+      setValue("images", files, { shouldValidate: true, shouldDirty: true }),
+    [setValue],
+  );
 
   const updateProductMutation = useMutation({
     mutationFn: updateProduct,
@@ -306,12 +312,7 @@ const UpdateProductForm: React.FC<Props> = ({ productId }) => {
           <ProductImagesInput
             value={watchedImages}
             prefilledImages={productResp?.data?.images || []}
-            onChange={(files) =>
-              setValue("images", files, {
-                shouldValidate: true,
-                shouldDirty: true,
-              })
-            }
+            onChange={handleImageChange}
             onRemainingImages={handleRemainingImages}
             error={errors.images?.message}
           />

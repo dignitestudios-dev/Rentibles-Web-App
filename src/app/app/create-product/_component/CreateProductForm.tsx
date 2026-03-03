@@ -8,7 +8,7 @@ import ToggleSelectField from "@/src/components/common/ToggleSelectField";
 import { CreateProductPayload, createProductSchema } from "@/src/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, Camera, ImagePlus, Plus, X } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import DaySelector from "./DaySelector";
 import { DaysOfWeek, User } from "@/src/types/index.type";
@@ -331,6 +331,12 @@ const CreateProductForm = () => {
     setIsMap(true);
   };
 
+  const handleImageChange = useCallback(
+    (files: File[]) =>
+      setValue("images", files, { shouldValidate: true, shouldDirty: true }),
+    [setValue],
+  );
+
   return (
     <div className=" mx-auto px-4 py-6 text-white">
       <div className="flex items-center gap-3 mb-8">
@@ -340,12 +346,7 @@ const CreateProductForm = () => {
         <div className="space-y-6">
           <ProductImagesInput
             value={watch("images")}
-            onChange={(files) =>
-              setValue("images", files, {
-                shouldValidate: true,
-                shouldDirty: true,
-              })
-            }
+            onChange={handleImageChange}
             error={errors.images?.message}
           />
 
