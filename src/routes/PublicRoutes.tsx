@@ -11,15 +11,20 @@ interface PublicRoutesProps {
 const PublicRoutes = ({ children }: PublicRoutesProps) => {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated, user, isGuestMode } = useSelector(
-    (state: RootState) => state.auth,
-  );
-  console.log("🚀 ~ PublicRoutes ~ user:", user);
+  const { isAuthenticated, user, isGuestMode, isResetPasswordFlow } =
+    useSelector((state: RootState) => state.auth);
+  console.log("🚀 ~ PublicRoutes ~ isResetPasswordFlow:", isResetPasswordFlow);
+
   const isLoggedIn = Boolean(isAuthenticated && user);
 
   useEffect(() => {
     if (isGuestMode && !isLoggedIn && pathname === "/auth/get-started") {
       router.push("/app/home");
+      return;
+    }
+
+    if (isResetPasswordFlow) {
+      router.push("/auth/new-password");
       return;
     }
 

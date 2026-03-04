@@ -12,8 +12,11 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const router = useRouter();
   const pathname = usePathname();
-  const { isAuthenticated, user, isGuestMode } = useSelector(
-    (state: RootState) => state.auth,
+  const { isAuthenticated, user, isGuestMode, isResetPasswordFlow } =
+    useSelector((state: RootState) => state.auth);
+  console.log(
+    "🚀 ~ ProtectedRoute ~ isResetPasswordFlow:",
+    isResetPasswordFlow,
   );
   const isLoggedIn = Boolean(isAuthenticated && user);
 
@@ -30,6 +33,10 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   useEffect(() => {
     if (!isLoggedIn && !(isGuestMode && isGuestAllowedPath)) {
       router.push("/auth/login");
+      return;
+    }
+    if (isResetPasswordFlow) {
+      router.push("/auth/new-password");
       return;
     }
 

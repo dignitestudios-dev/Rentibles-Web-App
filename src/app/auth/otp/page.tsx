@@ -64,6 +64,7 @@ const Page = () => {
             refresh: userInfo.token,
           },
           user: normalizedUser,
+          isResetPasswordFlow: true,
         }),
       );
       SuccessToast(response.message);

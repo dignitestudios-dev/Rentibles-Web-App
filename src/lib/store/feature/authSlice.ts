@@ -19,6 +19,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isVerified: boolean;
   isGuestMode: boolean;
+  isResetPasswordFlow: boolean;
 }
 const token =
   typeof window !== "undefined" ? localStorage.getItem("token") : null;
@@ -40,6 +41,7 @@ export const initialState: AuthState = {
       : false,
   isVerified: false,
   isGuestMode: !token && isGuestMode,
+  isResetPasswordFlow: false,
 };
 
 const authSlice = createSlice({
@@ -51,6 +53,7 @@ const authSlice = createSlice({
       action: PayloadAction<{
         token: { access: string; refresh: string };
         user: User;
+        isResetPasswordFlow?: boolean;
       }>,
     ) => {
       state.isAuthenticated = true;
@@ -58,6 +61,7 @@ const authSlice = createSlice({
       state.accessToken = action.payload.token.access;
       state.refreshToken = action.payload.token.refresh;
       state.user = action.payload.user;
+      state.isResetPasswordFlow = action.payload.isResetPasswordFlow || false;
       localStorage.setItem("user", JSON.stringify(action.payload.user));
       localStorage.setItem("token", action.payload.token.access);
       localStorage.removeItem("guest_mode");
@@ -89,6 +93,7 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.isVerified = false;
       state.isGuestMode = false;
+      state.isResetPasswordFlow = false;
       if (typeof window !== "undefined") {
         localStorage.removeItem("token");
         localStorage.removeItem("user");

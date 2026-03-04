@@ -15,9 +15,12 @@ import { useState } from "react";
 import Loader from "../common/Loader";
 import { ErrorToast } from "../common/Toaster";
 import z from "zod";
+import { logout } from "@/src/lib/store/feature/authSlice";
+import { useDispatch } from "react-redux";
 
 const NewPasswordForm = () => {
   const router = useRouter();
+  const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
   const {
     register,
@@ -34,6 +37,7 @@ const NewPasswordForm = () => {
   const newPasswordMutation = useMutation({
     mutationFn: newPassword,
     onSuccess: () => {
+      dispatch(logout());
       localStorage.removeItem("email");
       setOpen(true);
     },

@@ -57,7 +57,6 @@ export const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
               }
 
               value = value.replace(/^\s+/, "").replace(/\s{2,}/g, " ");
-              console.log("🚀 ~ value 60:", value);
 
               e.target.value = value;
               props.onChange?.(e);
