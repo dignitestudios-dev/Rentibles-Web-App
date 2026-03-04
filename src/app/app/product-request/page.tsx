@@ -85,7 +85,7 @@ const ProductRequestsScreen = () => {
             {productRequests.map((request) => (
               <div
                 key={request._id}
-                className="bg-card rounded-xl p-5 flex items-center justify-between shadow border border-border"
+                className="bg-card rounded-xl p-5 flex items-center justify-between shadow border border-border overflow-hidden"
               >
                 <div>
                   <div className="text-lg font-bold text-foreground mb-1">

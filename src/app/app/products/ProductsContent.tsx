@@ -2,6 +2,7 @@
 import { ArrowLeft, Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import React, { useState } from "react";
+import { useSelector } from "react-redux";
 import Categories from "../home/_components/categories";
 import ProductCard from "../home/_components/product-card";
 import { useProducts } from "@/src/lib/api/products";
@@ -13,17 +14,23 @@ import { getAxiosErrorMessage } from "@/src/utils/errorHandlers";
 import { ErrorToast } from "@/src/components/common/Toaster";
 import Loader from "@/src/components/common/Loader";
 import { useRequireLogin } from "@/src/hooks/useRequireLogin";
+import { RootState } from "@/src/lib/store";
 
 const ProductsContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { requireLogin } = useRequireLogin();
+  const { latitude, longitude } = useSelector(
+    (state: RootState) => state.location,
+  );
 
   // Get selected category from URL params
   const selectedCategory = searchParams?.get("category");
 
   const { data: products, isLoading } = useProducts({
     categoryId: selectedCategory || undefined,
+    latitude: latitude || undefined,
+    longitude: longitude || undefined,
   });
 
   // Track wishlist state locally

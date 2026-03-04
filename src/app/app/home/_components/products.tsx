@@ -1,26 +1,30 @@
 "use client";
-import React, { Suspense, use, useEffect, useState } from "react";
+import { useEffect } from "react";
 import SwiperProducts from "./swiper-products";
 import { useProducts } from "@/src/lib/api/products";
 import { useSearchParams } from "next/navigation";
+import { useDispatch, useSelector } from "react-redux";
+import { setLocationSuccess } from "@/src/lib/store/feature/locationSlice";
+import { RootState } from "@/src/lib/store";
 
 const Products = () => {
   const searchParams = useSearchParams();
-  const [latLong, setLatLong] = useState<{ lat: number; lng: number } | null>(
-    null,
+  const dispatch = useDispatch();
+  const { latitude, longitude } = useSelector(
+    (state: RootState) => state.location,
   );
 
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(async (position) => {
       const { latitude, longitude } = position.coords;
-      setLatLong({ lat: latitude, lng: longitude });
+      dispatch(setLocationSuccess({ latitude, longitude }));
     });
-  }, []);
+  }, [dispatch]);
 
-  const { data, isLoading, isError, error } = useProducts({
+  const { data, isLoading } = useProducts({
     categoryId: searchParams?.get("category") || undefined,
-    latitude: latLong?.lat,
-    longitude: latLong?.lng,
+    latitude: latitude || undefined,
+    longitude: longitude || undefined,
   });
 
   return <SwiperProducts products={data?.data} isLoading={isLoading} />;

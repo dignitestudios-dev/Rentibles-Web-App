@@ -69,6 +69,7 @@ const SearchContent = () => {
   const [wishlistItems, setWishlistItems] = useState<{
     [key: string]: boolean;
   }>({});
+  console.log("🚀 ~ SearchContent ~ wishlistItems:", wishlistItems);
 
   const wishlistMutation = useMutation({
     mutationFn: async (payload: { productId: string; value: boolean }) => {
@@ -78,7 +79,8 @@ const SearchContent = () => {
       };
       return createWishlist(formData);
     },
-    onSuccess: (variables) => {
+    onSuccess: (data, variables) => {
+      console.log("🚀 ~ SearchContent ~ variables:", variables);
       // Update local state on success
       setWishlistItems((prev) => ({
         ...prev,
