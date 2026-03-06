@@ -39,7 +39,7 @@ const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
             ${error ? "border border-red-500" : ""}
           `}
         >
-          <div className="flex items-center gap-2 text-sm font-medium text-black">
+          <div className="flex items-center gap-2 text-sm font-medium text-foreground">
             <Image src={Eng_flag} width={32} height={32} alt="eng_flag" />
             <span>{countryCode}</span>
           </div>

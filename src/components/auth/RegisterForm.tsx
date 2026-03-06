@@ -163,7 +163,6 @@ const RegisterForm = () => {
     },
     onError: (err) => {
       const message = getAxiosErrorMessage(err);
-      console.log("🚀 ~ RegisterForm ~ message:", message);
       setError("root", { type: "manual", message });
       ErrorToast(message);
     },
@@ -343,7 +342,7 @@ const RegisterForm = () => {
         <span className="text-xs text-gray-400">OR</span>
         <div className="flex-1 h-px bg-gray-300" />
       </div>
-      <p className="w-full text-center text-[16px] text-[#3C3C43D9] ">
+      <p className="w-full text-center text-[16px] text-foreground/60 ">
         Already have an account?{" "}
         <Link
           href="/auth/login"

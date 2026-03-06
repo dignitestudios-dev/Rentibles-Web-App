@@ -88,6 +88,10 @@ const CreateProductForm = () => {
   } | null>(null);
 
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+  console.log(
+    "🚀 ~ CreateProductForm ~ selectedCategoryId:",
+    selectedCategoryId,
+  );
   const [selectedSubCategoryId, setSelectedSubCategoryId] =
     useState<string>("");
 

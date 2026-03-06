@@ -43,6 +43,7 @@ const ForgotPasswordForm = () => {
       ErrorToast(message);
     },
   });
+
   return (
     <form className="w-full mt-6" onSubmit={handleSubmit(onSubmit)} action="">
       <div>

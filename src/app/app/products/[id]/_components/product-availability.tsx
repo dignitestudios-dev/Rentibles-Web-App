@@ -11,24 +11,19 @@ interface ProductAvailabilityProps {
     pricePerHour: number;
     pricePerDay: number;
     availableDays: string[]; // e.g., ["Monday", "Tuesday"]
+    quantity: number; // total quantity available for day-based rentals
   };
   onSlotSelect?: (slots: TimeSlot[]) => void;
   onDaySelect?: (date: Date) => void;
+  setAvailableQuantity: (qty: number) => void; // new callback to set available quantity in parent
 }
 
 export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
   product,
   onSlotSelect,
   onDaySelect,
+  setAvailableQuantity,
 }) => {
-  // Helper to convert 24-hour time to 12-hour AM/PM format
-  const toAmPm = (hour: number): string => {
-    if (hour === 0) return "12:00 AM";
-    if (hour < 12) return `${hour}:00 AM`;
-    if (hour === 12) return "12:00 PM";
-    return `${hour - 12}:00 PM`;
-  };
-
   const [isOpen, setIsOpen] = React.useState(false);
   const [selectedDate, setSelectedDate] = React.useState<Date | undefined>();
   const [selectedSlots, setSelectedSlots] = React.useState<TimeSlot[]>([]);
@@ -69,70 +64,54 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
     useProductAvailability(product._id, queryDate);
 
   // Availability Data Setup
-  const availabilityByDate = React.useMemo(() => {
+  const availabilityMap = React.useMemo(() => {
     const map = new Map<number, ProductAvailabilityDay>();
-    availabilityResp?.data?.forEach((day: ProductAvailabilityDay) =>
-      map.set(day.date, day),
-    );
+
+    availabilityResp?.data?.forEach((day: ProductAvailabilityDay) => {
+      map.set(day.date, day);
+    });
+
     return map;
   }, [availabilityResp]);
+  console.log("🚀 ~ ProductAvailability ~ availabilityMap:", availabilityMap);
 
-  // Example slots generation (adjust based on availability data when present)
-  const generateSlots = React.useCallback(
-    (date: Date): TimeSlot[] => {
-      const slots: TimeSlot[] = [];
+  // For epoch conversion
+  const getDateKey = (date: Date) => {
+    const d = new Date(date);
 
-      // attempt to pull the exact day from the API response map
-      const dayEpoch = Math.floor(
-        new Date(
-          date.getFullYear(),
-          date.getMonth(),
-          date.getDate(),
-        ).getTime() / 1000,
-      );
-      const dayData = availabilityByDate.get(dayEpoch);
+    return Math.floor(
+      Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()) / 1000,
+    );
+  };
 
-      if (dayData && dayData.slots.length > 0) {
-        // build slots directly from server data so we get quantities
-        return dayData.slots.map((s) => {
-          const start = new Date(s.start * 1000);
-          const end = new Date(s.end * 1000);
-          const h1 = start.getHours();
-          const h2 = end.getHours();
-          const startLabel = toAmPm(h1);
-          const endLabel = toAmPm(h2);
-          return {
-            startEpoch: s.start,
-            endEpoch: s.end,
-            startLabel,
-            endLabel,
-            label: `${startLabel} - ${endLabel}`,
-            availableQuantity: s.availableQuantity,
-          } as TimeSlot;
-        });
-      }
+  const generateSlots = (date: Date): TimeSlot[] => {
+    const dateKey = getDateKey(date);
 
-      // fallback to generic hourly slots
-      for (let hour = 8; hour < 18; hour++) {
-        const startEpoch =
-          new Date(date.setHours(hour, 0, 0, 0)).getTime() / 1000;
-        const endEpoch =
-          new Date(date.setHours(hour + 1, 0, 0, 0)).getTime() / 1000;
-        const startLabel = toAmPm(hour);
-        const endLabel = toAmPm(hour + 1);
+    const dayData = availabilityMap.get(dateKey);
 
-        slots.push({
-          startEpoch,
-          endEpoch,
-          startLabel,
-          endLabel,
-          label: `${startLabel} - ${endLabel}`,
-        });
-      }
-      return slots;
-    },
-    [availabilityByDate],
-  );
+    if (!dayData || !dayData.slots?.length) return [];
+
+    return dayData.slots.map((s) => {
+      const startLabel = new Date(s.start * 1000).toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      const endLabel = new Date(s.end * 1000).toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      return {
+        startEpoch: s.start,
+        endEpoch: s.end,
+        startLabel,
+        endLabel,
+        label: `${startLabel} - ${endLabel}`,
+        availableQuantity: s.availableQuantity,
+      } as TimeSlot;
+    });
+  };
 
   // Handle date selection
   const handleDateSelect = (date: Date) => {
@@ -150,24 +129,48 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
 
   // Handle time slot selection (multiple selection for hourly)
   const handleSlotSelect = (slot: TimeSlot) => {
-    setSelectedSlots((prevSlots) => {
-      const isAlreadySelected = prevSlots.some(
+    setSelectedSlots((prev) => {
+      const slotIndex = slots.findIndex(
         (s) => s.startEpoch === slot.startEpoch,
       );
 
-      if (isAlreadySelected) {
-        // Remove if already selected
-        return prevSlots.filter((s) => s.startEpoch !== slot.startEpoch);
-      } else {
-        // Add if not selected and less than 3
-        if (prevSlots.length < 3) {
-          return [...prevSlots, slot];
-        } else {
-          // Can't add more than 3
-          return prevSlots;
-        }
+      const selectedIndexes = prev
+        .map((s) => slots.findIndex((sl) => sl.startEpoch === s.startEpoch))
+        .sort((a, b) => a - b);
+
+      const isSelected = selectedIndexes.includes(slotIndex);
+
+      // Remove if clicked again
+      if (isSelected) {
+        return prev.filter((s) => s.startEpoch !== slot.startEpoch);
       }
+
+      // First slot can be anything
+      if (selectedIndexes.length === 0) {
+        return [slot];
+      }
+
+      // Don't allow more than 4
+      if (selectedIndexes.length >= slots.length) {
+        return prev;
+      }
+
+      const min = selectedIndexes[0];
+      const max = selectedIndexes[selectedIndexes.length - 1];
+
+      // Allow only adjacent expansion
+      if (slotIndex === min - 1 || slotIndex === max + 1) {
+        return [...prev, slot];
+      }
+
+      // ✅ Non-consecutive selection: clear previous and start fresh with this slot
+      return [slot];
     });
+  };
+
+  // Convert ISO date string to Unix timestamp (in seconds)
+  const getUnixTimestamp = (dateString: string) => {
+    return Math.floor(new Date(dateString + "T00:00:00Z").getTime() / 1000);
   };
 
   // Handle day selection (single day mode)
@@ -175,6 +178,12 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
     setSelectedDate(date);
     setSelectionMode("day");
     setSelectedSlots([]);
+    const dateKey = new Date(date).toISOString().split("T")[0];
+
+    const unixTimestamp = getUnixTimestamp(dateKey);
+    const minQuantity = availabilityMap.get(unixTimestamp)?.minQuantity;
+    const availableQty = minQuantity ?? product.quantity;
+    setAvailableQuantity(availableQty ?? 0);
     onDaySelect?.(date);
   };
 
@@ -202,19 +211,16 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
   };
 
   // whenever availability info or the selected date changes, rebuild slot list
-  React.useEffect(() => {
-    if (selectedDate) {
-      setSlots(generateSlots(new Date(selectedDate)));
-    }
-  }, [availabilityByDate, selectedDate, generateSlots]);
-
-  // Calculate total hours
-  const totalHours = selectedSlots.length;
+  // React.useEffect(() => {
+  //   if (selectedDate) {
+  //     setSlots(generateSlots(new Date(selectedDate)));
+  //   }
+  // }, [availabilityByDate, selectedDate, generateSlots]);
 
   // Can submit when exactly 3 slots selected (for hourly mode)
   const canSubmit =
     selectionMode === "hour"
-      ? selectedSlots.length === 3
+      ? selectedSlots.length >= 4
       : selectionMode === "day"
         ? true
         : false;
@@ -300,10 +306,10 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
             // unfortunately an intersection of `(date: Date)` and the DOM
             // event handler. we cast to `any` below.
             onSelect={
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               (selectionMode === "hour"
                 ? handleDateSelect
-                : handleSelectDay) as any
+                : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  handleSelectDay) as any
             }
             disabled={(date) => {
               // Disable past dates
@@ -317,15 +323,15 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
               // Disable dates not in availableDays or zero quantity
               if (!isDateAvailable(date)) return true;
               // also block if API says minQuantity === 0
-              const epoch = Math.floor(
-                new Date(
-                  date.getFullYear(),
-                  date.getMonth(),
-                  date.getDate(),
-                ).getTime() / 1000,
-              );
-              const dayData = availabilityByDate.get(epoch);
-              if (dayData && dayData.minQuantity <= 0) return true;
+              // const epoch = Math.floor(
+              //   new Date(
+              //     date.getFullYear(),
+              //     date.getMonth(),
+              //     date.getDate(),
+              //   ).getTime() / 1000,
+              // );
+              // const dayData = availabilityByDate.get(epoch);
+              // if (dayData && dayData.minQuantity <= 0) return true;
               return false;
             }}
             className="shadow-lg border-2 border-primary/20"
@@ -346,42 +352,14 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
                       <AlertCircle className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
                       <div>
                         <p className="text-sm font-medium text-blue-900 dark:text-blue-200">
-                          Select exactly 3 time slots
+                          Minimum-Hour Booking Required
                         </p>
                         <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
-                          You must select 3 consecutive or non-consecutive
-                          hourly slots for this rental period.
+                          Booking 4 Hour or More, No Shorter Sessions Allowed
                         </p>
                       </div>
                     </div>
                   </div>
-
-                  {/* Selected Slots Summary */}
-                  {selectedSlots.length > 0 && (
-                    <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-3">
-                      <div className="flex items-center gap-2 mb-2">
-                        <CheckCircle2 className="w-4 h-4 text-orange-600 dark:text-orange-400" />
-                        <p className="text-sm font-medium text-orange-900 dark:text-orange-200">
-                          {selectedSlots.length} of 3 slots selected
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {selectedSlots
-                          .sort((a, b) => a.startEpoch - b.startEpoch)
-                          .map((slot) => (
-                            <span
-                              key={slot.startEpoch}
-                              className="text-xs bg-white dark:bg-gray-800 px-2 py-1 rounded-full text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800"
-                            >
-                              {slot.startLabel} - {slot.endLabel}
-                            </span>
-                          ))}
-                      </div>
-                      <p className="text-xs text-orange-600 dark:text-orange-400 mt-2">
-                        Total: {totalHours} hours
-                      </p>
-                    </div>
-                  )}
 
                   {/* Slot Grid */}
                   <div>
@@ -393,7 +371,8 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
                         const isSelected = isSlotSelected(slot);
                         const slotQty = slot.availableQuantity ?? undefined;
                         const isDisabled =
-                          (!isSelected && selectedSlots.length >= 3) ||
+                          (!isSelected &&
+                            selectedSlots.length >= slots.length) ||
                           (slotQty !== undefined && slotQty <= 0);
 
                         return (
@@ -406,13 +385,13 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
                               "rounded-xl border px-3 py-2.5 text-sm font-medium transition-all duration-150",
                               "focus:outline-none focus:ring-2 focus:ring-offset-1",
                               isSelected
-                                ? "border-blue-600 bg-blue-600 text-white shadow-md focus:ring-blue-500"
+                                ? " bg-primary text-white shadow-md focus:ring-bg-primary/50"
                                 : isDisabled
                                   ? "border-gray-200 bg-gray-100 text-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500 cursor-not-allowed"
-                                  : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 cursor-pointer",
+                                  : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:border-primary/40 hover:bg-primary/10 dark:hover:bg-primary/20 cursor-pointer",
                             ].join(" ")}
                             title={
-                              isDisabled ? "Maximum 3 slots allowed" : undefined
+                              isDisabled ? "Maximum 4 slots allowed" : undefined
                             }
                           >
                             <span className="block">{slot.startLabel}</span>
@@ -423,9 +402,6 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
                               <span className="block text-xs mt-1">
                                 {slotQty} available
                               </span>
-                            )}
-                            {isSelected && (
-                              <span className="block text-xs mt-1">✓</span>
                             )}
                           </button>
                         );
@@ -439,6 +415,7 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
                     onClick={() => {
                       if (canSubmit) {
                         onSlotSelect?.(selectedSlots);
+                        setIsOpen(false);
                         // You can also show confirmation or move to next step
                       }
                     }}
@@ -449,9 +426,9 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
                     }`}
                   >
                     {selectedSlots.length === 0
-                      ? "Select 3 time slots to continue"
-                      : selectedSlots.length < 3
-                        ? `Select ${3 - selectedSlots.length} more slot(s)`
+                      ? "Select 4 time slots to continue"
+                      : selectedSlots.length < 4
+                        ? `Select ${4 - selectedSlots.length} more slot(s)`
                         : "Continue with selected slots"}
                   </button>
                 </>
@@ -491,7 +468,7 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
           {selectionMode === "hour" && selectedSlots.length > 0 ? (
             <div>
               <p className="font-medium text-gray-700 dark:text-gray-300">
-                Selected: {selectedSlots.length}/3 time slots
+                Selected: {selectedSlots.length}/{slots.length} time slots
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                 {selectedSlots

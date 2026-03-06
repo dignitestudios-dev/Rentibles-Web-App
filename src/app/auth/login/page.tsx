@@ -4,7 +4,7 @@ import LoginForm from "@/src/components/auth/LoginForm";
 
 const Page = () => {
   return (
-    <div className="w-full  flex flex-col items-center p-6 justify-center md:w-125 rounded-[19px] bg-background">
+    <div className="w-full  flex flex-col items-center p-6 justify-center md:w-125 rounded-[19px] bg-background relative">
       <Image src={OrangeLogo} alt="orange_logo" className="w-37" />
       <div className="w-auto flex flex-col mt-4 justify-center items-center">
         <h2 className="text-[32px] font-bold leading-12 ">Welcome Back</h2>

@@ -11,13 +11,15 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useAppSelector } from "@/src/lib/store/hooks";
 
+// bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60
+
 const AppNavbar = () => {
   const router = useRouter();
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   const isLoggedIn = Boolean(isAuthenticated && user);
 
   return (
-    <nav className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
+    <nav className="sticky top-0 z-40 border-b border-border bg-background">
       <div className="px-4 py-5 flex items-center justify-between">
         {/* Logo - Left */}
         <Link href="/app/home" className="shrink-0">

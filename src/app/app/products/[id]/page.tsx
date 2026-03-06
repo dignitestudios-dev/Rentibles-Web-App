@@ -43,6 +43,11 @@ const ProductDetailsPage = () => {
   const [rentalDate, setRentalDate] = useState<Date | undefined>(undefined);
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
   const [rentalType, setRentalType] = useState<"day" | "hour">("day");
+  const [availableQuantity, setAvailableQuantity] = useState<number>(0);
+  console.log(
+    "🚀 ~ ProductDetailsPage ~ availableQuantity:",
+    availableQuantity,
+  );
 
   // Handle clicking outside to close dropdown
   useEffect(() => {
@@ -354,6 +359,7 @@ const ProductDetailsPage = () => {
               product={product}
               onSlotSelect={handleSlotSelect}
               onDaySelect={handleDaySelect}
+              setAvailableQuantity={setAvailableQuantity}
             />
 
             <hr className="my-6 border-border" />
@@ -384,7 +390,7 @@ const ProductDetailsPage = () => {
                 <h3 className="text-lg font-semibold">
                   Quantity:{" "}
                   <span className="text-primary">
-                    {product.quantity || 0} Pcs Available
+                    {availableQuantity || product.quantity || 0} Pcs Available
                   </span>
                 </h3>
               </div>
@@ -410,18 +416,21 @@ const ProductDetailsPage = () => {
                 <button
                   onClick={() => handleQuantityChange(1)}
                   className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50"
-                  disabled={quantity >= (product.quantity || 0)}
+                  disabled={
+                    quantity >= (availableQuantity || product.quantity || 0)
+                  }
                   aria-label="Increase quantity"
                 >
                   <Plus className="w-5 h-5" />
                 </button>
               </div>
 
-              {quantity >= (product.quantity || 0) && product.quantity > 0 && (
-                <p className="text-xs text-orange-500 mt-2">
-                  Maximum available quantity reached
-                </p>
-              )}
+              {quantity >= (availableQuantity || product.quantity || 0) &&
+                (availableQuantity || product.quantity || 0) > 0 && (
+                  <p className="text-xs text-orange-500 mt-2">
+                    Maximum available quantity reached
+                  </p>
+                )}
             </div>
             {/* Estimated Total */}
             <div className="mt-4 p-4 bg-muted rounded-lg">

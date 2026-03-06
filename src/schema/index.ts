@@ -108,7 +108,7 @@ export const RegisterSchema = z
       }),
 
     terms: z.boolean().refine((v) => v === true, {
-      message: "You must accept terms & conditions",
+      message: "You must accept Terms & Conditions & Privacy Policy",
     }),
   })
   .refine((data) => data.password === data.confirmPassword, {

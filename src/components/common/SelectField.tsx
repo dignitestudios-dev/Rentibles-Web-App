@@ -42,9 +42,7 @@ export const SelectField = forwardRef<HTMLSelectElement, SelectFieldProps>(
             ${className}
           `}
         >
-          <option value="" disabled>
-            {placeholder}
-          </option>
+          <option value="">{placeholder}</option>
 
           {options?.map((option) => (
             <option

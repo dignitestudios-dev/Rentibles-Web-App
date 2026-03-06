@@ -92,12 +92,13 @@ const LoginForm = () => {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="w-full md:w-98.25 mt-5 flex flex-col justify-start items-start gap-4"
+      className="w-full md:w-98.25 mt-5 flex flex-col justify-start items-start gap-4 "
     >
-      <div className=" absolute top-1/8 left-1/3 pl-4">
+      <div className=" absolute top-4 left-0 pl-4">
         <button
+          type="button"
           onClick={() => router.push("/auth/get-started")}
-          className="p-2 hover:bg-muted rounded-md transition-colors"
+          className="p-2 bg-primary text-white hover:bg-muted hover:text-foreground rounded-md transition-colors"
         >
           <ArrowLeft className="w-5 h-5 " />
         </button>
