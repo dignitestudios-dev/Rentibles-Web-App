@@ -154,9 +154,9 @@ export const ProductImagesInput: React.FC<ProductImagesInputProps> = ({
     prefilledImages.length - removedPrefilled.length + value.length;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-[50%]">
       <div
-        className={`border border-dashed rounded-2xl flex flex-col items-center justify-center p-4 transition
+        className={`border border-dashed rounded-2xl flex flex-col items-center justify-center p-4 transition min-h-[440px]
           ${
             error
               ? "border-red-500 text-red-500"
@@ -166,15 +166,15 @@ export const ProductImagesInput: React.FC<ProductImagesInputProps> = ({
       >
         {/* Image Previews */}
         {imagePreviews.length > 0 && (
-          <div className="w-full overflow-x-auto pb-2">
-            <div className="flex gap-3 min-w-min">
+          <div className="w-full pb-2">
+            <div className="grid grid-cols-5 gap-3">
               {imagePreviews.map((preview, index) => {
                 const isPreFilled = preview.type === "url";
 
                 return (
                   <div
                     key={preview.sourceUrl || index}
-                    className="relative group flex-shrink-0 w-28 h-28 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition"
+                    className="relative group w-full aspect-square rounded-lg overflow-hidden shadow-md hover:shadow-xl transition"
                   >
                     <img
                       src={preview.data}

@@ -1,11 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
+import { useDispatch } from "react-redux";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { setGuestMode } from "@/src/lib/store/feature/authSlice";
 
 type LoginRequiredDialogProps = {
   open: boolean;
@@ -25,12 +24,14 @@ const LoginRequiredDialog = ({
   actionLabel = "Login Now",
 }: LoginRequiredDialogProps) => {
   const router = useRouter();
+  const dispatch = useDispatch();
 
   const handleLoginNow = () => {
+    dispatch(setGuestMode(false));
     if (onLoginNow) {
       onLoginNow();
     } else {
-      router.push("/auth/get-started");
+      router.push("/auth/login");
     }
   };
 
@@ -49,12 +50,8 @@ const LoginRequiredDialog = ({
         </div>
 
         <div className="flex flex-col items-center justify-center gap-4 text-center pt-6">
-          <h2 className="text-2xl font-semibold text-foreground">
-            {title}
-          </h2>
-          <p className="text-base text-muted-foreground">
-            {description}
-          </p>
+          <h2 className="text-2xl font-semibold text-foreground">{title}</h2>
+          <p className="text-base text-muted-foreground">{description}</p>
         </div>
 
         <Button

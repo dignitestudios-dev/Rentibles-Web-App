@@ -4,6 +4,7 @@ import { useState } from "react";
 import RentalCard from "./RentalCards";
 import { formatDateToMMDDYYYY } from "@/src/utils/helperFunctions";
 import { useRouter } from "next/navigation";
+import { TrackingBooking } from "@/src/types/index.type";
 
 export const TrackingFilter = [
   { _id: "all", name: "All" },
@@ -16,47 +17,6 @@ export const TrackingFilter = [
   { _id: "rejected", name: "Rejected" },
 ];
 
-export const dummyBookings = [
-  {
-    _id: "1",
-    shortCode: "YHZ-224097",
-    quantity: 1,
-    totalAmount: 20,
-    duration: "4 hrs",
-    status: "completed",
-    bookingDate: 1769598000,
-    user: {
-      name: "Jason Armstrong",
-      profilePicture:
-        "https://rentibles-bucket.s3.us-west-2.amazonaws.com/pictures/ba16792f-b635-4fda-a934-cd5b09ab7269.jpg",
-    },
-    product: {
-      name: "Rubik's Cube",
-      cover:
-        "https://rentibles-bucket.s3.us-west-2.amazonaws.com/pictures/8d51cfe4-e23f-4070-9cf5-58f82cd7d6e9.jpg",
-    },
-  },
-  {
-    _id: "2",
-    shortCode: "THH-236618",
-    quantity: 1,
-    totalAmount: 8,
-    duration: "4 hrs",
-    status: "incomplete",
-    bookingDate: 1768557600,
-    user: {
-      name: "Store Test",
-      profilePicture:
-        "https://rentibles-bucket.s3.us-west-2.amazonaws.com/pictures/761f866f-6b7a-4316-9dd1-085a6a042283.png",
-    },
-    product: {
-      name: "Test Product",
-      cover:
-        "https://rentibles-bucket.s3.us-west-2.amazonaws.com/pictures/856978f4-f95e-4f90-a77c-c5cbdb43f924.png",
-    },
-  },
-];
-
 const statusMap: Record<string, "Completed" | "Incomplete" | "Pending"> = {
   completed: "Completed",
   incomplete: "Incomplete",
@@ -65,22 +25,40 @@ const statusMap: Record<string, "Completed" | "Incomplete" | "Pending"> = {
   "over-due": "Incomplete",
 };
 
-const OrdersTracking = () => {
+interface OrdersTrackingProps {
+  bookings: TrackingBooking[];
+  isLoading: boolean;
+  type: "customer_rental" | "my_rentals";
+}
+
+const OrdersTracking: React.FC<OrdersTrackingProps> = ({
+  bookings,
+  isLoading,
+  type,
+}) => {
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState("all");
 
   const filteredBookings =
     activeFilter === "all"
-      ? dummyBookings
-      : dummyBookings.filter((booking) => booking.status === activeFilter);
+      ? bookings
+      : bookings.filter((booking) => booking.status === activeFilter);
 
   const handleRedirect = (id: string) => {
     router.push(`/app/tracking/${id}`);
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center py-10">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   return (
     <div>
-      <div className="flex gap-2 overflow-x-auto mb-6">
+      <div className="flex gap-2 overflow-x-auto my-6">
         {TrackingFilter.map((filter) => (
           <button
             key={filter._id}
@@ -101,16 +79,25 @@ const OrdersTracking = () => {
         {filteredBookings.map((booking) => (
           <RentalCard
             key={booking._id}
-            userName={booking.user.name}
-            userAvatar={booking.user.profilePicture}
+            userName={
+              type === "customer_rental"
+                ? booking.user.name
+                : booking.customer.name
+            }
+            userAvatar={
+              type === "customer_rental"
+                ? booking.user.profilePicture
+                : booking.customer.profilePicture
+            }
             productImage={booking.product.cover}
             title={booking.product.name}
             price={booking.totalAmount}
             hours={parseInt(booking.duration)}
-            status={statusMap[booking.status]}
+            status={statusMap[booking.status] || "Pending"}
             qty={booking.quantity}
             date={formatDateToMMDDYYYY(booking.bookingDate)}
             handleRedirect={() => handleRedirect(booking._id)}
+            id={booking.shortCode}
           />
         ))}
       </div>

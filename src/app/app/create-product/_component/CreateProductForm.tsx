@@ -29,6 +29,7 @@ import { ProductImagesInput } from "./ProductImagesInput";
 import { CoverImageInput } from "./CoverImageInput";
 import { useRouter } from "next/navigation";
 import Loader from "@/src/components/common/Loader";
+import BecomeSellerModal from "@/src/components/common/BecomeSellerModal";
 
 type LocationData = {
   country?: string;
@@ -63,8 +64,10 @@ const TimeOptions = [
 const CreateProductForm = () => {
   const dispatch = useAppDispatch();
   const [user, setUser] = useState<User>();
+  console.log("🚀 ~ CreateProductForm ~ user:", user);
   const [isMap, setIsMap] = useState<boolean>(false);
   const router = useRouter();
+  const [isBecomeSellerOpen, setIsBecomeSellerOpen] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -88,10 +91,7 @@ const CreateProductForm = () => {
   } | null>(null);
 
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
-  console.log(
-    "🚀 ~ CreateProductForm ~ selectedCategoryId:",
-    selectedCategoryId,
-  );
+
   const [selectedSubCategoryId, setSelectedSubCategoryId] =
     useState<string>("");
 
@@ -105,6 +105,15 @@ const CreateProductForm = () => {
     isError: isSubCategoriesError,
     error: subCategoriesError,
   } = useSubCategories(selectedCategoryId);
+
+  useEffect(() => {
+    if (user) {
+      if (!user?.isSeller) {
+        setIsBecomeSellerOpen(true);
+        return;
+      }
+    }
+  }, [user]);
 
   // Store categories in Redux when data is fetched
   useEffect(() => {
@@ -347,25 +356,27 @@ const CreateProductForm = () => {
         <h1 className="text-xl font-semibold text-foreground">Add Product</h1>
       </div>
       <form action="" onSubmit={handleSubmit(onsubmit)}>
-        <div className="space-y-6">
+        <div className="flex w-full gap-6 items-stretch ">
           <ProductImagesInput
             value={watch("images")}
             onChange={handleImageChange}
             error={errors.images?.message}
           />
 
-          <CoverImageInput
-            value={watch("coverImage")}
-            onChange={(file) => {
-              if (file) {
-                setValue("coverImage", file, {
-                  shouldValidate: true,
-                  shouldDirty: true,
-                });
-              }
-            }}
-            error={errors.coverImage?.message as string}
-          />
+          <div className="w-[50%] flex-shrink-0">
+            <CoverImageInput
+              value={watch("coverImage")}
+              onChange={(file) => {
+                if (file) {
+                  setValue("coverImage", file, {
+                    shouldValidate: true,
+                    shouldDirty: true,
+                  });
+                }
+              }}
+              error={errors.coverImage?.message as string}
+            />
+          </div>
         </div>
 
         <div className="mt-8 space-y-6">
@@ -537,6 +548,10 @@ const CreateProductForm = () => {
           </Button>
         )}
       </form>
+      <BecomeSellerModal
+        open={isBecomeSellerOpen}
+        onOpenChange={setIsBecomeSellerOpen}
+      />
     </div>
   );
 };

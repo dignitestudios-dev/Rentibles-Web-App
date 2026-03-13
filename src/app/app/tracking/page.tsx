@@ -1,11 +1,24 @@
+"use client";
+import { useState } from "react";
+import { useTracking } from "@/src/lib/api/booking";
 import OrdersTracking from "./_components/OrdersTracking";
 import RentalsTabs from "./_components/RentalsTabs";
 
 const Tracking = () => {
+  const [activeTab, setActiveTab] = useState<"customer_rental" | "my_rentals">(
+    "customer_rental",
+  );
+  const type = activeTab === "customer_rental" ? "rental" : "myRental";
+  const { data, isLoading } = useTracking({ type });
+
   return (
     <div>
-      <RentalsTabs />
-      <OrdersTracking />
+      <RentalsTabs activeTab={activeTab} onChange={setActiveTab} />
+      <OrdersTracking
+        bookings={data?.data || []}
+        isLoading={isLoading}
+        type={activeTab}
+      />
     </div>
   );
 };

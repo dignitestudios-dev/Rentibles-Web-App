@@ -2,6 +2,7 @@ import * as React from "react";
 import { Input } from "@/components/ui/input";
 import { Camera, X } from "lucide-react";
 import { ErrorToast } from "@/src/components/common/Toaster";
+import Image from "next/image";
 
 type CoverImageInputProps = {
   value?: File | null;
@@ -89,15 +90,9 @@ export const CoverImageInput: React.FC<CoverImageInputProps> = ({
   }, []);
 
   return (
-    <div className="space-y-3">
-      {/* Helper text */}
-      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        <Camera size={14} />
-        <span>Upload a high-quality cover image</span>
-      </div>
-
+    <div className="space-y-3 w-full">
       <div
-        className={`border border-dashed rounded-2xl h-56 flex items-center justify-center transition overflow-hidden
+        className={`border border-dashed rounded-2xl h-56 flex items-center justify-center transition min-h-[440px] overflow-hidden
           ${
             error
               ? "border-red-500 text-red-500"
@@ -107,11 +102,14 @@ export const CoverImageInput: React.FC<CoverImageInputProps> = ({
       >
         {preview && !showNewUploadOption ? (
           <div className="relative w-full h-full group">
-            <img
-              src={preview.data}
-              alt="Cover preview"
-              className="w-full h-full object-cover"
-            />
+            <div className="flex w-full justify-center items-center">
+              <Image
+                src={preview.data}
+                alt="Cover preview"
+                fill
+                style={{ objectFit: "contain" }}
+              />
+            </div>
 
             {/* Action buttons */}
             <div className="absolute inset-0 flex items-center justify-center gap-3">
@@ -142,7 +140,7 @@ export const CoverImageInput: React.FC<CoverImageInputProps> = ({
               <p className="mt-3 font-medium">
                 {showNewUploadOption
                   ? "Upload New Cover Image"
-                  : "Upload Cover Image"}
+                  : "Upload a High Quality Cover Image (must not exceed 20MB) "}
               </p>
               <p className="text-xs mt-1 opacity-70">PNG, JPG, JPEG or WEBP</p>
             </label>

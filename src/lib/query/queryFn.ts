@@ -61,6 +61,8 @@ import {
   GetProductRequestsResponse,
   DeleteProductRequestPayload,
   DeleteProductRequestResponse,
+  GetTrackingParams,
+  GetTrackingResponse,
 } from "@/src/types/index.type";
 import { OtpPayload } from "@/src/schema";
 
@@ -390,4 +392,12 @@ export const createSupportTicket = async (
     }
     throw new Error("Failed to create support ticket");
   }
+};
+
+// tracking / bookings
+export const getTracking = async (
+  params: GetTrackingParams,
+): Promise<GetTrackingResponse> => {
+  const { data } = await axiosInstance.get("/booking", { params });
+  return data;
 };

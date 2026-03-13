@@ -15,11 +15,14 @@ const Products = () => {
   );
 
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition(async (position) => {
-      const { latitude, longitude } = position.coords;
-      dispatch(setLocationSuccess({ latitude, longitude }));
-    });
-  }, [dispatch]);
+    // only request browser geolocation if we don't already have coordinates
+    if (latitude === null || longitude === null) {
+      navigator.geolocation.getCurrentPosition(async (position) => {
+        const { latitude, longitude } = position.coords;
+        dispatch(setLocationSuccess({ latitude, longitude }));
+      });
+    }
+  }, [dispatch, latitude, longitude]);
 
   const { data, isLoading } = useProducts({
     categoryId: searchParams?.get("category") || undefined,

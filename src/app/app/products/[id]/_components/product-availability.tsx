@@ -16,6 +16,8 @@ interface ProductAvailabilityProps {
   onSlotSelect?: (slots: TimeSlot[]) => void;
   onDaySelect?: (date: Date) => void;
   setAvailableQuantity: (qty: number) => void; // new callback to set available quantity in parent
+  onSelectionModeChange?: (mode: "day" | "hour" | null) => void;
+  onDateRangeChange?: (range: { from?: Date; to?: Date } | undefined) => void;
 }
 
 export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
@@ -23,11 +25,18 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
   onSlotSelect,
   onDaySelect,
   setAvailableQuantity,
+  onDateRangeChange,
+  onSelectionModeChange,
 }) => {
   const [isOpen, setIsOpen] = React.useState(false);
   const [selectedDate, setSelectedDate] = React.useState<Date | undefined>();
   const [selectedSlots, setSelectedSlots] = React.useState<TimeSlot[]>([]);
+
   const [slots, setSlots] = React.useState<TimeSlot[]>([]);
+
+  const [dateRange, setDateRange] = React.useState<
+    { from?: Date; to?: Date } | undefined
+  >();
 
   const [selectionMode, setSelectionMode] = React.useState<
     "day" | "hour" | null
@@ -73,7 +82,6 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
 
     return map;
   }, [availabilityResp]);
-  console.log("🚀 ~ ProductAvailability ~ availabilityMap:", availabilityMap);
 
   // For epoch conversion
   const getDateKey = (date: Date) => {
@@ -118,9 +126,11 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
     setSelectedDate(date);
     setSelectedSlots([]); // Reset selected slots when date changes
     setSelectionMode("hour");
+    onSelectionModeChange?.("hour");
 
     // Generate slots for selected date
     const generatedSlots = generateSlots(new Date(date));
+
     setSlots(generatedSlots);
 
     // Call callback
@@ -169,27 +179,50 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
   };
 
   // Convert ISO date string to Unix timestamp (in seconds)
-  const getUnixTimestamp = (dateString: string) => {
-    return Math.floor(new Date(dateString + "T00:00:00Z").getTime() / 1000);
+  // const getUnixTimestamp = (dateString: string) => {
+  //   return Math.floor(new Date(dateString + "T00:00:00Z").getTime() / 1000);
+  // };
+
+  const getUnixTimestamp = (date: Date) => {
+    return Math.floor(
+      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 1000,
+    );
   };
 
   // Handle day selection (single day mode)
-  const handleSelectDay = (date: Date) => {
-    setSelectedDate(date);
+  const handleSelectDay = (range: { from?: Date; to?: Date } | undefined) => {
     setSelectionMode("day");
-    setSelectedSlots([]);
-    const dateKey = new Date(date).toISOString().split("T")[0];
+    onSelectionModeChange?.("day");
 
-    const unixTimestamp = getUnixTimestamp(dateKey);
+    setSelectedSlots([]);
+
+    setDateRange(range);
+    onDateRangeChange?.(range);
+
+    if (!range?.from) return;
+    // const dateKey = new Date(range.from).toISOString().split("T")[0];
+    const unixTimestamp = getUnixTimestamp(range.from);
+
     const minQuantity = availabilityMap.get(unixTimestamp)?.minQuantity;
     const availableQty = minQuantity ?? product.quantity;
+
     setAvailableQuantity(availableQty ?? 0);
-    onDaySelect?.(date);
+
+    // onDaySelect?.(range.from);
+    onDateRangeChange?.(range);
   };
 
-  // Check if slot is selected
   const isSlotSelected = (slot: TimeSlot): boolean => {
-    return selectedSlots.some((s) => s.startEpoch === slot.startEpoch);
+    const selected = selectedSlots.some(
+      (s) => s.startEpoch === slot.startEpoch,
+    );
+
+    // Compute the minimum availableQuantity among all selected slots
+    const minAvailableQuantity = selectedSlots.reduce((min, s) => {
+      return s.availableQuantity! < min ? s.availableQuantity! : min;
+    }, Infinity);
+    setAvailableQuantity(minAvailableQuantity);
+    return selected;
   };
 
   // Format date for display
@@ -233,6 +266,7 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
       <div className="flex gap-4">
         {/* Per Hour Button */}
         <button
+          type="button"
           onClick={() => {
             setIsOpen(!isOpen);
             setSelectionMode("hour");
@@ -254,7 +288,7 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
             <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               {selectedDate
                 ? formatDate(selectedDate)
-                : "Select date & 3 slots"}
+                : "Select date & 4 slots"}
             </p>
             {selectionMode === "hour" && selectedSlots.length > 0 && (
               <p className="text-xs text-orange-600 font-semibold mt-1">
@@ -266,6 +300,7 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
 
         {/* Per Day Button */}
         <button
+          type="button"
           onClick={() => {
             setIsOpen(!isOpen);
             setSelectionMode("day");
@@ -299,7 +334,13 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
           )}
 
           <Calendar
-            selected={selectedDate}
+            mode={selectionMode === "hour" ? "single" : "range"}
+            selected={
+              selectionMode === "hour"
+                ? (selectedDate as Date | undefined)
+                : (dateRange as any)
+            }
+            // selected={selectedDate}
             month={currentMonth}
             onMonthChange={(m) => setCurrentMonth(m)}
             // calendar props extend html attributes so the onSelect type is
@@ -411,6 +452,7 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
 
                   {/* Submit Button */}
                   <button
+                    type="button"
                     disabled={!canSubmit}
                     onClick={() => {
                       if (canSubmit) {
@@ -437,18 +479,23 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
           )}
 
           {/* Day Selection Mode Message */}
-          {selectionMode === "day" && selectedDate && (
+          {selectionMode === "day" && dateRange?.from && (
             <div className="space-y-4">
               <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
                   <p className="text-sm font-medium text-green-900 dark:text-green-200">
-                    ✓ {formatDate(selectedDate)} selected
+                    ✓ {formatDate(dateRange.from)}
+                    {dateRange.to && dateRange.to !== dateRange.from && (
+                      <> – {formatDate(dateRange.to)}</>
+                    )}{" "}
+                    selected
                   </p>
                 </div>
               </div>
 
               <button
+                type="button"
                 onClick={() => {
                   onSlotSelect?.([]);
                   setIsOpen(false);

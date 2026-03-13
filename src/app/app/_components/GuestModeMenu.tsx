@@ -12,9 +12,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ChevronDown, LogOut } from "lucide-react";
+import { ChevronDown, Lock, LogOut } from "lucide-react";
 import Image from "next/image";
 import { UserProfile } from "@/public/images/export";
+
+const NAV_LINKS = [
+  { label: "Home", href: "/app/home" },
+  { label: "Favorites", href: "/app/favorites" },
+  { label: "Chat Support", href: "/app/chat-support" },
+  { label: "Cash Withdrawal", href: "/app/cash-withdrawal" },
+  { label: "Product Request", href: "/app/product-request" },
+  { label: "Settings", href: "/app/settings" },
+];
 
 const GuestModeMenu = () => {
   const router = useRouter();
@@ -48,13 +57,27 @@ const GuestModeMenu = () => {
             />
           </div>
           <div className="hidden md:flex flex-col items-start gap-0">
-            <span className="text-sm font-medium text-foreground">Guest User</span>
+            <span className="text-sm font-medium text-foreground">
+              Guest User
+            </span>
             <span className="text-xs text-muted-foreground">Guest Mode</span>
           </div>
           <ChevronDown className="w-4 h-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
+        {/* Navigation Links */}
+        {NAV_LINKS.map((link) => (
+          <DropdownMenuItem
+            key={link.href}
+            disabled={true}
+            className="flex items-center gap-2"
+          >
+            {true && <Lock className="size-4" />}
+            <span>{link.label}</span>
+          </DropdownMenuItem>
+        ))}
+
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={handleExitGuestMode}

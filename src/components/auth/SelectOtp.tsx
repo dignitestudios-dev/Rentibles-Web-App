@@ -22,6 +22,7 @@ import { logout } from "@/src/lib/store/feature/authSlice";
 
 const SelectOtp = () => {
   const { user } = useSelector((state: RootState) => state.auth);
+  console.log("🚀 ~ SelectOtp ~ user:", user);
   const [showVerified, setShowVerified] = useState(false);
   const router = useRouter();
   const dispatch = useDispatch();
@@ -101,11 +102,20 @@ const SelectOtp = () => {
               )}
             </div>
           </Link>
+
           <Link
             href={
               user?.isPhoneVerified ? "/auth/select-otp" : "/auth/phone-verify"
             }
-            className={`mb-4 flex items-center cursor-pointer   justify-between p-4 rounded-2xl shadow-sm ${user?.isPhoneVerified ? "border-2 border-orange-400" : ""}`}
+            onClick={(e) => {
+              if (!user?.isEmailVerified) {
+                e.preventDefault(); // prevent navigation
+              }
+            }}
+            className={`mb-4 flex items-center justify-between p-4 rounded-2xl shadow-sm
+    ${user?.isPhoneVerified ? "border-2 border-orange-400" : ""}
+    ${!user?.isEmailVerified ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
+  `}
           >
             <div className="flex items-center gap-3 justify-between w-full">
               <div className="flex items-center gap-2">
@@ -132,6 +142,7 @@ const SelectOtp = () => {
               )}
             </div>
           </Link>
+
           {user?.isEmailVerified && user?.isPhoneVerified && (
             <Button
               onClick={() => setShowVerified(true)}

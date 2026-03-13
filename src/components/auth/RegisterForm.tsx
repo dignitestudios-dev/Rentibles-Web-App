@@ -6,7 +6,7 @@ import PhoneInput from "../common/PhoneInput";
 import { Profile_img } from "@/public/images/export";
 import { InputField } from "../common/InputField";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { getAxiosErrorMessage } from "@/src/utils/errorHandlers";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
@@ -22,8 +22,11 @@ import { ErrorToast, SuccessToast } from "../common/Toaster";
 import { firebaseLogin, firebaseSignup } from "@/src/firebase/getIdToken";
 import { singUp } from "@/src/lib/store/feature/authSlice";
 import { useInvalidateAllQueries } from "@/src/hooks/useInvalidateAllQueries";
+import { Libraries, useLoadScript } from "@react-google-maps/api";
+import { getAddressFromLatLng } from "@/src/utils/helperFunctions";
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
+const libraries: Libraries = ["places"];
 
 const RegisterForm = () => {
   const router = useRouter();
@@ -39,6 +42,17 @@ const RegisterForm = () => {
     state?: string;
     country?: string;
   } | null>(null);
+
+  const [currentLocation, setCurrentLocation] = useState(false);
+
+  const [latLng, setLatLng] = useState<{ lat: number; lng: number } | null>(
+    null,
+  );
+
+  const { isLoaded } = useLoadScript({
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
+    libraries,
+  });
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -184,6 +198,20 @@ const RegisterForm = () => {
     clearErrors("location");
   };
 
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        setLatLng({ lat: latitude, lng: longitude });
+      },
+      () => {
+        setLatLng(null);
+      },
+    );
+  }, [isLoaded]);
+
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
@@ -254,12 +282,33 @@ const RegisterForm = () => {
       </div>
 
       <div>
-        <GoogleMapComponent onLocationSelect={onLocationSelect} />
+        {latLng?.lat ? (
+          <GoogleMapComponent
+            onLocationSelect={onLocationSelect}
+            latLng={currentLocation ? latLng : null}
+            setCurrentLocation={setCurrentLocation}
+          />
+        ) : (
+          <p className="text-sm text-gray-500">Loading map...</p>
+        )}
       </div>
 
       {errors.location && (
         <p className="mt-1 text-xs text-red-500">{errors.location.message}</p>
       )}
+
+      <div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            setCurrentLocation(true);
+          }}
+          className="mb-2 h-10 w-full border-gray-300 text-sm"
+        >
+          Use My Current Location
+        </Button>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <InputField

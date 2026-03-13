@@ -2,7 +2,15 @@
 
 import LoginRequiredDialog from "@/src/components/common/LoginRequiredDialog";
 import { useRouter } from "next/navigation";
-import React, { createContext, useCallback, useContext, useMemo, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useMemo,
+  useState,
+} from "react";
+import { useDispatch } from "react-redux";
+import { setGuestMode } from "@/src/lib/store/feature/authSlice";
 
 type LoginRequiredDialogOptions = {
   title?: string;
@@ -32,6 +40,7 @@ export const LoginRequiredProvider = ({
   children: React.ReactNode;
 }) => {
   const router = useRouter();
+  const dispatch = useDispatch();
   const [open, setOpen] = useState(false);
   const [options, setOptions] =
     useState<Required<LoginRequiredDialogOptions>>(defaultOptions);
@@ -50,8 +59,9 @@ export const LoginRequiredProvider = ({
 
   const handleLoginNow = useCallback(() => {
     setOpen(false);
+    dispatch(setGuestMode(false));
     router.push(options.loginPath);
-  }, [options.loginPath, router]);
+  }, [options.loginPath, router, dispatch]);
 
   const value = useMemo(
     () => ({
@@ -80,7 +90,9 @@ export const useLoginRequiredDialog = () => {
   const context = useContext(LoginRequiredDialogContext);
 
   if (!context) {
-    throw new Error("useLoginRequiredDialog must be used within LoginRequiredProvider");
+    throw new Error(
+      "useLoginRequiredDialog must be used within LoginRequiredProvider",
+    );
   }
 
   return context;

@@ -98,7 +98,7 @@ const LoginForm = () => {
         <button
           type="button"
           onClick={() => router.push("/auth/get-started")}
-          className="p-2 bg-primary text-white hover:bg-muted hover:text-foreground rounded-md transition-colors"
+          className="p-2 hover:bg-muted hover:text-foreground rounded-md transition-colors"
         >
           <ArrowLeft className="w-5 h-5 " />
         </button>

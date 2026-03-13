@@ -43,7 +43,7 @@ const AppNavbar = () => {
               aria-label="Tracking"
               title="Tracking"
               className="p-0"
-              onClick={() => router.push("/app/rental-tracking")}
+              onClick={() => router.push("/app/tracking")}
             >
               <FileClock className="w-6 h-6" />
             </Button>
@@ -52,6 +52,7 @@ const AppNavbar = () => {
               aria-label="Messages"
               title="Messages"
               className="p-0"
+              onClick={() => router.push("/app/user-chat")}
             >
               <MessageSquareText className="w-6 h-6" />
             </Button>

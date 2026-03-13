@@ -13,7 +13,7 @@ const PublicRoutes = ({ children }: PublicRoutesProps) => {
   const pathname = usePathname();
   const { isAuthenticated, user, isGuestMode, isResetPasswordFlow } =
     useSelector((state: RootState) => state.auth);
-  console.log("🚀 ~ PublicRoutes ~ isResetPasswordFlow:", isResetPasswordFlow);
+  console.log("🚀 ~ PublicRoutes ~ isGuestMode:", isGuestMode);
 
   const isLoggedIn = Boolean(isAuthenticated && user);
 

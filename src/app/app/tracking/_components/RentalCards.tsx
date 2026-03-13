@@ -1,7 +1,9 @@
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 
 type RentalCardProps = {
+  id: string;
   userName: string;
   userAvatar: string;
   productImage?: string;
@@ -30,10 +32,12 @@ const RentalCard = ({
   status,
   qty,
   date,
+  id,
   handleRedirect,
 }: RentalCardProps) => {
+  const router = useRouter();
   return (
-    <div className="bg-[#2e2e2e] rounded-2xl p-4 space-y-4 border border-white/5">
+    <div className=" overflow-hidden rounded-2xl p-4 space-y-4 border-[1px] border-foreground/25">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-orange-500">
@@ -45,10 +49,14 @@ const RentalCard = ({
               className="object-cover"
             />
           </div>
-          <span className="text-white font-medium">{userName}</span>
+          <span className="text-foreground font-medium">{userName}</span>
         </div>
 
-        <Button className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-4 py-2 text-sm">
+        <Button
+          type="button"
+          onClick={() => router.push(`/app/users/${id}`)}
+          className="bg-orange-500 hover:bg-orange-600 text-white rounded-lg px-4 py-2 text-sm"
+        >
           View Profile
         </Button>
       </div>

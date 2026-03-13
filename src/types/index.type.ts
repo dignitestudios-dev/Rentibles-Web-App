@@ -1037,3 +1037,84 @@ export interface DeleteAccountResponse {
   success: boolean;
   message: string;
 }
+
+// Tracking / Booking types for rentals
+
+export interface TrackingBooking {
+  _id: string;
+  shortCode: string;
+  bookingDate: number;
+  pickupTime: number;
+  dropOffTime: number;
+  quantity: number;
+  perUnitPrice: number;
+  totalAmount: number;
+  pickupAddress: string | null;
+  pickupLocation: {
+    type: string;
+    coordinates: [number, number];
+  };
+  dropOffAddress: string | null;
+  dropOffLocation: {
+    type: string;
+    coordinates: [number, number];
+  };
+  duration: string;
+  status: string;
+  chatId: string;
+  documentId: string | null;
+  signedBySeller: boolean;
+  signedByRenter: boolean;
+  isContractSigned: boolean;
+  isReported: boolean;
+  isPopupShown: boolean;
+  distance: number | null;
+  createdAt: string;
+  updatedAt: string;
+  platformAmount: number;
+  stripeFee: number;
+  sellerAmount: number;
+  user: {
+    _id: string;
+    name: string;
+    profilePicture: string;
+    uid: string;
+  };
+  store: null | any;
+  customer: {
+    _id: string;
+    name: string;
+    profilePicture: string;
+    uid: string;
+  };
+  product: {
+    _id: string;
+    name: string;
+    description: string;
+    cover: string;
+    category: {
+      _id: string;
+      name: string;
+    };
+    subCategory: {
+      _id: string;
+      name: string;
+    };
+  };
+  detail: {};
+  report: null | any;
+  review: null | any;
+}
+
+export interface GetTrackingParams {
+  type: "rental" | "myRental";
+  page?: number;
+  limit?: number;
+}
+
+export interface GetTrackingResponse {
+  success: boolean;
+  message: string;
+  data: TrackingBooking[];
+  pagination: IPagination;
+}

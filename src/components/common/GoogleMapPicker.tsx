@@ -30,6 +30,8 @@ type GoogleMapProps = {
   isDisabled?: boolean;
   error?: string;
   isClear?: boolean;
+  latLng?: { lat: number; lng: number } | null;
+  setCurrentLocation?: (value: boolean) => void;
 };
 
 const containerStyle = {
@@ -53,6 +55,8 @@ const GoogleMapComponent = ({
   isDisabled = false,
   error = "",
   isClear = false,
+  latLng = null,
+  setCurrentLocation = () => {},
 }: GoogleMapProps) => {
   const radiusInMeters = distance * 1609.34;
 
@@ -67,6 +71,53 @@ const GoogleMapComponent = ({
 
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
+  const updateLocationFromLatLng = (lat: number, lng: number) => {
+    setMarker({ lat, lng });
+    setMapCenter({ lat, lng });
+
+    const geocoder = new google.maps.Geocoder();
+
+    geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+      if (status === "OK" && results?.[0]) {
+        const result = results[0];
+        const components = result.address_components;
+
+        const getComponent = (types: string[]) =>
+          components.find((c) => types.some((t) => c.types.includes(t)))
+            ?.long_name || "";
+
+        const data: LocationData = {
+          country: getComponent(["country"]),
+          state: getComponent(["administrative_area_level_1"]),
+          city: getComponent([
+            "locality",
+            "postal_town",
+            "administrative_area_level_2",
+            "sublocality",
+          ]),
+          zipCode: getComponent(["postal_code"]),
+          address: result.formatted_address,
+          location: {
+            type: "Point",
+            coordinates: [lng, lat],
+          },
+        };
+
+        setInputValue(result.formatted_address || "");
+        onLocationSelect(data);
+      }
+    });
+  };
+
+  const handleMarkerDragEnd = (e: google.maps.MapMouseEvent) => {
+    if (!e.latLng) return;
+
+    const lat = e.latLng.lat();
+    const lng = e.latLng.lng();
+
+    updateLocationFromLatLng(lat, lng);
+  };
+
   useEffect(() => {
     if (isClear) setInputValue("");
   }, [isClear]);
@@ -79,6 +130,14 @@ const GoogleMapComponent = ({
       setInputValue(editAddress.address || "");
     }
   }, [editAddress]);
+
+  useEffect(() => {
+    if (editAddress?.location?.coordinates?.length === 2) return;
+
+    if (latLng?.lat && latLng?.lng) {
+      updateLocationFromLatLng(latLng.lat, latLng.lng);
+    }
+  }, [latLng?.lat, latLng?.lng]);
 
   if (!isLoaded) {
     return (
@@ -140,6 +199,7 @@ const GoogleMapComponent = ({
           placeholder="Enter your street, city, state, zip"
           className="mb-2 w-full rounded-md border text-foreground border-gray-300 p-2 text-sm"
           onChange={(e) => {
+            setCurrentLocation(false);
             const value = e.target.value;
             setInputValue(value);
 
@@ -179,7 +239,11 @@ const GoogleMapComponent = ({
             }}
           />
         ) : (
-          <Marker position={marker} />
+          <Marker
+            position={marker}
+            draggable={!isDisabled}
+            onDragEnd={handleMarkerDragEnd}
+          />
         )}
       </GoogleMap>
     </div>

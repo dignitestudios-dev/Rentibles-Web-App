@@ -16,12 +16,14 @@ import { useDispatch } from "react-redux";
 import { setUser } from "@/src/lib/store/feature/authSlice";
 import { useRouter } from "next/navigation";
 import { formatUSAPhoneNumber } from "@/src/utils/helperFunctions";
+import ChangePhoneModal from "@/src/components/auth/ChangePhoneModal";
 
 const Page = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
-  const [timer, setTimer] = useState(0);
+  const [timer, setTimer] = useState(55);
+  const [isChangePhoneOpen, setIsChangePhoneOpen] = useState(false);
 
   useEffect(() => {
     if (timer === 0) return;
@@ -33,6 +35,7 @@ const Page = () => {
     watch,
     setValue,
     setError,
+
     handleSubmit,
     formState: { errors },
   } = useForm<OtpPayload>({
@@ -84,6 +87,13 @@ const Page = () => {
         </span>
       </p>
 
+      <button
+        onClick={() => setIsChangePhoneOpen(true)}
+        className="cursor-pointer mt-3 text-primary hover:text-primary/80 font-semibold text-sm transition-colors"
+      >
+        Change Phone Number
+      </button>
+
       <OtpForm
         otp={otp}
         error={errors.otp?.message}
@@ -93,6 +103,12 @@ const Page = () => {
         onResendOtp={() => resendOtp.mutate({ phone: user!.phone })}
         isResendingOtp={resendOtp.isPending}
         timer={timer}
+      />
+
+      <ChangePhoneModal
+        isOpen={isChangePhoneOpen}
+        onClose={() => setIsChangePhoneOpen(false)}
+        onResendOtp={(phone) => resendOtp.mutate({ phone })}
       />
     </div>
   );

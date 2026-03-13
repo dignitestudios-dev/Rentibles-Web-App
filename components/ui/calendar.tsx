@@ -5,9 +5,15 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 
+type DateRange = {
+  from?: Date;
+  to?: Date;
+};
+
 export type CalendarProps = React.HTMLAttributes<HTMLDivElement> & {
-  selected?: Date;
-  onSelect?: (date: Date) => void;
+  mode?: "single" | "range";
+  selected?: Date | DateRange;
+  onSelect?: (date: Date | DateRange) => void;
   disabled?: (date: Date) => boolean;
   month?: Date;
   onMonthChange?: (date: Date) => void;
@@ -22,6 +28,7 @@ const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
       disabled,
       month: monthProp,
       onMonthChange,
+      mode,
       ...props
     },
     ref,
@@ -70,12 +77,33 @@ const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
     };
 
     const isSelected = (date: Date) => {
-      return (
-        selected &&
-        date.getDate() === selected.getDate() &&
-        date.getMonth() === selected.getMonth() &&
-        date.getFullYear() === selected.getFullYear()
-      );
+      if (!selected) return false;
+
+      if (mode === "single" && selected instanceof Date) {
+        return (
+          date.getDate() === selected.getDate() &&
+          date.getMonth() === selected.getMonth() &&
+          date.getFullYear() === selected.getFullYear()
+        );
+      }
+
+      if (mode === "range" && typeof selected === "object") {
+        const { from, to } = selected;
+
+        if (!from) return false;
+
+        if (!to) {
+          return (
+            date.getDate() === from.getDate() &&
+            date.getMonth() === from.getMonth() &&
+            date.getFullYear() === from.getFullYear()
+          );
+        }
+
+        return date >= from && date <= to;
+      }
+
+      return false;
     };
 
     return (
@@ -136,8 +164,24 @@ const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
               <button
                 key={idx}
                 onClick={() => {
-                  if (day && onSelect && !isDisabled) {
+                  if (!day || isDisabled || !onSelect) return;
+
+                  if (mode === "single") {
                     onSelect(day);
+                  }
+
+                  if (mode === "range") {
+                    const range = selected as DateRange | undefined;
+
+                    if (!range?.from || (range.from && range.to)) {
+                      onSelect({ from: day, to: undefined });
+                    } else {
+                      if (day < range.from) {
+                        onSelect({ from: day, to: range.from });
+                      } else {
+                        onSelect({ from: range.from, to: day });
+                      }
+                    }
                   }
                 }}
                 disabled={isDisabled}

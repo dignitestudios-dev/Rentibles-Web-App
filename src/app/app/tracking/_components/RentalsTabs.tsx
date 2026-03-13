@@ -1,28 +1,33 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
 
-const RentalsTabs = () => {
-  const [activeTab, setActiveTab] = useState("customer_rental");
+interface RentalsTabsProps {
+  activeTab: "customer_rental" | "my_rentals";
+  onChange: (tab: "customer_rental" | "my_rentals") => void;
+}
+
+const RentalsTabs: React.FC<RentalsTabsProps> = ({ activeTab, onChange }) => {
   return (
     <div>
       <div className="m-2 border-2 rounded-2xl">
         <div className="flex m-1">
           <button
-            onClick={() => setActiveTab("customer_rental")}
+            onClick={() => onChange("customer_rental")}
             className={`flex-1 px-6 py-4 text-sm cursor-pointer font-semibold transition-all ${
               activeTab === "customer_rental"
                 ? "bg-primary text-white rounded-l-xl"
-                : "text-foreground hover:text-gray-900 hover:bg-gray-50 rounded-l-xl"
+                : "border-b-transparent text-gray-600 dark:text-gray-400 hover:text-foreground rounded-l-xl"
             }`}
           >
             Customer Rentals
           </button>
+          +
           <button
-            onClick={() => setActiveTab("my_rentals")}
+            onClick={() => onChange("my_rentals")}
             className={`flex-1 px-6 py-4 text-sm  cursor-pointer font-semibold transition-all ${
               activeTab === "my_rentals"
                 ? "bg-primary text-white rounded-r-xl"
-                : "text-foreground hover:text-gray-900 hover:bg-gray-50 rounded-r-xl"
+                : "border-b-transparent text-gray-600 dark:text-gray-400 hover:text-foreground rounded-r-xl"
             }`}
           >
             My Rentals
