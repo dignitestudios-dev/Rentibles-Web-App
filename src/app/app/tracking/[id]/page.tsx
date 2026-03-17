@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import {
   ArrowLeft,
@@ -12,52 +12,70 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, A11y } from "swiper/modules";
 import type { SwiperRef } from "swiper/react";
 import MediaViewer from "../../products/[id]/_components/MediaViewer";
+import { useBookingDetails } from "@/src/lib/api/booking";
+import { calculateDistanceMiles } from "@/src/utils/helperFunctions";
+import { useSelector } from "react-redux";
+import { RootState } from "@/src/lib/store";
 
 const OrderDetailsPage = () => {
   const router = useRouter();
-  const [quantity, setQuantity] = useState(14);
+  const { id } = useParams();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isMediaViewerOpen, setIsMediaViewerOpen] = useState(false);
-  const swiperRef = useRef<SwiperRef>(null);
+  const [distance, setDistance] = useState("");
 
-  const product = {
-    _id: "68b99e0ded64fb55be419720",
-    name: "Test Product",
-    description:
-      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-    cover:
-      "https://rentibles-bucket.s3.us-west-2.amazonaws.com/pictures/37b3c72e-c2df-406f-a433-fe8a6da5b1df.jpg",
-    images: [
-      "https://rentibles-bucket.s3.us-west-2.amazonaws.com/pictures/37b3c72e-c2df-406f-a433-fe8a6da5b1df.jpg",
-      "https://rentibles-bucket.s3.us-west-2.amazonaws.com/pictures/8586f2da-d4a3-43ca-b40e-a8ffea023ab7.jpg",
-      "https://rentibles-bucket.s3.us-west-2.amazonaws.com/pictures/bf930ca3-5f96-4554-9f35-7f7043c8093a.jpg",
-      "https://rentibles-bucket.s3.us-west-2.amazonaws.com/pictures/7cd58120-ab4b-44fa-a7d3-780cd4b54105.jpg",
-    ],
-    rating: 4.5,
-    category: "Furniture",
-    subCategory: "Chair",
-    pricePerHour: 3000,
-    pricePerDay: 9000,
-    totalQuantity: 100,
-    availableQuantity: 14,
-    distance: "8 Miles Away",
-    phone: "+1 136 898 21345",
-    storeAvatar:
-      "https://rentibles-bucket.s3.us-west-2.amazonaws.com/pictures/761f866f-6b7a-4316-9dd1-085a6a042283.png",
-  };
+  // const swiperRef = useRef<SwiperRef>(null);
+  const { latitude, longitude } = useSelector(
+    (state: RootState) => state.location,
+  );
 
-  const handleQuantityChange = (change: number) => {
-    const newQty = quantity + change;
-    if (newQty > 0 && newQty <= product.totalQuantity) {
-      setQuantity(newQty);
+  const {
+    data: bookingData,
+    isLoading,
+    error,
+  } = useBookingDetails(id as string);
+
+  useEffect(() => {
+    if (bookingData?.data) {
+      // Select default card if exists, otherwise select first card
+
+      const productLat = bookingData?.data?.pickupLocation.coordinates[1];
+      const productLng = bookingData?.data?.pickupLocation.coordinates[0];
+
+      let distance = null;
+
+      if (latitude && longitude) {
+        distance = calculateDistanceMiles(
+          latitude,
+          longitude,
+          productLat,
+          productLng,
+        ).toFixed(2);
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setDistance(distance);
+      }
     }
-  };
+  }, [bookingData?.data]);
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error loading booking details</div>;
+  if (!bookingData?.data) return <div>No data found</div>;
+
+  const booking = bookingData.data;
+  const product = booking.product;
+
+  // const handleQuantityChange = (change: number) => {
+  //   const newQty = quantity + change;
+  //   if (newQty > 0 && newQty <= product.totalQuantity) {
+  //     setQuantity(newQty);
+  //   }
+  // };
 
   return (
     <div className="bg-background min-h-screen">
@@ -74,8 +92,12 @@ const OrderDetailsPage = () => {
 
           <div className="w-10 h-10 rounded-full p-1 bg-primary ring-2 ring-primary overflow-hidden">
             <img
-              src={product.storeAvatar}
-              alt="store"
+              src={
+                booking?.type === "own"
+                  ? booking?.user?.profilePicture
+                  : booking.customer.profilePicture
+              }
+              alt="user"
               className="w-full h-full object-cover rounded-full"
             />
           </div>
@@ -102,7 +124,7 @@ const OrderDetailsPage = () => {
                   src={product.images[activeImageIndex]}
                   alt="product"
                   onClick={() => setIsMediaViewerOpen(true)}
-                  className="w-full h-96 md:h-125 object-cover cursor-pointer hover:opacity-90 transition-opacity"
+                  className="w-full h-96 md:h-125 object-contain cursor-pointer hover:opacity-90 transition-opacity"
                 />
 
                 <button
@@ -134,6 +156,29 @@ const OrderDetailsPage = () => {
           </div>
 
           <div className="lg:col-span-1">
+            <div className="shadow-md rounded-xl p-2 py-3 mb-6">
+              <h2>Order Summary</h2>
+
+              <div className="space-y-4">
+                <div className="flex justify-between">
+                  <span className="font-medium">Order ID:</span>
+                  <span>{booking.shortCode}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-medium">Order Created:</span>
+                  <span>
+                    {new Date(booking.createdAt).toLocaleDateString()}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="font-medium">Order Time:</span>
+                  <span>
+                    {new Date(booking.pickupTime * 1000).toLocaleTimeString()}
+                  </span>
+                </div>
+              </div>
+            </div>
+
             <div className="mb-6">
               <div className="flex items-start justify-between gap-4 mb-3">
                 <h2 className="text-3xl md:text-4xl font-bold">
@@ -141,7 +186,7 @@ const OrderDetailsPage = () => {
                 </h2>
                 <div className="flex items-center gap-1 bg-primary text-primary-foreground px-3 py-1 rounded-md whitespace-nowrap">
                   <Star className="w-5 h-5 fill-current" />
-                  <span className="font-semibold">{product.rating}</span>
+                  <span className="font-semibold">{product.productReview}</span>
                 </div>
               </div>
 
@@ -156,16 +201,18 @@ const OrderDetailsPage = () => {
               <div>
                 <h3 className="text-lg font-semibold mb-2">Pickup Locations</h3>
                 <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">
-                  Location will be visible once you book the item.
+                  {booking.pickupAddress}
                 </p>
-                <p className="text-xl font-bold">{product.distance}</p>
+                <p className="text-xl font-bold">
+                  {distance ? `${distance} miles` : "N/A"}
+                </p>
               </div>
 
               <div>
                 <h3 className="text-lg font-semibold mb-2">Phone Number</h3>
                 <div className="flex items-center gap-2">
                   <Phone className="w-5 h-5 text-gray-500" />
-                  <span className="text-lg">{product.phone}</span>
+                  <span className="text-lg">{booking.user.phone}</span>
                 </div>
               </div>
             </div>
@@ -176,56 +223,58 @@ const OrderDetailsPage = () => {
               <div>
                 <h3 className="text-lg font-semibold mb-2">Category</h3>
                 <p className="text-gray-500 dark:text-gray-400">
-                  {product.category}
+                  {product.category.name}
                 </p>
               </div>
 
               <div>
                 <h3 className="text-lg font-semibold mb-2">Sub Category</h3>
                 <p className="text-gray-500 dark:text-gray-400">
-                  {product.subCategory}
+                  {product.subCategory.name}
                 </p>
               </div>
             </div>
 
             <hr className="my-6 border-border" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div className="mb-6">
+              <div>
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-lg font-semibold">Quantity, </h3>
                 </div>
 
-                <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
-                  {quantity} Items
+                <p className="text-gray-500 dark:text-gray-400 text-sm ">
+                  {booking.quantity} Items
                 </p>
               </div>
-              <div className="mb-6">
+              <div>
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-lg font-semibold">Date </h3>
                 </div>
 
-                <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
-                  {quantity} Items
+                <p className="text-gray-500 dark:text-gray-400 text-sm ">
+                  {new Date(booking.bookingDate * 1000).toLocaleDateString()}
                 </p>
               </div>
             </div>
+            <hr className="my-6 border-border" />
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div className="mb-6">
+              <div>
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-lg font-semibold">Duration</h3>
                 </div>
 
-                <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
-                 1:00 AM - 7:00 AM
+                <p className="text-gray-500 dark:text-gray-400 text-sm ">
+                  {booking.duration}
                 </p>
               </div>
-              <div className="mb-6">
+              <div>
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-semibold">Date </h3>
+                  <h3 className="text-lg font-semibold">Pickup Time</h3>
                 </div>
 
-                <p className="text-gray-500 dark:text-gray-400 text-sm mb-4">
-                  {quantity} Items
+                <p className="text-gray-500 dark:text-gray-400 text-sm ">
+                  {new Date(booking.pickupTime * 1000).toLocaleTimeString()}
                 </p>
               </div>
             </div>

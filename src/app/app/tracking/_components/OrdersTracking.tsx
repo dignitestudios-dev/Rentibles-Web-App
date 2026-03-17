@@ -17,12 +17,15 @@ export const TrackingFilter = [
   { _id: "rejected", name: "Rejected" },
 ];
 
-const statusMap: Record<string, "Completed" | "Incomplete" | "Pending"> = {
+const statusMap: Record<
+  string,
+  "Completed" | "Incomplete" | "Pending" | "In Progress" | "Over Due"
+> = {
   completed: "Completed",
   incomplete: "Incomplete",
   pending: "Pending",
-  "in-progress": "Pending",
-  "over-due": "Incomplete",
+  "in-progress": "In Progress",
+  "over-due": "Over Due",
 };
 
 interface OrdersTrackingProps {
@@ -36,6 +39,7 @@ const OrdersTracking: React.FC<OrdersTrackingProps> = ({
   isLoading,
   type,
 }) => {
+  console.log("🚀 ~ OrdersTracking ~ bookings:", bookings);
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState("all");
 
@@ -75,31 +79,70 @@ const OrdersTracking: React.FC<OrdersTrackingProps> = ({
         ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filteredBookings.map((booking) => (
-          <RentalCard
-            key={booking._id}
-            userName={
-              type === "customer_rental"
-                ? booking.user.name
-                : booking.customer.name
-            }
-            userAvatar={
-              type === "customer_rental"
-                ? booking.user.profilePicture
-                : booking.customer.profilePicture
-            }
-            productImage={booking.product.cover}
-            title={booking.product.name}
-            price={booking.totalAmount}
-            hours={parseInt(booking.duration)}
-            status={statusMap[booking.status] || "Pending"}
-            qty={booking.quantity}
-            date={formatDateToMMDDYYYY(booking.bookingDate)}
-            handleRedirect={() => handleRedirect(booking._id)}
-            id={booking.shortCode}
-          />
-        ))}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {filteredBookings.length ? (
+          filteredBookings.map((booking) => {
+            // ✅ Convert epoch → Date
+            const bookingDateObj = new Date(booking.bookingDate * 1000);
+
+            // ✅ Format Date
+            const formattedDate = bookingDateObj.toLocaleDateString(undefined, {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            });
+
+            // ✅ Format Time
+            const formattedTime = bookingDateObj.toLocaleTimeString(undefined, {
+              hour: "2-digit",
+              minute: "2-digit",
+            });
+
+            return (
+              <RentalCard
+                key={booking._id}
+                bookingId={booking._id}
+                userName={
+                  type === "customer_rental"
+                    ? booking.customer.name
+                    : booking?.store
+                      ? booking?.store?.name
+                      : booking?.user?.name
+                }
+                userAvatar={
+                  type === "customer_rental"
+                    ? booking.customer.profilePicture
+                    : booking?.store
+                      ? booking?.store?.profilePicture
+                      : booking?.user?.profilePicture
+                }
+                productImage={booking?.product?.cover}
+                title={booking.product.name}
+                price={booking.totalAmount}
+                hours={parseInt(booking.duration)}
+                status={statusMap[booking.status] || "Pending"}
+                qty={booking.quantity}
+                date={formattedDate}
+                time={formattedTime}
+                pickupTime={booking.pickupTime}
+                dropOffTime={booking.dropOffTime}
+                handleRedirect={() => handleRedirect(booking._id)}
+                id={
+                  type === "customer_rental"
+                    ? booking.customer._id
+                    : booking?.store
+                      ? booking?.store?._id
+                      : booking?.user?._id
+                }
+                type={type}
+              />
+            );
+          })
+        ) : (
+          <p className="text-muted-foreground mt-10 text-center col-span-full">
+            No bookings found
+          </p>
+        )}
       </div>
       {filteredBookings.length === 0 && (
         <p className="text-muted-foreground mt-10 text-center col-span-full">

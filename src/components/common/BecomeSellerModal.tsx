@@ -41,6 +41,9 @@ const BecomeSellerModal = ({ open, onOpenChange }: BecomeSellerModalProps) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        onInteractOutside={(e) => {
+          e.preventDefault();
+        }}
         showCloseButton={false}
         className="rounded-3xl border-0 bg-card px-6 pb-6 pt-14 text-center max-w-sm"
       >

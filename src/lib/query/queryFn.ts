@@ -63,6 +63,7 @@ import {
   DeleteProductRequestResponse,
   GetTrackingParams,
   GetTrackingResponse,
+  GetBookingDetailsResponse,
 } from "@/src/types/index.type";
 import { OtpPayload } from "@/src/schema";
 
@@ -399,5 +400,12 @@ export const getTracking = async (
   params: GetTrackingParams,
 ): Promise<GetTrackingResponse> => {
   const { data } = await axiosInstance.get("/booking", { params });
+  return data;
+};
+
+export const getBookingById = async (
+  id: string,
+): Promise<GetBookingDetailsResponse> => {
+  const { data } = await axiosInstance.get(`/booking/${id}`);
   return data;
 };

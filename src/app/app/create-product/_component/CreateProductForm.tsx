@@ -64,7 +64,6 @@ const TimeOptions = [
 const CreateProductForm = () => {
   const dispatch = useAppDispatch();
   const [user, setUser] = useState<User>();
-  console.log("🚀 ~ CreateProductForm ~ user:", user);
   const [isMap, setIsMap] = useState<boolean>(false);
   const router = useRouter();
   const [isBecomeSellerOpen, setIsBecomeSellerOpen] = useState(false);

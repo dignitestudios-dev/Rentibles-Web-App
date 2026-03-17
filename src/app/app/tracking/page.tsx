@@ -8,7 +8,7 @@ const Tracking = () => {
   const [activeTab, setActiveTab] = useState<"customer_rental" | "my_rentals">(
     "customer_rental",
   );
-  const type = activeTab === "customer_rental" ? "rental" : "myRental";
+  const type = activeTab === "customer_rental" ? "rental" : "own";
   const { data, isLoading } = useTracking({ type });
 
   return (

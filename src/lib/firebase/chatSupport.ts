@@ -38,6 +38,19 @@ export interface CurrentChatUser {
   initials: string;
 }
 
+export interface UserChatModel {
+  chatId: string;
+  otherUserId: string;
+  name: string;
+  email: string;
+  profilePicture?: string;
+  lastMessage: string;
+  lastMessageType: "text" | "file";
+  timestamp: Timestamp | null;
+  unreadCount: number;
+  blockedBy: string[];
+}
+
 export const generateChatId = (uid1: string, uid2: string): string => {
   const ids = [uid1, uid2].sort();
   return ids.join("");
@@ -68,6 +81,79 @@ export const getCurrentChatUser = (): CurrentChatUser | null => {
     name,
     initials,
   };
+};
+
+export const subscribeToUserChatsWithDetails = (
+  currentUid: string,
+  callback: (chats: UserChatModel[]) => void,
+): Unsubscribe => {
+  const chatsQuery = query(
+    collection(db, "chats"),
+    where("users", "array-contains", currentUid),
+    orderBy("timestamp", "desc"),
+  );
+
+  return onSnapshot(chatsQuery, async (snapshot) => {
+    // Mirror Flutter's Future.wait(chatSnapshot.docs.map(...))
+    const settled = await Promise.allSettled(
+      snapshot.docs.map(async (chatDoc): Promise<UserChatModel | null> => {
+        const data = chatDoc.data();
+
+        // Mirror: firstWhereOrNull((id) => id != userId)
+        const users = (data.users as string[] | undefined) ?? [];
+        const otherUserId = users.find((uid) => uid !== currentUid);
+        if (!otherUserId) return null;
+
+        // Mirror: firestore.collection('users').doc(otherUserId).get()
+        const userSnap = await getDoc(doc(db, "users", otherUserId));
+        const userData = userSnap.exists() ? userSnap.data() : null;
+
+        // Mirror: getUnreadMessages() — count docs where receiverId == me and isSeen == false
+        const unreadSnap = await getDocs(
+          query(
+            collection(db, "chats", chatDoc.id, "messages"),
+            where("receiverId", "==", currentUid),
+            where("isSeen", "==", false),
+          ),
+        );
+
+        return {
+          chatId: chatDoc.id,
+          otherUserId,
+          name: userData?.name ?? "Unknown",
+          email: userData?.email ?? "",
+          profilePicture: userData?.profilePicture ?? undefined,
+          lastMessage: data.lastMessage ?? "",
+          lastMessageType: data.type === "file" ? "file" : "text",
+          timestamp: (data.timestamp as Timestamp | undefined) ?? null,
+          unreadCount: unreadSnap.size,
+          blockedBy: (data.blockedBy as string[] | undefined) ?? [],
+        };
+      }),
+    );
+    // Filter out nulls and rejected promises (same as Flutter catching Exception)
+    const chats = settled
+      .filter(
+        (r): r is PromiseFulfilledResult<UserChatModel> =>
+          r.status === "fulfilled" && r.value !== null,
+      )
+      .map((r) => r.value);
+
+    callback(chats);
+  });
+};
+
+export const subscribeToUserStatus = (
+  uid: string,
+  callback: (isOnline: boolean, lastSeen: Timestamp | null) => void,
+): Unsubscribe => {
+  return onSnapshot(doc(db, "status", uid), (snap) => {
+    const data = snap.data();
+    callback(
+      Boolean(data?.isOnline),
+      (data?.lastSeen as Timestamp | undefined) ?? null,
+    );
+  });
 };
 
 export const resolveSupportChatId = async (
@@ -162,6 +248,7 @@ export const sendChatMessage = async (params: {
   content: string;
   type: "text" | "file";
   clientMessageId?: string;
+  receiverData?: { name?: string; email?: string; profilePicture?: string };
 }): Promise<void> => {
   const { chatId, senderUid, receiverId, content, type, clientMessageId } =
     params;

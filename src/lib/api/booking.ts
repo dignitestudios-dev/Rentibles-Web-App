@@ -6,8 +6,12 @@ import {
   UseQueryResult,
 } from "@tanstack/react-query";
 import { axiosInstance } from "@/src/lib/axiosInstance";
-import { getTracking } from "../query/queryFn";
-import { GetTrackingParams, GetTrackingResponse } from "@/src/types/index.type";
+import { getTracking, getBookingById } from "../query/queryFn";
+import {
+  GetTrackingParams,
+  GetTrackingResponse,
+  GetBookingDetailsResponse,
+} from "@/src/types/index.type";
 
 export interface CreateBookingPayload {
   productId: string;
@@ -59,5 +63,20 @@ export const useTracking = (
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     enabled: options?.enabled ?? true,
+  });
+};
+
+export const useBookingDetails = (
+  id: string,
+  options?: {
+    enabled?: boolean;
+  },
+): UseQueryResult<GetBookingDetailsResponse, Error> => {
+  return useQuery({
+    queryKey: ["booking", id],
+    queryFn: () => getBookingById(id),
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    enabled: options?.enabled ?? !!id,
   });
 };

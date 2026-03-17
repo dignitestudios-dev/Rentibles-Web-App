@@ -21,7 +21,7 @@ const RentalsTabs: React.FC<RentalsTabsProps> = ({ activeTab, onChange }) => {
           >
             Customer Rentals
           </button>
-          +
+
           <button
             onClick={() => onChange("my_rentals")}
             className={`flex-1 px-6 py-4 text-sm  cursor-pointer font-semibold transition-all ${

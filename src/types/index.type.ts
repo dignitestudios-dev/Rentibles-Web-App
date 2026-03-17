@@ -1040,6 +1040,8 @@ export interface DeleteAccountResponse {
 
 // Tracking / Booking types for rentals
 
+// Tracking / Booking types for rentals
+
 export interface TrackingBooking {
   _id: string;
   shortCode: string;
@@ -1061,7 +1063,8 @@ export interface TrackingBooking {
   };
   duration: string;
   status: string;
-  chatId: string;
+  chatId: string | null;
+  type: string;
   documentId: string | null;
   signedBySeller: boolean;
   signedByRenter: boolean;
@@ -1078,13 +1081,16 @@ export interface TrackingBooking {
     _id: string;
     name: string;
     profilePicture: string;
+    phone: string;
     uid: string;
   };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   store: null | any;
   customer: {
     _id: string;
     name: string;
     profilePicture: string;
+    phone: string;
     uid: string;
   };
   product: {
@@ -1092,22 +1098,41 @@ export interface TrackingBooking {
     name: string;
     description: string;
     cover: string;
+    images: string[];
+    productReview: number;
     category: {
       _id: string;
       name: string;
+      cover: string;
     };
     subCategory: {
       _id: string;
       name: string;
+      cover: string;
     };
+    isContracted: boolean;
+    createdAt: string;
+    updatedAt: string;
   };
-  detail: {};
+  detail: {
+    history: Array<{
+      status: string;
+      date: number;
+    }>;
+    pickupImages: string[];
+    pickupVideos: string[];
+    dropOffImages: string[];
+    dropOffVideos: string[];
+    cancellationReason: string | null;
+  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   report: null | any;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   review: null | any;
 }
 
 export interface GetTrackingParams {
-  type: "rental" | "myRental";
+  type: "rental" | "own";
   page?: number;
   limit?: number;
 }
@@ -1117,4 +1142,10 @@ export interface GetTrackingResponse {
   message: string;
   data: TrackingBooking[];
   pagination: IPagination;
+}
+
+export interface GetBookingDetailsResponse {
+  success: boolean;
+  message: string;
+  data: TrackingBooking;
 }
