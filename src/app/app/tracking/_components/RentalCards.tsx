@@ -123,7 +123,7 @@ const RentalCard = ({
 
       <div className="flex justify-between items-center gap-2 w-full ">
         {type === "customer_rental" && (
-          <div className="mt-2 w-full">
+          <div className=" w-full">
             <PickupCaptchaDialog
               bookingId={bookingId}
               disabled={!isReadyForPickup && status !== "In Progress"}
