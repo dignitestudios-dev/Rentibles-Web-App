@@ -126,7 +126,7 @@ const RentalCard = ({
           <div className="mt-2 w-full">
             <PickupCaptchaDialog
               bookingId={bookingId}
-              disabled={!isReadyForPickup}
+              disabled={!isReadyForPickup && status !== "In Progress"}
               trigger={
                 <Button
                   variant={"outline"}
@@ -136,7 +136,9 @@ const RentalCard = ({
                     ? "Ready for Pickup"
                     : status === "In Progress"
                       ? "Mark As Received"
-                      : "Completed"}
+                      : status === "Incomplete"
+                        ? "In Complete"
+                        : "Completed"}
                 </Button>
               }
             />
@@ -144,6 +146,8 @@ const RentalCard = ({
             <p className="text-[12px] text-primary">
               {!isReadyForPickup &&
                 status !== "Completed" &&
+                status !== "Incomplete" &&
+                status !== "In Progress" &&
                 "Can be mark at the time of booking"}
             </p>
           </div>
