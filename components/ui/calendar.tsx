@@ -46,6 +46,7 @@ const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
     startDate.setDate(startDate.getDate() - firstDay.getDay());
 
     const days: (Date | null)[] = [];
+    // eslint-disable-next-line prefer-const
     let current = new Date(startDate);
 
     while (days.length < 42) {
@@ -76,6 +77,11 @@ const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
       );
     };
 
+    const isDateRange = (
+      value: Date | DateRange | undefined,
+    ): value is DateRange =>
+      typeof value === "object" && value !== null && "from" in value;
+
     const isSelected = (date: Date) => {
       if (!selected) return false;
 
@@ -87,7 +93,7 @@ const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
         );
       }
 
-      if (mode === "range" && typeof selected === "object") {
+      if (mode === "range" && isDateRange(selected)) {
         const { from, to } = selected;
 
         if (!from) return false;
@@ -171,7 +177,7 @@ const Calendar = React.forwardRef<HTMLDivElement, CalendarProps>(
                   }
 
                   if (mode === "range") {
-                    const range = selected as DateRange | undefined;
+                    const range = isDateRange(selected) ? selected : undefined;
 
                     if (!range?.from || (range.from && range.to)) {
                       onSelect({ from: day, to: undefined });

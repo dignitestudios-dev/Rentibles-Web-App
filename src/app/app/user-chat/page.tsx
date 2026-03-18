@@ -57,6 +57,218 @@ type ChatDisplayMessage = {
   clientMessageId?: string;
 };
 
+type MessageInputProps = {
+  messageInput: string;
+  isBlocked: boolean;
+  isBlockedByMe: boolean;
+  isSending: boolean;
+  inputRef: React.RefObject<HTMLInputElement | null>;
+  imageInputRef: React.RefObject<HTMLInputElement | null>;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onSend: () => void;
+  onImageSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
+};
+
+type MessageBubbleProps = {
+  message: ChatDisplayMessage;
+  index: number;
+  activeSenderUid: string;
+  displayMessages: ChatDisplayMessage[];
+  formatTime: (date: Date) => string;
+  getDayLabel: (msg: ChatDisplayMessage) => string;
+};
+
+const MessageInput = ({
+  messageInput,
+  isBlocked,
+  isBlockedByMe,
+  isSending,
+  inputRef,
+  imageInputRef,
+  onChange,
+  onKeyDown,
+  onSend,
+  onImageSelect,
+}: MessageInputProps) => (
+  <div className="sticky bottom-0 z-30 bg-background border-t border-border p-3 sm:p-4">
+    {isBlocked && (
+      <p className="text-sm text-center text-muted-foreground mb-3">
+        {isBlockedByMe
+          ? "You have blocked this user. Unblock to send messages."
+          : "You have been blocked by this user."}
+      </p>
+    )}
+    <div className="flex items-center gap-2 sm:gap-3 bg-muted p-1 rounded-xl">
+      <input
+        ref={inputRef}
+        type="text"
+        placeholder={isBlocked ? "Messaging unavailable" : "Type a message..."}
+        value={messageInput}
+        onChange={onChange}
+        onKeyDown={onKeyDown}
+        disabled={isBlocked}
+        className="flex-1 px-3 py-2 sm:px-4 sm:py-3 text-sm bg-transparent rounded-lg focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+        aria-label="Message input"
+      />
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={onImageSelect}
+      />
+      <button
+        onClick={() => imageInputRef.current?.click()}
+        disabled={isBlocked}
+        className="w-9 h-9 sm:w-10 sm:h-10 text-primary rounded-lg flex items-center justify-center hover:bg-primary/10 disabled:text-muted-foreground disabled:cursor-not-allowed transition-all"
+        aria-label="Send image"
+      >
+        <Camera className="w-5 h-5" />
+      </button>
+      <button
+        onClick={onSend}
+        disabled={!messageInput.trim() || isBlocked || isSending}
+        className="w-9 h-9 sm:w-10 sm:h-10 bg-primary text-primary-foreground rounded-lg flex items-center justify-center hover:opacity-90 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed transition-all active:scale-95"
+        aria-label="Send message"
+      >
+        {isSending ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          <Send className="w-4 h-4" />
+        )}
+      </button>
+    </div>
+  </div>
+);
+
+const MessageBubble = ({
+  message,
+  index,
+  activeSenderUid,
+  displayMessages,
+  formatTime,
+  getDayLabel,
+}: MessageBubbleProps) => {
+  const isMe = message.senderUid === activeSenderUid;
+
+  const hasDateHeader = (): boolean => {
+    if (index === 0) return true;
+    return (
+      message.time.toDateString() !==
+      displayMessages[index - 1].time.toDateString()
+    );
+  };
+
+  return (
+    <div>
+      {hasDateHeader() && (
+        <div className="flex justify-center mb-4">
+          <span className="px-3 py-1 bg-muted text-muted-foreground text-xs rounded-full font-medium">
+            {getDayLabel(message)}
+          </span>
+        </div>
+      )}
+      <div className={`flex gap-2 ${isMe ? "justify-end" : "justify-start"}`}>
+        <div
+          className={`max-w-[75%] sm:max-w-md rounded-xl px-3 py-2 sm:px-4 ${
+            isMe
+              ? "bg-primary text-primary-foreground rounded-tr-none"
+              : "bg-card text-card-foreground rounded-tl-none border border-border"
+          }`}
+        >
+          {message.type === "file" ? (
+            <div className="relative">
+              <img
+                src={message.content}
+                alt="chat media"
+                className="w-full max-w-[280px] h-auto rounded-md object-cover"
+              />
+              {message.isOptimistic && message.deliveryStatus === "sending" && (
+                <div className="absolute inset-0 rounded-md bg-black/35 flex items-center justify-center gap-2 text-white text-xs font-medium">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Sending...
+                </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-sm leading-relaxed break-words">
+              {message.content}
+            </p>
+          )}
+          <span
+            className={`flex items-center justify-end gap-1 text-xs mt-1 ${
+              isMe ? "text-primary-foreground/80" : "text-muted-foreground"
+            }`}
+          >
+            {formatTime(message.time)}
+            {isMe && (
+              <>
+                {message.isOptimistic && message.deliveryStatus === "failed" ? (
+                  <CircleAlert className="w-3 h-3 text-red-400" />
+                ) : (
+                  <CheckCheck
+                    className={`w-3 h-3 ${
+                      message.isSeen
+                        ? "text-green-500"
+                        : "text-primary-foreground/80"
+                    }`}
+                  />
+                )}
+              </>
+            )}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+type MessagesAreaProps = {
+  isLoadingMessages: boolean;
+  displayMessages: ChatDisplayMessage[];
+  activeSenderUid: string;
+  selectedChatName?: string;
+  messagesEndRef: React.RefObject<HTMLDivElement | null>;
+  formatTime: (date: Date) => string;
+  getDayLabel: (msg: ChatDisplayMessage) => string;
+};
+
+const MessagesArea = ({
+  isLoadingMessages,
+  displayMessages,
+  activeSenderUid,
+  selectedChatName,
+  messagesEndRef,
+  formatTime,
+  getDayLabel,
+}: MessagesAreaProps) => (
+  <div className="flex-1 overflow-y-auto scrollbar-hide p-4 sm:p-6 space-y-4">
+    {isLoadingMessages && (
+      <div className="flex justify-center py-8">
+        <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+      </div>
+    )}
+    {!isLoadingMessages && displayMessages.length === 0 && (
+      <p className="text-sm text-muted-foreground text-center py-8">
+        Start a conversation with {selectedChatName}.
+      </p>
+    )}
+    {displayMessages.map((msg, idx) => (
+      <MessageBubble
+        key={msg.id}
+        message={msg}
+        index={idx}
+        activeSenderUid={activeSenderUid}
+        displayMessages={displayMessages}
+        formatTime={formatTime}
+        getDayLabel={getDayLabel}
+      />
+    ))}
+    <div ref={messagesEndRef} />
+  </div>
+);
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 const UserChat = () => {
@@ -169,14 +381,6 @@ const UserChat = () => {
     if (msg.time.toDateString() === yesterday.toDateString())
       return "Yesterday";
     return msg.time.toLocaleDateString([], { month: "short", day: "numeric" });
-  };
-
-  const hasDateHeader = (index: number): boolean => {
-    if (index === 0) return true;
-    return (
-      displayMessages[index].time.toDateString() !==
-      displayMessages[index - 1].time.toDateString()
-    );
   };
 
   const formatLastMessagePreview = (chat: UserChatModel): string => {
@@ -489,128 +693,6 @@ const UserChat = () => {
     );
   };
 
-  const MessageInput = () => (
-    <div className="sticky bottom-0 z-30 bg-background border-t border-border p-3 sm:p-4">
-      <BlockBanner />
-      <div className="flex items-center gap-2 sm:gap-3 bg-muted p-1 rounded-xl">
-        <input
-          ref={inputRef}
-          type="text"
-          placeholder={
-            isBlocked ? "Messaging unavailable" : "Type a message..."
-          }
-          value={messageInput}
-          onChange={(e) => setMessageInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          disabled={isBlocked}
-          className="flex-1 px-3 py-2 sm:px-4 sm:py-3 text-sm bg-transparent rounded-lg focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-          aria-label="Message input"
-        />
-        <input
-          ref={imageInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handleSelectImage}
-        />
-        <button
-          onClick={() => imageInputRef.current?.click()}
-          disabled={isBlocked}
-          className="w-9 h-9 sm:w-10 sm:h-10 text-primary rounded-lg flex items-center justify-center hover:bg-primary/10 disabled:text-muted-foreground disabled:cursor-not-allowed transition-all"
-          aria-label="Send image"
-        >
-          <Camera className="w-5 h-5" />
-        </button>
-        <button
-          onClick={handleSendMessage}
-          disabled={!messageInput.trim() || isBlocked || isSending}
-          className="w-9 h-9 sm:w-10 sm:h-10 bg-primary text-primary-foreground rounded-lg flex items-center justify-center hover:opacity-90 disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed transition-all active:scale-95"
-          aria-label="Send message"
-        >
-          {isSending ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Send className="w-4 h-4" />
-          )}
-        </button>
-      </div>
-    </div>
-  );
-
-  const MessageBubble = ({
-    message,
-    index,
-  }: {
-    message: ChatDisplayMessage;
-    index: number;
-  }) => {
-    const isMe = message.senderUid === activeSenderUid;
-    return (
-      <div>
-        {hasDateHeader(index) && (
-          <div className="flex justify-center mb-4">
-            <span className="px-3 py-1 bg-muted text-muted-foreground text-xs rounded-full font-medium">
-              {getDayLabel(message)}
-            </span>
-          </div>
-        )}
-        <div className={`flex gap-2 ${isMe ? "justify-end" : "justify-start"}`}>
-          <div
-            className={`max-w-[75%] sm:max-w-md rounded-xl px-3 py-2 sm:px-4 ${
-              isMe
-                ? "bg-primary text-primary-foreground rounded-tr-none"
-                : "bg-card text-card-foreground rounded-tl-none border border-border"
-            }`}
-          >
-            {message.type === "file" ? (
-              <div className="relative">
-                <img
-                  src={message.content}
-                  alt="chat media"
-                  className="w-full max-w-[280px] h-auto rounded-md object-cover"
-                />
-                {message.isOptimistic &&
-                  message.deliveryStatus === "sending" && (
-                    <div className="absolute inset-0 rounded-md bg-black/35 flex items-center justify-center gap-2 text-white text-xs font-medium">
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      Sending...
-                    </div>
-                  )}
-              </div>
-            ) : (
-              <p className="text-sm leading-relaxed break-words">
-                {message.content}
-              </p>
-            )}
-            <span
-              className={`flex items-center justify-end gap-1 text-xs mt-1 ${
-                isMe ? "text-primary-foreground/80" : "text-muted-foreground"
-              }`}
-            >
-              {formatTime(message.time)}
-              {isMe && (
-                <>
-                  {message.isOptimistic &&
-                  message.deliveryStatus === "failed" ? (
-                    <CircleAlert className="w-3 h-3 text-red-400" />
-                  ) : (
-                    <CheckCheck
-                      className={`w-3 h-3 ${
-                        message.isSeen
-                          ? "text-green-500"
-                          : "text-primary-foreground/80"
-                      }`}
-                    />
-                  )}
-                </>
-              )}
-            </span>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   const ChatHeader = ({ onBack }: { onBack?: () => void }) => {
     if (!selectedChat) return null;
     return (
@@ -677,25 +759,6 @@ const UserChat = () => {
       </div>
     );
   };
-
-  const MessagesArea = () => (
-    <div className="flex-1 overflow-y-auto scrollbar-hide p-4 sm:p-6 space-y-4">
-      {isLoadingMessages && (
-        <div className="flex justify-center py-8">
-          <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-        </div>
-      )}
-      {!isLoadingMessages && displayMessages.length === 0 && (
-        <p className="text-sm text-muted-foreground text-center py-8">
-          Start a conversation with {selectedChat?.name}.
-        </p>
-      )}
-      {displayMessages.map((msg, idx) => (
-        <MessageBubble key={msg.id} message={msg} index={idx} />
-      ))}
-      <div ref={messagesEndRef} />
-    </div>
-  );
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
@@ -796,8 +859,27 @@ const UserChat = () => {
           <>
             <ChatHeader />
             <div className="flex-1 flex flex-col min-h-0">
-              <MessagesArea />
-              <MessageInput />
+              <MessagesArea
+                isLoadingMessages={isLoadingMessages}
+                displayMessages={displayMessages}
+                activeSenderUid={activeSenderUid}
+                selectedChatName={selectedChat?.name}
+                messagesEndRef={messagesEndRef}
+                formatTime={formatTime}
+                getDayLabel={getDayLabel}
+              />
+              <MessageInput
+                messageInput={messageInput}
+                isBlocked={isBlocked}
+                isBlockedByMe={isBlockedByMe}
+                isSending={isSending}
+                inputRef={inputRef}
+                imageInputRef={imageInputRef}
+                onChange={(e) => setMessageInput(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onSend={handleSendMessage}
+                onImageSelect={handleSelectImage}
+              />
             </div>
           </>
         ) : (
@@ -819,8 +901,27 @@ const UserChat = () => {
         <div className="md:hidden absolute inset-0 bg-background z-20 flex flex-col">
           <ChatHeader onBack={() => setSelectedChat(null)} />
           <div className="flex-1 flex flex-col min-h-0">
-            <MessagesArea />
-            <MessageInput />
+            <MessagesArea
+              isLoadingMessages={isLoadingMessages}
+              displayMessages={displayMessages}
+              activeSenderUid={activeSenderUid}
+              selectedChatName={selectedChat?.name}
+              messagesEndRef={messagesEndRef}
+              formatTime={formatTime}
+              getDayLabel={getDayLabel}
+            />
+            <MessageInput
+              messageInput={messageInput}
+              isBlocked={isBlocked}
+              isBlockedByMe={isBlockedByMe}
+              isSending={isSending}
+              inputRef={inputRef}
+              imageInputRef={imageInputRef}
+              onChange={(e) => setMessageInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              onSend={handleSendMessage}
+              onImageSelect={handleSelectImage}
+            />
           </div>
         </div>
       )}

@@ -34,15 +34,16 @@ const PickupCaptchaDialog: React.FC<PickupCaptchaDialogProps> = ({
       <DialogTrigger asChild>
         {/* allow the caller to control disabled state */}
         {React.isValidElement(trigger)
-          ? React.cloneElement(trigger, { disabled })
+          ? React.cloneElement(
+              trigger as React.ReactElement<{ disabled?: boolean }>,
+              { disabled },
+            )
           : trigger}
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Ready for Pickup</DialogTitle>
-          <DialogDescription>
-            Scan the QR code below to view the booking ID.
-          </DialogDescription>
+          <DialogDescription>Scan the QR code below .</DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col items-center gap-4 py-4">
@@ -52,7 +53,7 @@ const PickupCaptchaDialog: React.FC<PickupCaptchaDialogProps> = ({
             className="h-60 w-60 rounded-md border border-border shadow-sm"
           />
 
-          <div className="flex flex-col items-center gap-2 text-center">
+          {/* <div className="flex flex-col items-center gap-2 text-center">
             <p className="text-sm text-muted-foreground">Booking ID</p>
             <p className="font-semibold break-all">{bookingId}</p>
             <Button
@@ -62,7 +63,7 @@ const PickupCaptchaDialog: React.FC<PickupCaptchaDialogProps> = ({
             >
               Copy Booking ID
             </Button>
-          </div>
+          </div> */}
         </div>
 
         <DialogFooter>
