@@ -73,7 +73,7 @@ const IdentityVerificationPage = () => {
         localStorage.setItem("user", JSON.stringify(updatedUser));
       }
 
-      router.push("/dashboard/home");
+      router.push("/app/home");
     },
     onError: (err) => {
       const message = getAxiosErrorMessage(err || "Login failed");

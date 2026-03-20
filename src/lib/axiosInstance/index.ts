@@ -24,7 +24,7 @@ export const axiosInstance = axios.create({
   baseURL,
   timeout: 50000,
   headers: {
-    Accept: "application/json",
+    Accept: "multipart/form-data, application/json, text/plain, */*",
   },
 });
 
