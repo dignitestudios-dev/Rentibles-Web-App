@@ -30,6 +30,7 @@ import { CoverImageInput } from "./CoverImageInput";
 import { useRouter } from "next/navigation";
 import Loader from "@/src/components/common/Loader";
 import BecomeSellerModal from "@/src/components/common/BecomeSellerModal";
+import { useUser } from "@/src/lib/api/user";
 
 type LocationData = {
   country?: string;
@@ -74,7 +75,16 @@ const CreateProductForm = () => {
       setUser(JSON.parse(storedUser));
     }
   }, []);
+
   const { location: locationValue } = user || {};
+
+  // ✅ get userId
+  const userId = user?._id;
+
+  // ✅ call query
+  const { data: userData, isLoading: usersLoading } = useUser(userId ?? "", {
+    enabled: Boolean(userId),
+  });
 
   const [location, setLocation] = useState<{
     lat: number;
@@ -106,13 +116,13 @@ const CreateProductForm = () => {
   } = useSubCategories(selectedCategoryId);
 
   useEffect(() => {
-    if (user) {
-      if (!user?.isSeller) {
+    if (userData?.data) {
+      if (userData?.data?.isSeller === false) {
         setIsBecomeSellerOpen(true);
         return;
       }
     }
-  }, [user]);
+  }, [userData]);
 
   // Store categories in Redux when data is fetched
   useEffect(() => {

@@ -1,27 +1,28 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
-import Image from "next/image";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   ArrowLeft,
   Star,
   Phone,
-  MapPin,
-  Minus,
-  Plus,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
-import Link from "next/link";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Navigation, A11y } from "swiper/modules";
-import type { SwiperRef } from "swiper/react";
 import MediaViewer from "../../products/[id]/_components/MediaViewer";
-import { useBookingDetails } from "@/src/lib/api/booking";
+import { useBookingDetails, useCancelBooking } from "@/src/lib/api/booking";
 import { calculateDistanceMiles } from "@/src/utils/helperFunctions";
 import { useSelector } from "react-redux";
 import { RootState } from "@/src/lib/store";
+import Loader from "@/src/components/common/Loader";
+import RejectionModal from "@/src/components/common/RejectionModal";
+import { Button } from "@/components/ui/button";
+import { ErrorToast, SuccessToast } from "@/src/components/common/Toaster";
+import ConfirmationModal from "@/src/components/common/ConfirmationModal";
+import {
+  RejectReasonContent,
+  ReportUserContent,
+} from "../../users/[id]/_components/reportUserOptions";
 
 const OrderDetailsPage = () => {
   const router = useRouter();
@@ -29,6 +30,8 @@ const OrderDetailsPage = () => {
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isMediaViewerOpen, setIsMediaViewerOpen] = useState(false);
   const [distance, setDistance] = useState("");
+  const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
+  const [showReasonModal, setShowReasonModal] = useState(false);
 
   // const swiperRef = useRef<SwiperRef>(null);
   const { latitude, longitude } = useSelector(
@@ -40,6 +43,26 @@ const OrderDetailsPage = () => {
     isLoading,
     error,
   } = useBookingDetails(id as string);
+
+  const cancelBookingMutation = useCancelBooking();
+
+  const handleRejectBooking = () => {
+    setIsRejectionModalOpen(true);
+  };
+
+  const handleConfirmRejection = async (reason: string) => {
+    try {
+      await cancelBookingMutation.mutateAsync({
+        id: booking._id,
+        cancellationReason: reason,
+      });
+      SuccessToast("Booking rejected successfully");
+      setShowReasonModal(false);
+      router.back();
+    } catch (error) {
+      ErrorToast("Failed to reject booking. Please try again.");
+    }
+  };
 
   useEffect(() => {
     if (bookingData?.data) {
@@ -63,7 +86,17 @@ const OrderDetailsPage = () => {
     }
   }, [bookingData?.data]);
 
-  if (isLoading) return <div>Loading...</div>;
+  const handleRejectionModal = useCallback(() => {
+    setIsRejectionModalOpen(false);
+    setShowReasonModal(true);
+  }, [bookingData?.data]);
+
+  if (isLoading)
+    return (
+      <div>
+        <Loader show={true} />
+      </div>
+    );
   if (error) return <div>Error loading booking details</div>;
   if (!bookingData?.data) return <div>No data found</div>;
 
@@ -283,12 +316,47 @@ const OrderDetailsPage = () => {
           </div>
         </div>
       </div>
+      <div className="w-full px-6 py-6 border-t border-border flex justify-center">
+        {booking.status === "pending" && (
+          <Button
+            onClick={handleRejectBooking}
+            variant="destructive"
+            className="w-100 py-6"
+            disabled={cancelBookingMutation.isPending}
+          >
+            {cancelBookingMutation.isPending
+              ? "Rejecting..."
+              : "Reject Booking"}
+          </Button>
+        )}
+      </div>
 
       <MediaViewer
         images={product.images}
         initialIndex={activeImageIndex}
         isOpen={isMediaViewerOpen}
         onClose={() => setIsMediaViewerOpen(false)}
+      />
+
+      <RejectionModal
+        isOpen={showReasonModal}
+        onClose={() => setShowReasonModal(false)}
+        onSubmit={handleConfirmRejection}
+        userId={booking?._id}
+        title="Reject Reasons"
+        reasons={RejectReasonContent}
+      />
+      <ConfirmationModal
+        isOpen={isRejectionModalOpen}
+        onClose={() => setIsRejectionModalOpen(false)}
+        onConfirm={handleRejectionModal}
+        title=""
+        message={`Are you sure you want to cancel/Reject this booking? Please let us know why by providing a reason fro the cancellation.`}
+        confirmText="Confirm "
+        cancelText="Cancel"
+        type="danger"
+        isDangerous={false}
+        showIcon={true}
       />
     </div>
   );

@@ -60,8 +60,10 @@ export const useTracking = (
   return useQuery({
     queryKey: ["tracking", params],
     queryFn: () => getTracking(params),
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    refetchOnMount: "always",
+    staleTime: 0,
+    // staleTime: 5 * 60 * 1000, // 5 minutes
+    // gcTime: 10 * 60 * 1000, // 10 minutes
     enabled: options?.enabled ?? true,
   });
 };
@@ -78,5 +80,38 @@ export const useBookingDetails = (
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     enabled: options?.enabled ?? !!id,
+  });
+};
+
+export interface CancelBookingPayload {
+  id: string;
+  cancellationReason: string;
+}
+
+export interface CancelBookingResponse {
+  success: boolean;
+  message?: string;
+}
+
+export const cancelBooking = async (
+  payload: CancelBookingPayload,
+): Promise<CancelBookingResponse> => {
+  const { data } = await axiosInstance.post("/booking/cancel", payload);
+  return data;
+};
+
+export const useCancelBooking = (): UseMutationResult<
+  CancelBookingResponse,
+  Error,
+  CancelBookingPayload,
+  unknown
+> => {
+  return useMutation<
+    CancelBookingResponse,
+    Error,
+    CancelBookingPayload,
+    unknown
+  >({
+    mutationFn: cancelBooking,
   });
 };

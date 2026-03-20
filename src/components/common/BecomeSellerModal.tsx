@@ -18,7 +18,9 @@ const BecomeSellerModal = ({ open, onOpenChange }: BecomeSellerModalProps) => {
 
   const becomeSellerMutation = useMutation({
     mutationFn: async () => {
-      const response = await axiosInstance.post("/user/becomeSeller");
+      const response = await axiosInstance.post("/user/becomeSeller", {
+        returnUrl: "https://rentibles-web.vercel.app/app/home",
+      });
       return response.data;
     },
     onSuccess: (response) => {

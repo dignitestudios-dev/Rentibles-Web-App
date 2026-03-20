@@ -758,6 +758,7 @@ export interface GetUserProfileResponse {
     isEmailVerified: boolean;
     isPhoneVerified: boolean;
     isProfileCompleted: boolean;
+    isSeller: boolean;
     stripeProfileStatus: string;
     stripeAccountId: string;
     idFrontImage: string | null;

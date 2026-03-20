@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import PickupCaptchaDialog from "./PickupCaptchaDialog";
+import MarkAsReturnModal from "./MarkAsReturnModal";
 
 type RentalCardProps = {
   bookingId: string;
@@ -13,7 +14,14 @@ type RentalCardProps = {
   title: string;
   price: number;
   hours: number;
-  status: "Completed" | "Incomplete" | "Pending" | "In Progress" | "Over Due";
+  status:
+    | "Completed"
+    | "Incomplete"
+    | "Pending"
+    | "In Progress"
+    | "Over Due"
+    | "Cancelled"
+    | "Rejected";
   qty: number;
   date: string;
   time: string;
@@ -29,6 +37,8 @@ const statusStyles = {
   Pending: "text-blue-500",
   "In Progress": "text-yellow-500",
   "Over Due": "text-grey-500",
+  Cancelled: "text-red-500",
+  Rejected: "text-red-500",
 };
 
 const RentalCard = ({
@@ -49,6 +59,7 @@ const RentalCard = ({
   bookingId,
   handleRedirect,
 }: RentalCardProps) => {
+  console.log("🚀 ~ RentalCard ~ status:", status);
   const useCurrentEpoch = () => {
     const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
 
@@ -67,6 +78,7 @@ const RentalCard = ({
 
   const isReadyForPickup = now >= pickupTime && now <= dropOffTime;
   const router = useRouter();
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
   return (
     <div className=" overflow-hidden rounded-2xl p-4 space-y-4 border-[1px] border-foreground/25">
       <div className="flex items-center justify-between">
@@ -122,8 +134,8 @@ const RentalCard = ({
       </div>
 
       <div className="flex justify-between items-center gap-2 w-full ">
-        {type === "customer_rental" && (
-          <div className=" w-full">
+        {type === "customer_rental" ? (
+          <div className="w-full">
             <PickupCaptchaDialog
               bookingId={bookingId}
               disabled={!isReadyForPickup && status !== "In Progress"}
@@ -142,14 +154,25 @@ const RentalCard = ({
                 </Button>
               }
             />
-
-            <p className="text-[12px] text-primary">
-              {!isReadyForPickup &&
-                status !== "Completed" &&
-                status !== "Incomplete" &&
-                status !== "In Progress" &&
-                "Can be mark at the time of booking"}
-            </p>
+          </div>
+        ) : (
+          <div className="w-full">
+            {status === "Pending" ||
+              (status === "Over Due" && (
+                <>
+                  <Button
+                    variant={"outline"}
+                    onClick={() => setIsReturnModalOpen(true)}
+                    className="w-full border-[1px] border-primary text-primary rounded-xl py-6 text-lg"
+                  >
+                    Mark As Return
+                  </Button>
+                  <MarkAsReturnModal
+                    open={isReturnModalOpen}
+                    onOpenChange={setIsReturnModalOpen}
+                  />
+                </>
+              ))}
           </div>
         )}
         <div className="w-full">
@@ -161,6 +184,14 @@ const RentalCard = ({
           </Button>
         </div>
       </div>
+      <p className="text-[12px] text-primary -mt-2">
+        {!isReadyForPickup &&
+          status !== "Completed" &&
+          status !== "Incomplete" &&
+          status !== "Cancelled" &&
+          status !== "Rejected" &&
+          "Can be mark at the time of booking"}
+      </p>
     </div>
   );
 };

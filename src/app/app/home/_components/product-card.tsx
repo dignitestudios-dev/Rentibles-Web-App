@@ -99,7 +99,9 @@ const ProductCard: React.FC<ProductCardProps> = ({
           )}
         </div>
 
-        <h3 className="mt-4 text-2xl font-bold">{name}</h3>
+        <h3 className="mt-4 text-2xl font-bold overflow-hidden text-ellipsis whitespace-nowrap">
+          {name}
+        </h3>
         <p className="text-gray-400">{category}</p>
 
         <div className="mt-auto flex items-center justify-between">

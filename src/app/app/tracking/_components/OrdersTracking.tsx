@@ -19,13 +19,21 @@ export const TrackingFilter = [
 
 const statusMap: Record<
   string,
-  "Completed" | "Incomplete" | "Pending" | "In Progress" | "Over Due"
+  | "Completed"
+  | "Incomplete"
+  | "Pending"
+  | "In Progress"
+  | "Over Due"
+  | "Cancelled"
+  | "Rejected"
 > = {
   completed: "Completed",
   incomplete: "Incomplete",
   pending: "Pending",
   "in-progress": "In Progress",
   "over-due": "Over Due",
+  cancelled: "Cancelled",
+  rejected: "Rejected",
 };
 
 interface OrdersTrackingProps {
@@ -39,7 +47,6 @@ const OrdersTracking: React.FC<OrdersTrackingProps> = ({
   isLoading,
   type,
 }) => {
-  console.log("🚀 ~ OrdersTracking ~ bookings:", bookings);
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState("all");
 

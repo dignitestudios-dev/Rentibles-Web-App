@@ -14,7 +14,7 @@ const firebaseConfig = {
   storageBucket: "rentibles-app.firebasestorage.app",
   messagingSenderId: "366992554576",
   appId: "1:366992554576:web:070673a15453be3e1eef55",
-  measurementId: "G-HL3045S1RH"
+  measurementId: "G-HL3045S1RH",
 };
 
 // @ts-ignore – firebase is available globally via importScripts
