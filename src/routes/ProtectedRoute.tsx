@@ -14,10 +14,7 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const pathname = usePathname();
   const { isAuthenticated, user, isGuestMode, isResetPasswordFlow } =
     useSelector((state: RootState) => state.auth);
-  console.log(
-    "🚀 ~ ProtectedRoute ~ isResetPasswordFlow:",
-    isResetPasswordFlow,
-  );
+
   const isLoggedIn = Boolean(isAuthenticated && user);
 
   const isGuestAllowedPath =
