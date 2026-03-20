@@ -22,7 +22,7 @@ import { logout } from "@/src/lib/store/feature/authSlice";
 
 const SelectOtp = () => {
   const { user } = useSelector((state: RootState) => state.auth);
-  console.log("🚀 ~ SelectOtp ~ user:", user);
+
   const [showVerified, setShowVerified] = useState(false);
   const router = useRouter();
   const dispatch = useDispatch();

@@ -144,7 +144,7 @@ const RegisterForm = () => {
       await registerMutation.mutateAsync(formData);
     } catch (err: any) {
       const message = err?.message || "Signup failed. Please try again.";
-      console.log("🚀 ~ onSubmit ~ message: 133", message);
+
       setError("root", { type: "manual", message });
       // ErrorToast(message);
     } finally {

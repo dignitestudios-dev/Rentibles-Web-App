@@ -59,7 +59,6 @@ const RentalCard = ({
   bookingId,
   handleRedirect,
 }: RentalCardProps) => {
-  console.log("🚀 ~ RentalCard ~ status:", status);
   const useCurrentEpoch = () => {
     const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
 

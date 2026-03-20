@@ -69,7 +69,6 @@ const SearchContent = () => {
   const [wishlistItems, setWishlistItems] = useState<{
     [key: string]: boolean;
   }>({});
-  console.log("🚀 ~ SearchContent ~ wishlistItems:", wishlistItems);
 
   const wishlistMutation = useMutation({
     mutationFn: async (payload: { productId: string; value: boolean }) => {

@@ -38,7 +38,6 @@ const ProfileMenu = () => {
   const [isLoading, setIsLoading] = useState(false);
   const authState = useAppSelector((state: RootState) => state.auth);
   const { user, isAuthenticated } = authState;
-  console.log("🚀 ~ ProfileMenu ~ user:", user);
 
   if (!isAuthenticated || !user) {
     return null;
