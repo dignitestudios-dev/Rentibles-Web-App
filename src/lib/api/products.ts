@@ -199,8 +199,7 @@ export const useDeleteProduct = (): UseMutationResult<
     mutationFn: async (payload: DeleteProductPayload) => {
       // Axios delete expecting `data` property when body is required
       const response = await axiosInstance.delete<DeleteProductResponse>(
-        "/product",
-        { data: payload },
+        `/product/${payload?.productId || null}`,
       );
       return response.data;
     },

@@ -13,7 +13,9 @@ import { useMutation } from "@tanstack/react-query";
 import { createWishlist } from "@/src/lib/query/queryFn";
 import { getAxiosErrorMessage } from "@/src/utils/errorHandlers";
 import { ErrorToast, SuccessToast } from "@/src/components/common/Toaster";
-
+import { UserProfile } from "@/public/images/export";
+import { useAppSelector } from "@/src/lib/store/hooks";
+import Loader from "@/src/components/common/Loader";
 import ConfirmationModal from "@/src/components/common/ConfirmationModal";
 import ReportUserModal from "./_components/ReportUserModal";
 import { ReportUserContent } from "./_components/reportUserOptions";
@@ -24,11 +26,13 @@ type Tab = "information" | "listing";
 export default function UserProfilePage() {
   const router = useRouter();
   const params = useParams();
+  const { user: currentUser } = useAppSelector((state) => state.auth);
 
   const [activeTab, setActiveTab] = useState<Tab>("information");
-  const [profileLoaded] = useState(false); // state controlled by image onLoad (still potentially used later)
+  const [profileLoaded, setProfileLoaded] = useState(false);
 
   const userId = typeof params?.id === "string" ? params.id : undefined;
+  const isOwnProfile = currentUser?._id === userId;
 
   const { data: products } = useProducts({
     userId: userId,
@@ -37,6 +41,8 @@ export default function UserProfilePage() {
   const { data: userData, isLoading: usersLoading } = useUser(userId ?? "", {
     enabled: Boolean(userId),
   });
+
+  console.log("userData", userData);
 
   const tabs: { id: Tab; label: string }[] = [
     { id: "information", label: "Information" },
@@ -89,9 +95,15 @@ export default function UserProfilePage() {
 
       setIsReporting(true);
       try {
+        // Get the reason details
+        const selectedReasonObj = ReportUserContent.find(
+          (r) => r.id === reasonId,
+        );
+        const reasonLabel = selectedReasonObj?.label || reasonId;
+
         const payload = {
-          title: reasonId,
-          description: reasonId,
+          title: reasonLabel,
+          description: reasonLabel,
           userId: userId,
         };
         await reportUser(payload);
@@ -127,8 +139,9 @@ export default function UserProfilePage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Loader show={isReporting} />
       {/* Header with Orange Gradient */}
-      <div className="sticky top-0">
+      <div className="sticky top-22.5">
         <div className="relative flex flex-col min-h-52 md:min-h-80 h-fit">
           <div className="absolute inset-0">
             <div
@@ -148,13 +161,15 @@ export default function UserProfilePage() {
           <h2 className="absolute left-1/2 -translate-x-1/2 top-4 text-white text-xl font-semibold">
             Profile
           </h2>
-          <div className="absolute right-8 top-4 z-50">
-            <TooltipButton
-              icon={<TriangleAlert className="w-5 h-5" />}
-              tooltip="Report User"
-              onClick={() => setShowConfirmation(true)}
-            />
-          </div>
+          {!isOwnProfile && (
+            <div className="absolute right-8 top-4 z-50">
+              <TooltipButton
+                icon={<TriangleAlert className="w-5 h-5" />}
+                tooltip="Report User"
+                onClick={() => setShowConfirmation(true)}
+              />
+            </div>
+          )}
 
           <div className="relative z-20 h-full flex-1 flex flex-col justify-end p-5 mb-10">
             <div className="flex items-center gap-5 text-white">
@@ -164,11 +179,11 @@ export default function UserProfilePage() {
                 )}
 
                 <Image
-                  src={userData?.data?.profilePicture ?? ""}
+                  src={userData?.data?.profilePicture || UserProfile}
                   alt="profile"
                   width={1000}
                   height={1000}
-                  // onLoadingComplete={() => setProfileLoaded(true)}
+                  onLoadingComplete={() => setProfileLoaded(true)}
                   className={`w-full h-full object-cover rounded-full transition-opacity duration-300 ${profileLoaded ? "opacity-100" : "opacity-0"}`}
                 />
               </div>
@@ -295,6 +310,7 @@ export default function UserProfilePage() {
                       }
                       isLoading={wishlistMutation.isPending}
                       isUser={true}
+                      isOwner={isOwnProfile}
                     />
                   ))}
                 </div>

@@ -7,6 +7,8 @@ import {
   Plus,
   ChevronLeft,
   ChevronRight,
+  Heart,
+  Flag,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
 
@@ -27,6 +29,12 @@ import { Button } from "@/components/ui/button";
 import { useSelector } from "react-redux";
 import { RootState } from "@/src/lib/store";
 import { calculateDistanceMiles } from "@/src/utils/helperFunctions";
+import Link from "next/link";
+import { useMutation } from "@tanstack/react-query";
+import { createWishlist } from "@/src/lib/query/queryFn";
+import { reportUser } from "@/src/lib/api/user";
+import ConfirmationModal from "@/src/components/common/ConfirmationModal";
+import Loader from "@/src/components/common/Loader";
 
 const ProductDetailsPage = () => {
   const router = useRouter();
@@ -70,6 +78,14 @@ const ProductDetailsPage = () => {
   >();
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
 
+  // Wishlist state
+  const [isLiked, setIsLiked] = useState<boolean>(false);
+
+  // Report state
+  const [showReportConfirmation, setShowReportConfirmation] =
+    useState<boolean>(false);
+  const [isReporting, setIsReporting] = useState<boolean>(false);
+
   // Handle clicking outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -96,6 +112,58 @@ const ProductDetailsPage = () => {
 
   const createBookingMutation = useCreateBooking();
 
+  // Wishlist mutation
+  const wishlistMutation = useMutation({
+    mutationFn: async (payload: { productId: string; value: boolean }) => {
+      const formData = {
+        productId: payload.productId,
+        value: payload.value,
+      };
+      return createWishlist(formData);
+    },
+    onSuccess: (data, variables) => {
+      setIsLiked(variables.value);
+      SuccessToast(
+        variables.value ? "Added to wishlist" : "Removed from wishlist",
+      );
+    },
+    onError: (err) => {
+      const message = getAxiosErrorMessage(err || "Failed to update wishlist");
+      ErrorToast(message);
+    },
+  });
+
+  // Handle wishlist toggle
+  const handleWishlistToggle = () => {
+    if (!product?._id) return;
+    wishlistMutation.mutate({
+      productId: product._id,
+      value: !isLiked,
+    });
+  };
+
+  // Handle report product
+  const handleReportProduct = async () => {
+    if (!product?.user?._id) return;
+
+    setIsReporting(true);
+    try {
+      const payload = {
+        title: "Inappropriate Product",
+        description: "Inappropriate Product",
+        userId: product.user._id,
+      };
+      await reportUser(payload);
+      SuccessToast("Product reported successfully");
+      setShowReportConfirmation(false);
+    } catch (error) {
+      const message = getAxiosErrorMessage(error || "Failed to report product");
+      ErrorToast(message);
+    } finally {
+      setIsReporting(false);
+    }
+  };
+
   // Extract product data from API response
   const product = apiResponse?.data;
 
@@ -121,6 +189,9 @@ const ProductDetailsPage = () => {
         ).toFixed(2);
         setDistance(distance);
       }
+
+      // Set initial liked state from product
+      setIsLiked(product?.isLiked ?? false);
     }
   }, [cardsData, selectedCardId, product]);
 
@@ -157,7 +228,7 @@ const ProductDetailsPage = () => {
   // Handle quantity change with proper validation
   const handleQuantityChange = (change: number) => {
     const newQty = quantity + change;
-    const maxQuantity = product.quantity || product.totalQuantity || 0;
+    const maxQuantity = product?.quantity || product?.totalQuantity || 0;
 
     if (newQty > 0 && newQty <= maxQuantity) {
       setQuantity(newQty);
@@ -165,8 +236,8 @@ const ProductDetailsPage = () => {
   };
 
   // Get store information (from user object since store is null in API response)
-  const storeInfo = product.user || {};
-  const storeImage = storeInfo.profilePicture || product.cover;
+  const storeInfo = product?.user || {};
+  const storeImage = storeInfo.profilePicture || product?.cover;
 
   const handleSlotSelect = (slots: TimeSlot[]) => {
     setTimeSlots(slots);
@@ -236,7 +307,7 @@ const ProductDetailsPage = () => {
 
     try {
       await createBookingMutation.mutateAsync({
-        productId: product._id,
+        productId: product?._id,
         quantity,
         pickupTime: epochs.pickupTime,
         dropOffTime: epochs.dropOffTime,
@@ -255,6 +326,7 @@ const ProductDetailsPage = () => {
 
   return (
     <div className="bg-background min-h-screen">
+      <Loader show={isReporting} />
       {/* Header */}
       <div className="sticky top-22.75 z-40 bg-background border-b border-border">
         <div className="flex items-center justify-between px-4 py-4 md:px-6">
@@ -267,18 +339,48 @@ const ProductDetailsPage = () => {
 
           <h1 className="text-lg font-semibold">Product Details</h1>
 
-          <div className="w-10 h-10 rounded-full p-1 bg-primary ring-2 ring-primary overflow-hidden">
-            <img
-              src={storeImage}
-              alt="store"
-              className="w-full h-full object-cover rounded-full"
-            />
+          <div className="flex items-center gap-3">
+            {product?.user?._id !== userId && (
+              <>
+                <button
+                  onClick={handleWishlistToggle}
+                  disabled={wishlistMutation.isPending}
+                  className="p-2 hover:bg-muted rounded-md transition-colors"
+                  title={isLiked ? "Remove from wishlist" : "Add to wishlist"}
+                >
+                  <Heart
+                    className={`w-5 h-5 transition-colors ${
+                      isLiked ? "text-red-500 fill-red-500" : "text-gray-400"
+                    }`}
+                  />
+                </button>
+                <button
+                  onClick={() => setShowReportConfirmation(true)}
+                  className="p-2 hover:bg-muted rounded-md transition-colors"
+                  title="Report product"
+                >
+                  <Flag className="w-5 h-5 text-gray-400" />
+                </button>
+              </>
+            )}
+            <Link
+              href={
+                product?.user?._id ? `/app/users/${product?.user?._id}` : "#"
+              }
+              className="cursor-pointer w-12 h-12 rounded-full p-1 bg-primary ring-[.5px] ring-primary overflow-hidden"
+            >
+              <img
+                src={storeImage}
+                alt="store"
+                className="w-full h-full object-cover rounded-full"
+              />
+            </Link>
           </div>
         </div>
       </div>
 
       {/* Content */}
-      <div className="w-full px-0 md:px-6 py-6 pb-6">
+      <div className="w-full px-0 md:px-6 py-6 pb-6 overflow-x-hidden">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left Column - Image */}
           <div className="lg:col-span-2">
@@ -286,7 +388,7 @@ const ProductDetailsPage = () => {
             <div className="mb-6 sticky top-20">
               <div className="relative w-full bg-gray-100 dark:bg-gray-800 rounded-3xl overflow-hidden mb-3 flex items-center justify-center group">
                 {/* Left Chevron */}
-                {product.images && product.images.length > 0 && (
+                {product?.images && product?.images.length > 0 && (
                   <>
                     <button
                       onClick={() => {
@@ -301,8 +403,8 @@ const ProductDetailsPage = () => {
                     </button>
 
                     <img
-                      src={product.images[activeImageIndex]}
-                      alt={product.name || "product"}
+                      src={product?.images[activeImageIndex]}
+                      alt={product?.name || "product"}
                       onClick={() => setIsMediaViewerOpen(true)}
                       className="w-full h-96 md:h-125 object-contain cursor-pointer hover:opacity-90 transition-opacity"
                     />
@@ -310,12 +412,12 @@ const ProductDetailsPage = () => {
                     {/* Right Chevron */}
                     <button
                       onClick={() => {
-                        if (activeImageIndex < product.images.length - 1) {
+                        if (activeImageIndex < product?.images.length - 1) {
                           setActiveImageIndex(activeImageIndex + 1);
                         }
                       }}
                       className="absolute right-4 z-10 bg-primary text-white rounded-full p-3 hover:bg-primary/90 transition-colors"
-                      disabled={activeImageIndex === product.images.length - 1}
+                      disabled={activeImageIndex === product?.images.length - 1}
                     >
                       <ChevronRight className="w-6 h-6" />
                     </button>
@@ -324,9 +426,9 @@ const ProductDetailsPage = () => {
               </div>
 
               {/* Image Indicators */}
-              {product.images && product.images.length > 0 && (
+              {product?.images && product?.images.length > 0 && (
                 <div className="flex items-center justify-center gap-2">
-                  {product.images.map((_, idx) => (
+                  {product?.images.map((_, idx) => (
                     <button
                       key={idx}
                       onClick={() => setActiveImageIndex(idx)}
@@ -348,6 +450,10 @@ const ProductDetailsPage = () => {
               product={product}
               distance={distance}
               storeInfo={storeInfo}
+              isLiked={isLiked}
+              onWishlistToggle={handleWishlistToggle}
+              onReport={() => setShowReportConfirmation(true)}
+              isWishlistLoading={wishlistMutation.isPending}
             />
 
             {product?.user?._id !== userId && (
@@ -386,7 +492,7 @@ const ProductDetailsPage = () => {
                         <h3 className="text-lg font-semibold">
                           Quantity:{" "}
                           <span className="text-primary">
-                            {availableQuantity || product.quantity || 0} Pcs
+                            {availableQuantity || product?.quantity || 0} Pcs
                             Available
                           </span>
                         </h3>
@@ -415,7 +521,7 @@ const ProductDetailsPage = () => {
                           className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors disabled:opacity-50"
                           disabled={
                             quantity >=
-                            (availableQuantity || product.quantity || 0)
+                            (availableQuantity || product?.quantity || 0)
                           }
                           aria-label="Increase quantity"
                         >
@@ -424,8 +530,8 @@ const ProductDetailsPage = () => {
                       </div>
 
                       {quantity >=
-                        (availableQuantity || product.quantity || 0) &&
-                        (availableQuantity || product.quantity || 0) > 0 && (
+                        (availableQuantity || product?.quantity || 0) &&
+                        (availableQuantity || product?.quantity || 0) > 0 && (
                           <p className="text-xs text-orange-500 mt-2">
                             Maximum available quantity reached
                           </p>
@@ -466,8 +572,8 @@ const ProductDetailsPage = () => {
                 <button
                   className="flex-1 max-w-sm bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-4 rounded-lg transition-colors text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={
-                    product.isBooked ||
-                    !product.isActive ||
+                    product?.isBooked ||
+                    !product?.isActive ||
                     !selectedCardId ||
                     !getBookingEpochs() ||
                     createBookingMutation.isPending
@@ -490,7 +596,7 @@ const ProductDetailsPage = () => {
               <button
                 type="button"
                 className="flex-1 max-w-sm bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-4 rounded-lg transition-colors text-lg disabled:opacity-50"
-                disabled={product.isBooked || !product.isActive}
+                disabled={product?.isBooked || !product?.isActive}
                 onClick={() => {
                   if (!getBookingEpochs()) {
                     ErrorToast("Please select booking date and time first");
@@ -507,14 +613,28 @@ const ProductDetailsPage = () => {
       )}
 
       {/* Media Viewer Modal */}
-      {product.images && product.images.length > 0 && (
+      {product?.images && product?.images.length > 0 && (
         <MediaViewer
-          images={product.images}
+          images={product?.images}
           initialIndex={activeImageIndex}
           isOpen={isMediaViewerOpen}
           onClose={() => setIsMediaViewerOpen(false)}
         />
       )}
+
+      {/* Report Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showReportConfirmation}
+        onClose={() => setShowReportConfirmation(false)}
+        onConfirm={handleReportProduct}
+        title="Report Product"
+        message="Are you sure you want to report this product? This will help us maintain quality standards."
+        confirmText="Yes, Report"
+        cancelText="Cancel"
+        type="danger"
+        isDangerous={false}
+        showIcon={true}
+      />
     </div>
   );
 };

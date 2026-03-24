@@ -128,7 +128,9 @@ const RegisterForm = () => {
       formData.append("phone", data.phone);
       formData.append("zipCode", data.zipCode);
       formData.append("password", data.password);
-      formData.append("profilePicture", data.image[0]);
+      if (data.image && data.image.length > 0) {
+        formData.append("profilePicture", data.image[0]);
+      }
       formData.append("apartment", data.apartmentNo);
       formData.append("idToken", idToken);
       formData.append("role", "user");

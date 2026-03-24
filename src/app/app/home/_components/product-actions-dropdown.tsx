@@ -27,6 +27,7 @@ import {
 } from "@/src/lib/api/products";
 import { ErrorToast, SuccessToast } from "@/src/components/common/Toaster";
 import { getAxiosErrorMessage } from "@/src/utils/errorHandlers";
+import Loader from "@/src/components/common/Loader";
 
 type Product = {
   _id?: string;
@@ -77,9 +78,11 @@ export function ProductActionsDropdown({ product }: Props) {
   };
 
   return (
-    <DropdownMenu>
+    <>
+      <Loader show={deleteMutation.isPending} />
+      <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button className="absolute top-3 right-3 bg-accent rounded-md p-1 shadow hover:bg-muted z-50">
+        <button className="absolute top-3 right-3 bg-accent rounded-md p-1 shadow hover:bg-muted z-40">
           <MoreVertical className="w-4 h-4" />
         </button>
       </DropdownMenuTrigger>
@@ -122,7 +125,9 @@ export function ProductActionsDropdown({ product }: Props) {
             </AlertDialogHeader>
 
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogCancel disabled={deleteMutation.isPending}>
+                Cancel
+              </AlertDialogCancel>
               <AlertDialogAction
                 onClick={() => {
                   if (!product._id) return;
@@ -144,14 +149,16 @@ export function ProductActionsDropdown({ product }: Props) {
                     },
                   );
                 }}
-                className="bg-red-500 hover:bg-red-600"
+                disabled={deleteMutation.isPending}
+                className="bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Delete
+                {deleteMutation.isPending ? "Deleting..." : "Delete"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
       </DropdownMenuContent>
     </DropdownMenu>
+    </>
   );
 }

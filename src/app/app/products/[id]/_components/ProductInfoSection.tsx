@@ -1,17 +1,25 @@
 import React from "react";
-import { Star, Phone } from "lucide-react";
+import { Star, Phone, Heart, Flag } from "lucide-react";
 import { IProductDetails, IUser } from "@/src/types/index.type";
 
 interface ProductInfoSectionProps {
-  product: IProductDetails; // Replace with proper Product type if available
+  product: IProductDetails;
   distance: string;
-  storeInfo: IUser; // Replace with proper StoreInfo type if available
+  storeInfo: IUser;
+  isLiked?: boolean;
+  onWishlistToggle?: () => void;
+  onReport?: () => void;
+  isWishlistLoading?: boolean;
 }
 
 const ProductInfoSection: React.FC<ProductInfoSectionProps> = ({
   product,
   distance,
   storeInfo,
+  isLiked = false,
+  onWishlistToggle,
+  onReport,
+  isWishlistLoading = false,
 }) => {
   return (
     <>
@@ -22,11 +30,40 @@ const ProductInfoSection: React.FC<ProductInfoSectionProps> = ({
             {product.name || "Unnamed Product"}
           </h2>
           {product.productReview !== undefined && (
-            <div className="flex items-center gap-1 bg-primary text-primary-foreground px-3 py-1 rounded-md whitespace-nowrap">
-              <Star className="w-5 h-5 fill-current" />
-              <span className="font-semibold">
-                {product.productReview || "0"}
-              </span>
+            <div className="flex items-center gap-3">
+              {/* Star Rating */}
+              <div className="flex items-center gap-1 bg-primary text-primary-foreground px-3 py-1 rounded-md whitespace-nowrap">
+                <Star className="w-5 h-5 fill-current" />
+                <span className="font-semibold">
+                  {product.productReview || "0"}
+                </span>
+              </div>
+
+              {/* Heart/Like Button */}
+              <button
+                type="button"
+                onClick={onWishlistToggle}
+                disabled={isWishlistLoading}
+                className="bg-white rounded-md p-2 shadow flex items-center justify-center hover:shadow-md transition-shadow disabled:opacity-50"
+                title={isLiked ? "Remove from wishlist" : "Add to wishlist"}
+              >
+                <Heart
+                  className={`w-5 h-5 transition-colors ${
+                    isLiked ? "text-red-500 fill-red-500" : "text-gray-400"
+                  }`}
+                />
+              </button>
+
+              {/* Report Button */}
+              <button
+                type="button"
+                onClick={onReport}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-md font-medium transition-colors flex items-center gap-2"
+                title="Report product"
+              >
+                <Flag className="w-5 h-5" />
+                Report
+              </button>
             </div>
           )}
         </div>

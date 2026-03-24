@@ -22,6 +22,7 @@ interface ProductCardProps {
   isLiked?: boolean;
   isLoading?: boolean;
   isUser?: boolean;
+  isOwner?: boolean;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({
@@ -30,6 +31,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   isLiked: externalIsLiked,
   isLoading = false,
   isUser = false,
+  isOwner = false,
 }) => {
   const coverSrc: string | null = product?.cover ?? null;
   const hasCover = coverSrc !== null;
@@ -81,7 +83,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             <span className="font-semibold">{review}</span>
           </div>
 
-          {isUser ? (
+          {isUser && isOwner ? (
             product && <ProductActionsDropdown product={product} />
           ) : (
             <button

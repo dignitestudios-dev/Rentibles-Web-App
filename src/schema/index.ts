@@ -95,7 +95,7 @@ export const RegisterSchema = z
 
     image: z
       .any()
-      .refine((file) => file?.length > 0, "Profile image is required"),
+      .optional(),
 
     location: z
       .object({
