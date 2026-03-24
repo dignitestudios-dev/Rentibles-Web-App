@@ -11,6 +11,7 @@ import ThemeProvider from "../lib/theme/ThemeProvider";
 import ReactQueryProvider from "../lib/query/ReactQueryProvider";
 import { Toaster } from "react-hot-toast";
 import { LoginRequiredProvider } from "../lib/auth/LoginRequiredProvider";
+import OfflineScreen from "../components/common/OfflineScreen";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -36,6 +37,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${poppins.variable} antialiased`}>
+        <OfflineScreen />
         <ThemeProvider>
           <ReduxProvider>
             <ReactQueryProvider>
