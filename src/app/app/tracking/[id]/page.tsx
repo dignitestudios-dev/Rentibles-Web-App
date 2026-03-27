@@ -177,11 +177,10 @@ const OrderDetailsPage = () => {
                   <button
                     key={idx}
                     onClick={() => setActiveImageIndex(idx)}
-                    className={`h-2 rounded-full transition-all ${
-                      idx === activeImageIndex
-                        ? "w-8 bg-primary"
-                        : "w-2 bg-gray-300 dark:bg-gray-600"
-                    }`}
+                    className={`h-2 rounded-full transition-all ${idx === activeImageIndex
+                      ? "w-8 bg-primary"
+                      : "w-2 bg-gray-300 dark:bg-gray-600"
+                      }`}
                   />
                 ))}
               </div>
@@ -223,9 +222,17 @@ const OrderDetailsPage = () => {
                 </div>
               </div>
 
-              <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base">
+              {/* <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base whitespace-pre-line overflow-x-auto" style={{
+                scrollbarWidth: 'thin',
+                scrollbarColor: '#F36815 #0000'
+              }}>
+                {product.description}
+              </p> */}
+              <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base truncate line-clamp-3">
                 {product.description}
               </p>
+
+
             </div>
 
             <hr className="my-6 border-border" />

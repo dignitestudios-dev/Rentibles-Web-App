@@ -27,28 +27,12 @@ import { getAxiosErrorMessage } from "@/src/utils/errorHandlers";
 import SettingsBackButton from "../../_components/SettingsBackButton";
 import Link from "next/link";
 import countries from "@/src/data/countries.json";
+import { useThemeContext } from "@/src/lib/theme/ThemeProvider";
+import { useMemo } from "react";
 
 const stripePromise = loadStripe(
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "",
 );
-
-const elementOptions = {
-  style: {
-    base: {
-      fontSize: "16px",
-      color: "text-foreground",
-      "::placeholder": {
-        color: "text-foreground",
-      },
-      fontFamily: '"Poppins", sans-serif',
-      fontSmoothing: "antialiased",
-    },
-    invalid: {
-      color: "var(--destructive)",
-    },
-  },
-  hidePostalCode: true,
-};
 
 function StripeForm({ onSaved }: { onSaved: () => void }) {
   const stripe = useStripe();
@@ -58,12 +42,38 @@ function StripeForm({ onSaved }: { onSaved: () => void }) {
   const [country, setCountry] = useState("US");
   const [zipCode, setZipCode] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
+
+  const { isDark } = useThemeContext();
   
   // Validation states
   const [cardNumberValid, setCardNumberValid] = useState(false);
   const [cardExpiryValid, setCardExpiryValid] = useState(false);
   const [cardCvcValid, setCardCvcValid] = useState(false);
   const [zipCodeValid, setZipCodeValid] = useState(false);
+
+  // Stripe Elements iframe ke andar CSS variables resolve nahi hote,
+  // isliye dark/light ke liye direct colors set kar rahe hain.
+  const elementOptions = useMemo(
+    () => ({
+      style: {
+        base: {
+          fontSize: "16px",
+          color: isDark ? "#F9FAFB" : "#111827", // near white / near black
+          backgroundColor: isDark ? "#343436" : "#F3F3F3",
+          "::placeholder": {
+            color: isDark ? "#6B7280" : "#6B7280",
+          },
+          fontFamily: '"Poppins", sans-serif',
+          fontSmoothing: "antialiased",
+        },
+        invalid: {
+          color: "#F43F5E",
+        },
+      },
+      hidePostalCode: true,
+    }),
+    [isDark],
+  );
 
   const isFormValid =
     cardNumberValid &&
@@ -143,6 +153,7 @@ function StripeForm({ onSaved }: { onSaved: () => void }) {
             </label>
             <div className="text-foreground! placeholder:text-muted-foreground">
               <CardNumberElement
+                key={isDark ? "dark" : "light"}
                 options={elementOptions}
                 onChange={(e) => {
                   setCardNumberValid(e.complete && !e.error);
@@ -159,6 +170,7 @@ function StripeForm({ onSaved }: { onSaved: () => void }) {
               </label>
               <div className="text-foreground placeholder:text-muted-foreground">
                 <CardExpiryElement
+                  key={isDark ? "dark-exp" : "light-exp"}
                   options={elementOptions}
                   onChange={(e) => {
                     setCardExpiryValid(e.complete && !e.error);
@@ -172,6 +184,7 @@ function StripeForm({ onSaved }: { onSaved: () => void }) {
               </label>
               <div className="text-foreground placeholder:text-muted-foreground">
                 <CardCvcElement
+                  key={isDark ? "dark-cvc" : "light-cvc"}
                   options={elementOptions}
                   onChange={(e) => {
                     setCardCvcValid(e.complete && !e.error);
@@ -194,7 +207,7 @@ function StripeForm({ onSaved }: { onSaved: () => void }) {
               <SelectTrigger className="w-full bg-transparent border-0 h-10 text-foreground focus:ring-0 shadow-none px-0 pb-2 border-b border-border/50 focus:border-primary rounded-none disabled:opacity-50 disabled:cursor-not-allowed">
                 <SelectValue
                   placeholder="Select country"
-                  className="text-muted-foreground"
+                className="text-foreground"
                 />
               </SelectTrigger>
               <SelectContent className="bg-card border border-border rounded-lg">

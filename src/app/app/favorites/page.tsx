@@ -9,6 +9,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createWishlist } from "@/src/lib/query/queryFn";
 import { getAxiosErrorMessage } from "@/src/utils/errorHandlers";
 import { ErrorToast } from "@/src/components/common/Toaster";
+import { GetWishlistResponse } from "@/src/types/index.type";
 
 const FavoritePage = () => {
   const router = useRouter();
@@ -29,15 +30,50 @@ const FavoritePage = () => {
       };
       return createWishlist(formData);
     },
-    onSuccess: () => {
-      // Update local state on success
-      queryClient.invalidateQueries({
-        queryKey: ["wishlist"],
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries({ queryKey: ["wishlist"] });
+      const previousWishlist = queryClient.getQueryData<GetWishlistResponse>([
+        "wishlist",
+      ]);
+
+      queryClient.setQueryData<GetWishlistResponse>(["wishlist"], (old) => {
+        if (!old) return old;
+
+        // Unlike from favorites should remove card immediately.
+        if (variables.value === false) {
+          return {
+            ...old,
+            data: old.data.filter((item) => item._id !== variables.productId),
+          };
+        }
+
+        // Like action on favorites page should reflect immediate heart state.
+        return {
+          ...old,
+          data: old.data.map((item) =>
+            item._id === variables.productId
+              ? { ...item, isLiked: variables.value }
+              : item,
+          ),
+        };
       });
+
+      return { previousWishlist };
     },
-    onError: (err) => {
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["wishlist"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["productById"] });
+    },
+    onError: (err, _variables, context) => {
+      if (context?.previousWishlist) {
+        queryClient.setQueryData(["wishlist"], context.previousWishlist);
+      }
       const message = getAxiosErrorMessage(err || "Failed to update wishlist");
       ErrorToast(message);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["wishlist"] });
     },
   });
 

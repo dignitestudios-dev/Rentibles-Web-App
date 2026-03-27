@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useRouter } from "next/navigation";
 import React, { useEffect } from "react";
 import { useSelector } from "react-redux";
+import { resolveFlowRoute } from "@/src/lib/flows/resolveFlowRoute";
 
 interface PublicRoutesProps {
   children: React.ReactNode;
@@ -17,36 +18,93 @@ const PublicRoutes = ({ children }: PublicRoutesProps) => {
   const isLoggedIn = Boolean(isAuthenticated && user);
 
   useEffect(() => {
+    const hasForgotEmail =
+      typeof window !== "undefined" && Boolean(localStorage.getItem("email"));
+    const isAuthRoute = pathname.startsWith("/auth");
+
     if (isGuestMode && !isLoggedIn && pathname === "/auth/get-started") {
       router.push("/app/home");
       return;
     }
 
-    if (isResetPasswordFlow) {
-      router.push("/auth/new-password");
-      return;
-    }
-
     if (!isLoggedIn || !user) {
-      if (
-        pathname !== "/auth/forgot-password" &&
-        pathname !== "/auth/register" &&
-        pathname !== "/auth/otp" &&
-        pathname !== "/auth/get-started"
-      ) {
-        router.push("/auth/login");
+      const forgotFlowTarget = resolveFlowRoute({
+        currentPath: pathname,
+        startPath: "/auth/forgot-password",
+        context: {
+          hasForgotEmail,
+          isResetPasswordFlow,
+        },
+        steps: [
+          {
+            path: "/auth/forgot-password",
+            canAccess: () => true,
+          },
+          {
+            path: "/auth/otp",
+            canAccess: (ctx) => Boolean(ctx.hasForgotEmail),
+          },
+          {
+            path: "/auth/new-password",
+            canAccess: (ctx) => Boolean(ctx.isResetPasswordFlow),
+          },
+        ],
+      });
+
+      const allowedUnauthPaths = new Set([
+        "/auth/get-started",
+        "/auth/login",
+        "/auth/register",
+        "/auth/forgot-password",
+        "/auth/otp",
+        "/auth/new-password",
+      ]);
+
+      if (pathname === "/auth/otp" || pathname === "/auth/new-password") {
+        if (pathname !== forgotFlowTarget) router.push(forgotFlowTarget);
+        return;
       }
+
+      if (!allowedUnauthPaths.has(pathname)) router.push("/auth/login");
       return;
     }
 
     if (user.isEmailVerified === false || user.isPhoneVerified === false) {
-      // router.push("/auth/select-otp");
+      const signupStepTarget = resolveFlowRoute({
+        currentPath: pathname,
+        startPath: "/auth/select-otp",
+        context: {
+          isEmailVerified: user.isEmailVerified,
+          isPhoneVerified: user.isPhoneVerified,
+        },
+        steps: [
+          {
+            path: "/auth/select-otp",
+            canAccess: () => true,
+          },
+          {
+            path: "/auth/email-verify",
+            canAccess: (ctx) => !ctx.isEmailVerified,
+          },
+          {
+            path: "/auth/phone-verify",
+            canAccess: (ctx) =>
+              Boolean(ctx.isEmailVerified) && !ctx.isPhoneVerified,
+          },
+        ],
+      });
+
+      if (isAuthRoute && pathname !== signupStepTarget) {
+        router.push(signupStepTarget);
+      }
       return;
     }
 
     switch (user.identityStatus) {
       case "not-provided":
-        router.push("/auth/identity-verification");
+        if (pathname !== "/auth/identity-verification") {
+          router.push("/auth/identity-verification");
+        }
         return;
 
       case "pending":
@@ -62,10 +120,10 @@ const PublicRoutes = ({ children }: PublicRoutesProps) => {
 
       case "approved":
       default:
-        router.push("/app/home");
+        if (isAuthRoute) router.push("/app/home");
         return;
     }
-  }, [isLoggedIn, user, isGuestMode, pathname, router]);
+  }, [isLoggedIn, user, isGuestMode, pathname, router, isResetPasswordFlow]);
 
   return <>{children}</>;
 };

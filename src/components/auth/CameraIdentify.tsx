@@ -53,7 +53,8 @@ export default function CameraCapture({ onCapture, onClose }: Props) {
     <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
       <div className="bg-white p-4 rounded-xl w-[320px]">
         <video ref={videoRef} autoPlay playsInline className="rounded-lg" />
-        <button onClick={capture} className="btn w-full mt-3">
+        <button onClick={capture} className="btn w-full mt-3 text-black cursor-pointer">
+
           Capture
         </button>
       </div>

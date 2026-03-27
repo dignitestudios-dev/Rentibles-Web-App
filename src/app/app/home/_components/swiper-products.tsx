@@ -6,6 +6,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { NoDataFound } from "@/public/images/export";
 import { useMutation } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { createWishlist } from "@/src/lib/query/queryFn";
 import { getAxiosErrorMessage } from "@/src/utils/errorHandlers";
 import { ErrorToast } from "@/src/components/common/Toaster";
@@ -32,6 +33,7 @@ const SwiperProducts: React.FC<SwiperProductsProps> = ({
   isLoading,
 }) => {
   const { requireLogin } = useRequireLogin();
+  const queryClient = useQueryClient();
 
   // Track wishlist state locally
   const [wishlistItems, setWishlistItems] = useState<{
@@ -52,6 +54,9 @@ const SwiperProducts: React.FC<SwiperProductsProps> = ({
         ...prev,
         [variables.productId]: variables.value,
       }));
+      queryClient.invalidateQueries({ queryKey: ["wishlist"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["productById"] });
     },
     onError: (err) => {
       const message = getAxiosErrorMessage(err || "Failed to update wishlist");

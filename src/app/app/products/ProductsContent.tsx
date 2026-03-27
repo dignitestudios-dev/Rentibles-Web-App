@@ -9,6 +9,7 @@ import { useProducts } from "@/src/lib/api/products";
 import Image from "next/image";
 import { NoDataFound } from "@/public/images/export";
 import { useMutation } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { createWishlist } from "@/src/lib/query/queryFn";
 import { getAxiosErrorMessage } from "@/src/utils/errorHandlers";
 import { ErrorToast } from "@/src/components/common/Toaster";
@@ -20,6 +21,7 @@ const ProductsContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { requireLogin } = useRequireLogin();
+  const queryClient = useQueryClient();
   const { latitude, longitude } = useSelector(
     (state: RootState) => state.location,
   );
@@ -52,6 +54,9 @@ const ProductsContent = () => {
         ...prev,
         [variables.productId]: variables.value,
       }));
+      queryClient.invalidateQueries({ queryKey: ["wishlist"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      queryClient.invalidateQueries({ queryKey: ["productById"] });
     },
     onError: (err) => {
       const message = getAxiosErrorMessage(err || "Failed to update wishlist");

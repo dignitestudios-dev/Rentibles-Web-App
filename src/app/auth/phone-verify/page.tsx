@@ -34,7 +34,7 @@ const Page = () => {
   const {
     watch,
     setValue,
-    setError,
+    clearErrors,
 
     handleSubmit,
     formState: { errors },
@@ -59,6 +59,20 @@ const Page = () => {
     onError: (err) => {
       const message = getAxiosErrorMessage(err);
       ErrorToast(message);
+
+      // If server says OTP is invalid/incorrect, clear the input immediately.
+      // OtpInput is controlled by the `otp` field, so clearing it wipes all 6 boxes.
+      const normalized = message.toLowerCase();
+      const isOtpInvalid =
+        normalized.includes("otp") &&
+        (normalized.includes("invalid") ||
+          normalized.includes("incorrect") ||
+          normalized.includes("wrong") ||
+          normalized.includes("expired"));
+
+      if (!isOtpInvalid) return;
+      setValue("otp", "", { shouldValidate: false, shouldDirty: false });
+      clearErrors("otp");
     },
   });
 
