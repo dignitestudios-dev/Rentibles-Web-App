@@ -96,11 +96,11 @@ const CategoriesContent = () => {
           <div className="md:col-span-3">
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
               {subCategoriesData?.data?.map((subcategory) => (
-                <Link
-                  key={subcategory._id}
-                  href={`/app/categories/${selectedCategory}`}
-                  className="group cursor-pointer transform transition-all hover:scale-105 active:scale-95"
-                >
+               <Link
+  key={subcategory._id}
+  href={`/app/categories/${selectedCategory}?subcategory=${subcategory._id}`}
+  className="group cursor-pointer transform transition-all hover:scale-105 active:scale-95"
+>
                   <div className="bg-gray-100 dark:bg-gray-800 rounded-2xl overflow-hidden aspect-square mb-3 border border-border group-hover:border-primary transition-colors">
                     <img
                       src={subcategory.cover}

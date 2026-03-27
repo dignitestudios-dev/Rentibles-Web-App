@@ -138,50 +138,104 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
   };
 
   // Handle time slot selection (multiple selection for hourly)
-  const handleSlotSelect = (slot: TimeSlot) => {
-    setSelectedSlots((prev) => {
-      const slotIndex = slots.findIndex(
-        (s) => s.startEpoch === slot.startEpoch,
-      );
+  // const handleSlotSelect = (slot: TimeSlot) => {
+  //   setSelectedSlots((prev) => {
+  //     const slotIndex = slots.findIndex(
+  //       (s) => s.startEpoch === slot.startEpoch,
+  //     );
 
-      const selectedIndexes = prev
-        .map((s) => slots.findIndex((sl) => sl.startEpoch === s.startEpoch))
-        .sort((a, b) => a - b);
+      
 
-      const isSelected = selectedIndexes.includes(slotIndex);
+  //     const selectedIndexes = prev
+  //       .map((s) => slots.findIndex((sl) => sl.startEpoch === s.startEpoch))
+  //       .sort((a, b) => a - b);
 
-      // Remove if clicked again
-      if (isSelected) {
-        return prev.filter((s) => s.startEpoch !== slot.startEpoch);
-      }
+  //     const isSelected = selectedIndexes.includes(slotIndex);
 
-      // First slot can be anything
-      if (selectedIndexes.length === 0) {
-        return [slot];
-      }
+  //     // Remove if clicked again
+  //     if (isSelected) {
+  //       return prev.filter((s) => s.startEpoch !== slot.startEpoch);
+  //     }
 
-      // Don't allow more than 4
-      if (selectedIndexes.length >= slots.length) {
-        return prev;
-      }
+  //     // First slot can be anything
+  //     if (selectedIndexes.length === 0) {
+  //       return [slot];
+  //     }
 
-      const min = selectedIndexes[0];
-      const max = selectedIndexes[selectedIndexes.length - 1];
+  //     // Don't allow more than 4
+  //     if (selectedIndexes.length >= slots.length) {
+  //       return prev;
+  //     }
 
-      // Allow only adjacent expansion
-      if (slotIndex === min - 1 || slotIndex === max + 1) {
-        return [...prev, slot];
-      }
+  //     const min = selectedIndexes[0];
+  //     const max = selectedIndexes[selectedIndexes.length - 1];
 
-      // ✅ Non-consecutive selection: clear previous and start fresh with this slot
-      return [slot];
-    });
-  };
+  //     // Allow only adjacent expansion
+  //     if (slotIndex === min - 1 || slotIndex === max + 1) {
+  //       return [...prev, slot];
+  //     }
+
+  //     // ✅ Non-consecutive selection: clear previous and start fresh with this slot
+  //     return [slot];
+  //   });
+  // };
 
   // Convert ISO date string to Unix timestamp (in seconds)
   // const getUnixTimestamp = (dateString: string) => {
   //   return Math.floor(new Date(dateString + "T00:00:00Z").getTime() / 1000);
   // };
+
+
+
+  
+
+  const handleSlotSelect = (slot: TimeSlot) => {
+  setSelectedSlots((prev) => {
+    const slotIndex = slots.findIndex(
+      (s) => s.startEpoch === slot.startEpoch,
+    );
+
+    const selectedIndexes = prev
+      .map((s) =>
+        slots.findIndex((sl) => sl.startEpoch === s.startEpoch),
+      )
+      .sort((a, b) => a - b);
+
+    const isSelected = selectedIndexes.includes(slotIndex);
+
+    // ✅ Remove if already selected (toggle off)
+    if (isSelected) {
+      return prev.filter((s) => s.startEpoch !== slot.startEpoch);
+    }
+
+    // ✅ First selection
+    if (selectedIndexes.length === 0) {
+      return [slot];
+    }
+
+    // ❌ Prevent selecting more than 4
+    if (prev.length >= 4) {
+      return prev;
+    }
+
+    const min = selectedIndexes[0];
+    const max = selectedIndexes[selectedIndexes.length - 1];
+
+    // ✅ Allow only adjacent expansion
+    if (slotIndex === min - 1 || slotIndex === max + 1) {
+      return [...prev, slot];
+    }
+
+    // 🔁 If non-adjacent → reset and start fresh
+    return [slot];
+  });
+};
+
+React.useEffect(() => {
+  if (selectionMode === "hour" && selectedSlots.length >= 4) {
+    onSlotSelect?.(selectedSlots);
+  }
+}, [selectedSlots, selectionMode, onSlotSelect]);
 
   const getUnixTimestamp = (date: Date) => {
     return Math.floor(
@@ -290,11 +344,11 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
                 ? formatDate(selectedDate)
                 : "Select date & 4 slots"}
             </p>
-            {selectionMode === "hour" && selectedSlots.length > 0 && (
+            {/* {selectionMode === "hour" && selectedSlots.length > 0 && (
               <p className="text-xs text-orange-600 font-semibold mt-1">
                 {selectedSlots.length}/3 slots selected
               </p>
-            )}
+            )} */}
           </div>
         </button>
 
@@ -451,7 +505,7 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
                   </div>
 
                   {/* Submit Button */}
-                  <button
+                  {/* <button
                     type="button"
                     disabled={!canSubmit}
                     onClick={() => {
@@ -472,7 +526,7 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
                       : selectedSlots.length < 4
                         ? `Select ${4 - selectedSlots.length} more slot(s)`
                         : "Continue with selected slots"}
-                  </button>
+                  </button> */}
                 </>
               )}
             </div>

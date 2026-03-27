@@ -104,10 +104,24 @@ const ProductCard: React.FC<ProductCardProps> = ({
         <h3 className="mt-4 text-2xl font-bold overflow-hidden text-ellipsis whitespace-nowrap">
           {name}
         </h3>
-        <p className="text-gray-400">{category}</p>
+        <p className="text-gray-400">{category}</p>  
+
 
         <div className="mt-auto flex items-center justify-between">
-          <div className="text-2xl font-bold">${Math.round(price)}</div>
+          {/* <div className="text-2xl font-bold">${Math.round(price)}</div> */}
+          {/* <p className="text-white">
+  <span className="text-sm">Daily Rates:</span>{" "}
+  <span className="text-lg font-semibold text-white">
+    ${product?.pricePerDay?.toFixed(2) ?? "0.00"}
+  </span>
+</p> */}
+
+<p className="text-white">
+  {/* <span className="text-sm">Hourly Rates:</span>{" "} */}
+  <span className="text-lg font-semibold text-white">
+    ${product?.pricePerHour}/hr
+  </span>
+</p>
           <Link
             href={`/app/products/${product?._id}`}
             className="cursor-pointer bg-primary text-primary-foreground w-10 h-10 rounded-md flex items-center justify-center"

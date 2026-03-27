@@ -165,7 +165,20 @@ const ProductDetailsPage = () => {
   };
 
   // Extract product data from API response
-  const product = apiResponse?.data;
+
+  // const product = apiResponse?.data;
+//show thumbnail first
+const rawProduct = apiResponse?.data;
+
+const product = rawProduct
+  ? {
+      ...rawProduct,
+      images: rawProduct.cover
+        ? [rawProduct.cover, ...(rawProduct.images || [])]
+        : rawProduct.images || [],
+    }
+  : null;
+
 
   // Initialize selected card on mount or when cardsData changes
   useEffect(() => {
