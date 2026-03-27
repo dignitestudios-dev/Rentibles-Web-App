@@ -76,6 +76,24 @@ const SwiperProducts: React.FC<SwiperProductsProps> = ({
     });
   };
 
+  const ProductSkeleton = () => {
+  return (
+    <div className="animate-pulse rounded-xl border p-3 space-y-3">
+      {/* Image */}
+      <div className="w-full h-40 bg-gray-200 rounded-lg" />
+
+      {/* Title */}
+      <div className="h-4 bg-gray-200 rounded w-3/4" />
+
+      {/* Category */}
+      <div className="h-3 bg-gray-200 rounded w-1/2" />
+
+      {/* Price */}
+      <div className="h-4 bg-gray-200 rounded w-1/3" />
+    </div>
+  );
+};
+
   return (
     <div className="my-5">
       <div className="flex items-center justify-between">
@@ -86,7 +104,11 @@ const SwiperProducts: React.FC<SwiperProductsProps> = ({
       </div>
 
       {isLoading ? (
-        <p>loading...</p>
+       <div className="grid grid-cols-4 gap-5">
+    {Array.from({ length: 8 }).map((_, i) => (
+      <ProductSkeleton key={i} />
+    ))}
+  </div>
       ) : (
         <>
           <div className="grid grid-cols-4 gap-5">

@@ -359,6 +359,30 @@ const CreateProductForm = () => {
     [setValue],
   );
 
+  const pickupTime = watch("pickupTime");
+
+  const timeToMinutes = (time: string) => {
+  const [timePart, modifier] = time.split(" ");
+  let [hours, minutes] = timePart.split(":").map(Number);
+
+  if (modifier === "PM" && hours !== 12) hours += 12;
+  if (modifier === "AM" && hours === 12) hours = 0;
+
+  return hours * 60 + minutes;
+};
+
+const filteredDropOffOptions = TimeOptions.filter((option) => {
+  if (!pickupTime) return TimeOptions;
+
+  const pickupMinutes = timeToMinutes(pickupTime);
+  const dropMinutes = timeToMinutes(option.value);
+
+  // Handle next-day wrap properly
+  const diff = (dropMinutes - pickupMinutes + 1440) % 1440;
+
+  return diff >= 240; // 4 hours
+});
+
   return (
     <div className=" mx-auto px-4 py-6 text-white">
       <div className="flex items-center gap-3 mb-8">
@@ -462,22 +486,23 @@ const CreateProductForm = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-          <SelectField
-            label="Pick Up Time"
-            placeholder="Select"
-            options={TimeOptions}
-            error={errors.pickupTime?.message}
-            {...register("pickupTime")}
-          />
-          <SelectField
-            label="Drop Off Time"
-            placeholder="Select"
-            options={TimeOptions}
-            error={errors.dropOffTime?.message}
-            {...register("dropOffTime")}
-          />
-        </div>
+       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+  <SelectField
+    label="Pick Up Time"
+    placeholder="Select"
+    options={TimeOptions}
+    error={errors.pickupTime?.message}
+    {...register("pickupTime")}
+  />
+
+  <SelectField
+    label="Drop Off Time"
+    placeholder="Select"
+    options={filteredDropOffOptions}
+    error={errors.dropOffTime?.message}
+    {...register("dropOffTime")}
+  />
+</div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
           <InputField

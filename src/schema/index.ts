@@ -131,10 +131,13 @@ export const identitySchema = z.object({
 export type IdentityFormValues = z.infer<typeof identitySchema>;
 
 export const createProductSchema = z.object({
-  productName: z
-    .string()
-    .min(3, { message: "Product name must be at least 3 characters" })
-    .trim(),
+ productName: z
+  .string()
+  .min(3, { message: "Product name must be at least 3 characters" })
+  .trim()
+  .refine((val) => !/\d/.test(val), {
+    message: "Product name should not contain numbers",
+  }),
 
   description: z
     .string()
@@ -142,7 +145,7 @@ export const createProductSchema = z.object({
     .trim(),
 
   quantity: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-    message: "Quantity must be a positive number",
+    message: "Please enter a valid quantity greater than 0",
   }),
 
   hourlyPrice: z
@@ -228,9 +231,12 @@ export type CreateProductPayload = z.infer<typeof createProductSchema>;
 export const updateProductSchema = z
   .object({
     productName: z
-      .string()
-      .min(3, { message: "Product name must be at least 3 characters" })
-      .trim(),
+  .string()
+  .min(3, { message: "Product name must be at least 3 characters" })
+  .trim()
+  .refine((val) => !/\d/.test(val), {
+    message: "Product name should not contain numbers",
+  }),
 
     description: z
       .string()

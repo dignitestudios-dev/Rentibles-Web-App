@@ -9,7 +9,7 @@ export interface SupportTicketResponse {
 }
 export type RegisterPayload = {
   fullName: string;
-  image: FileList;
+  image?: any;
   email: string;
   phone: string;
   zipCode: string;

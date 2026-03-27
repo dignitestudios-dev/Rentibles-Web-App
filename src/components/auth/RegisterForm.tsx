@@ -253,7 +253,7 @@ const RegisterForm = () => {
         />
       </div>
       {errors.image && (
-        <p className="text-red-500 text-xs mt-1">{errors.image.message}</p>
+        <p className="text-red-500 text-xs mt-1">{errors.image.message as string}</p>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

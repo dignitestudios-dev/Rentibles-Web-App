@@ -200,7 +200,10 @@ const GoogleMapComponent = ({
           className="mb-2 w-full rounded-md border text-foreground border-gray-300 p-2 text-sm"
           onChange={(e) => {
             setCurrentLocation(false);
-            const value = e.target.value;
+            let value = e.target.value;
+    if (value.length > 0) {
+    value = value.charAt(0).toUpperCase() + value.slice(1);
+  }
             setInputValue(value);
 
             if (!value) {
