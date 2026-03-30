@@ -19,8 +19,7 @@ const LocationAndSearch = () => {
   const [latLng, setLatLng] = useState<{ lat: number; lng: number } | null>(
     null,
   );
-
-  const [selected, setSelected] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
@@ -32,13 +31,12 @@ const LocationAndSearch = () => {
     const lng = loc.location.coordinates[0];
 
     const selectedAddress = loc.address || "";
+
     setLatLng({ lat, lng });
-    // whenever user picks a location, update redux + hide map
     dispatch(setLocationSuccess({ latitude: lat, longitude: lng }));
     setAddress(selectedAddress);
-    // if (selected) {
-    //   setSelected(false);
-    // }
+
+    setIsModalOpen(false);
   };
 
   useEffect(() => {
@@ -47,10 +45,10 @@ const LocationAndSearch = () => {
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
-        // inform the store so products component can react
+
         dispatch(setLocationSuccess({ latitude, longitude }));
-        // keep latLng up to date for map display
         setLatLng({ lat: latitude, lng: longitude });
+
         try {
           const addr = await getAddressFromLatLng(latitude, longitude);
           setAddress(addr);
@@ -66,37 +64,49 @@ const LocationAndSearch = () => {
   }, [isLoaded, dispatch]);
 
   return (
-    <div className="w-full flex justify-between gap-10">
-      <div className="w-160">
-        <button
-          onClick={() => setSelected((prev) => !prev)}
-          type="button"
-          className="flex gap-2 text-sm items-center my-2"
-        >
-          <MapPin className="text-primary size-4" />{" "}
-          <span
-            className={address === "Loading..." ? "text-muted-foreground" : ""}
+    <>
+      <div className="w-full flex justify-between gap-10">
+        <div className="w-160">
+          <button
+            onClick={() => setIsModalOpen(true)}
+            type="button"
+            className="flex gap-2 text-sm items-center my-2"
           >
-            {address}
-          </span>
-        </button>
-        {/* show map only when selecting */}
-        {selected && (
-          <div>
+            <MapPin className="text-primary cursor-pointer size-4" />
+            <span
+              className={
+                address === "Loading..." ? "text-muted-foreground" : ""
+              }
+            >
+              {address}
+            </span>
+          </button>
+        </div>
+
+        <Link href="/app/search">
+          <div className="bg-app rounded-sm p-2 flex items-center gap-2 w-80 max-w-full cursor-pointer">
+            <Search className="size-4 text-muted-foreground" />
+            <span className="text-muted-foreground">Search</span>
+          </div>
+        </Link>
+      </div>
+
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setIsModalOpen(false)}
+          />
+
+          <div className="relative bg-white rounded-lg w-[90%] max-w-2xl   z-50 p-2">
             <GoogleMapComponent
               onLocationSelect={onLocationSelect}
               latLng={latLng}
             />
           </div>
-        )}
-      </div>
-      <Link href="/app/search">
-        <div className="bg-app rounded-sm p-2 flex items-center gap-2 w-80 max-w-full cursor-pointer">
-          <Search className="size-4 text-muted-foreground" />{" "}
-          <span className="text-muted-foreground">Search</span>
         </div>
-      </Link>
-    </div>
+      )}
+    </>
   );
 };
 
