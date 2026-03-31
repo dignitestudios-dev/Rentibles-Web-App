@@ -56,7 +56,7 @@ const OrdersTracking: React.FC<OrdersTrackingProps> = ({
       : bookings.filter((booking) => booking.status === activeFilter);
 
   const handleRedirect = (id: string) => {
-    router.push(`/app/tracking/${id}`);
+    router.push(`/app/tracking/${id}?type=${type}`);
   };
 
   if (isLoading) {
@@ -66,6 +66,7 @@ const OrdersTracking: React.FC<OrdersTrackingProps> = ({
       </div>
     );
   }
+  console.log(bookings,"filteredBookings")
 
   return (
     <div>

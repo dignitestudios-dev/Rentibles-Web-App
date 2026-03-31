@@ -6,12 +6,25 @@ import {
   UseQueryResult,
 } from "@tanstack/react-query";
 import { axiosInstance } from "@/src/lib/axiosInstance";
-import { getTracking, getBookingById } from "../query/queryFn";
+import { getTracking, getBookingById, updateBooking } from "../query/queryFn";
 import {
   GetTrackingParams,
   GetTrackingResponse,
   GetBookingDetailsResponse,
 } from "@/src/types/index.type";
+
+// Types
+export interface UpdateBookingPayload {
+  id: string;
+  type: "pickup" | "dropOff";
+  images?: File[];
+  videos?: File[];
+}
+export interface UpdateBookingResponse {
+  success: boolean;
+  message?: string;
+  data?: unknown;
+}
 
 export interface CreateBookingPayload {
   productId: string;
@@ -115,3 +128,17 @@ export const useCancelBooking = (): UseMutationResult<
     mutationFn: cancelBooking,
   });
 };
+
+
+
+export const useUpdateBooking = (): UseMutationResult<
+  UpdateBookingResponse,
+  Error,
+  UpdateBookingPayload,
+  unknown
+> => {
+  return useMutation<UpdateBookingResponse, Error, UpdateBookingPayload, unknown>({
+    mutationFn: updateBooking,
+  });
+};
+

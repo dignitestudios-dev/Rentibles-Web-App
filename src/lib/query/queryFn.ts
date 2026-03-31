@@ -66,6 +66,7 @@ import {
   GetBookingDetailsResponse,
 } from "@/src/types/index.type";
 import { OtpPayload } from "@/src/schema";
+import { UpdateBookingPayload, UpdateBookingResponse } from "../api/booking";
 
 export const loginUser = async (
   credentials: LoginPayload,
@@ -410,4 +411,23 @@ export const getBookingById = async (
   return data;
 };
 
+export const updateBooking = async (
+  payload: UpdateBookingPayload,
+): Promise<UpdateBookingResponse> => {
+  const formData = new FormData();
+
+  formData.append("id", payload.id);
+  formData.append("type", payload.type);
+
+  payload.images?.forEach((img) => formData.append("images", img));
+  payload.videos?.forEach((vid) => formData.append("videos", vid));
+
+  const { data } = await axiosInstance.post("/booking/update", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+
+  return data;
+};
 

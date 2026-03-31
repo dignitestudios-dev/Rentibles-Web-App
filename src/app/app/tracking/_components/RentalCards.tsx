@@ -4,6 +4,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import PickupCaptchaDialog from "./PickupCaptchaDialog";
 import MarkAsReturnModal from "./MarkAsReturnModal";
+import MarkItemCollected from "./MarkAsCollectedScaner";
+import { useBookingDetails, useUpdateBooking } from "@/src/lib/api/booking";
 
 type RentalCardProps = {
   bookingId: string;
@@ -72,8 +74,12 @@ const RentalCard = ({
 
     return now;
   };
-
+  const [scannedId, setScannedId] = useState<string | null>(null);
   const now = useCurrentEpoch();
+  const { data, isLoading, error } = useBookingDetails(scannedId || "", {
+    enabled: !!scannedId,
+  });
+  const { mutate: updateBooking, isPending: isUpdating } = useUpdateBooking();
 
   const isReadyForPickup = now >= pickupTime && now <= dropOffTime;
   const router = useRouter();
@@ -137,7 +143,10 @@ const RentalCard = ({
           <div className="w-full">
             <PickupCaptchaDialog
               bookingId={bookingId}
-              productInfo={{ ProductName: title, productImg: productImage?? "https://placehold.co/600x400" }}
+              productInfo={{
+                ProductName: title,
+                productImg: productImage ?? "https://placehold.co/600x400",
+              }}
               disabled={!isReadyForPickup && status !== "In Progress"}
               trigger={
                 <Button
@@ -157,8 +166,53 @@ const RentalCard = ({
           </div>
         ) : (
           <div className="w-full">
-            {status === "Pending" ||
-              (status === "Over Due" && (
+            {status === "Pending" && (
+              <>
+                <Button
+                  variant={"outline"}
+                  onClick={() => setIsReturnModalOpen(true)}
+                  className="w-full border-[1px] border-primary text-primary rounded-xl py-6 text-lg"
+                >
+                  Mark Item Collected
+                </Button>
+                <MarkItemCollected
+                  open={isReturnModalOpen}
+                  onOpenChange={setIsReturnModalOpen}
+                  onScanned={(text) => {
+                    console.log("QR Value:", text);
+                    setScannedId(text);
+                  }}
+                  onEvidenceSubmit={(files) => {
+                    const images = files.filter((f) =>
+                      f.type.startsWith("image/"),
+                    );
+                    const videos = files.filter((f) =>
+                      f.type.startsWith("video/"),
+                    );
+
+                    updateBooking(
+                      {
+                        id: bookingId, // apna booking id
+                        type: "pickup", // ya "dropOff"
+                        images,
+                        videos,
+                      },
+                      {
+                        onSuccess: (res) => {
+                          console.log("Updated:", res);
+                          setIsReturnModalOpen(false);
+                        },
+                        onError: (err) => {
+                          console.error("Error:", err);
+                        },
+                      },
+                    );
+                  }}
+                  isSubmitting={isUpdating}
+                />
+              </>
+            )}
+            {status === "In Progress"  && (
                 <>
                   <Button
                     variant={"outline"}
@@ -172,7 +226,7 @@ const RentalCard = ({
                     onOpenChange={setIsReturnModalOpen}
                   />
                 </>
-              ))}
+              )}
           </div>
         )}
         <div className="w-full">

@@ -30,10 +30,8 @@ const ProductInfoSection: React.FC<ProductInfoSectionProps> = ({
     <>
       {/* Product Name & Rating */}
       <div className="mb-6">
-        <div className="flex items-start justify-between gap-4 mb-3">
-          <h2 className="text-3xl md:text-4xl font-bold">
-            {product.name || "Unnamed Product"}
-          </h2>
+        <div className="flex items-start justify-end gap-4 mb-4">
+       
           {product.productReview !== undefined && (
             <div className="flex items-center gap-3">
               {/* Star Rating */}
@@ -72,7 +70,9 @@ const ProductInfoSection: React.FC<ProductInfoSectionProps> = ({
             </div>
           )}
         </div>
-
+   <h2 className="text-3xl md:text-4xl mt-10 font-bold">
+            {product.name || "Unnamed Product"}
+          </h2>
         <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base">
           {product.description || "No description available"}
         </p>

@@ -8,7 +8,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
-import { useRouter, useParams } from "next/navigation";
+import { useRouter, useParams, useSearchParams } from "next/navigation";
 import MediaViewer from "../../products/[id]/_components/MediaViewer";
 import { useBookingDetails, useCancelBooking } from "@/src/lib/api/booking";
 import { calculateDistanceMiles } from "@/src/utils/helperFunctions";
@@ -24,6 +24,8 @@ import {
   ReportUserContent,
 } from "../../users/[id]/_components/reportUserOptions";
 import Link from "next/link";
+import MarkAsReturnModal from "../_components/MarkAsReturnModal";
+import PickupCaptchaDialog from "../_components/PickupCaptchaDialog";
 
 const OrderDetailsPage = () => {
   const router = useRouter();
@@ -33,7 +35,7 @@ const OrderDetailsPage = () => {
   const [distance, setDistance] = useState<number | null>(null);
   const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
   const [showReasonModal, setShowReasonModal] = useState(false);
-
+  const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
   // const swiperRef = useRef<SwiperRef>(null);
   const { latitude, longitude } = useSelector(
     (state: RootState) => state.location,
@@ -65,21 +67,21 @@ const OrderDetailsPage = () => {
     }
   };
 
-useEffect(() => {
-  if (bookingData?.data && latitude && longitude) {
-    const productLat = bookingData?.data?.pickupLocation.coordinates[1];
-    const productLng = bookingData?.data?.pickupLocation.coordinates[0];
+  useEffect(() => {
+    if (bookingData?.data && latitude && longitude) {
+      const productLat = bookingData?.data?.pickupLocation.coordinates[1];
+      const productLng = bookingData?.data?.pickupLocation.coordinates[0];
+      const dist = calculateDistanceMiles(
+        latitude,
+        longitude,
+        productLat,
+        productLng,
+      );
 
-    const dist = calculateDistanceMiles(
-      latitude,
-      longitude,
-      productLat,
-      productLng,
-    );
+      setDistance(dist);
+    }
+  }, [bookingData?.data, latitude, longitude]);
 
-    setDistance(dist);
-  }
-}, [bookingData?.data, latitude, longitude]);
   const handleRejectionModal = useCallback(() => {
     setIsRejectionModalOpen(false);
     setShowReasonModal(true);
@@ -96,14 +98,33 @@ useEffect(() => {
 
   const booking = bookingData.data;
   const product = booking.product;
-
+  
   // const handleQuantityChange = (change: number) => {
   //   const newQty = quantity + change;
   //   if (newQty > 0 && newQty <= product.totalQuantity) {
   //     setQuantity(newQty);
   //   }
   // };
-console.log(distance,"distance")
+  console.log(booking, "distance");
+
+ const useCurrentEpoch = () => {
+    const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
+
+    useEffect(() => {
+      const interval = setInterval(() => {
+        setNow(Math.floor(Date.now() / 1000));
+      }, 60000);
+
+      return () => clearInterval(interval);
+    }, []);
+
+    return now;
+  };
+
+  const now = useCurrentEpoch();
+  const type=useSearchParams().get("type");
+  const isReadyForPickup = now >= booking.pickupTime && now <= booking.dropOffTime;
+ console.log(booking.status,"type")
   return (
     <div className="bg-background min-h-screen">
       <div className="sticky top-22.75 z-40 bg-background border-b border-border">
@@ -171,10 +192,11 @@ console.log(distance,"distance")
                   <button
                     key={idx}
                     onClick={() => setActiveImageIndex(idx)}
-                    className={`h-2 rounded-full transition-all ${idx === activeImageIndex
-                      ? "w-8 bg-primary"
-                      : "w-2 bg-gray-300 dark:bg-gray-600"
-                      }`}
+                    className={`h-2 rounded-full transition-all ${
+                      idx === activeImageIndex
+                        ? "w-8 bg-primary"
+                        : "w-2 bg-gray-300 dark:bg-gray-600"
+                    }`}
                   />
                 ))}
               </div>
@@ -225,8 +247,6 @@ console.log(distance,"distance")
               <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base truncate line-clamp-3">
                 {product.description}
               </p>
-
-
             </div>
 
             <hr className="my-6 border-border" />
@@ -237,21 +257,24 @@ console.log(distance,"distance")
                 <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">
                   {booking.pickupAddress}
                 </p>
-             <p className="text-xl font-bold">
-  {distance === null
-    ? "N/A"
-    : distance < 0.05
-    ? "Arrived"
-    : `${distance.toFixed(2)} miles`}
-</p>
+                <p className="text-xl font-bold">
+                  {distance === null
+                    ? "N/A"
+                    : distance < 0.05
+                      ? "Arrived"
+                      : `${distance.toFixed(2)} miles`}
+                </p>
               </div>
 
               <div>
                 <h3 className="text-lg font-semibold mb-2">Phone Number</h3>
-                <Link href={`tel:${booking.user.phone}`} className="flex items-center gap-2">
+                <Link
+                  href={`tel:${booking.user.phone}`}
+                  className="flex items-center gap-2"
+                >
                   <Phone className="w-5 h-5 text-gray-500" />
                   <span className="text-lg">{booking.user.phone}</span>
-                </Link >
+                </Link>
               </div>
             </div>
 
@@ -321,7 +344,65 @@ console.log(distance,"distance")
           </div>
         </div>
       </div>
-      <div className="w-full px-6 py-6 border-t border-border flex justify-center">
+      <div className="w-full px-6 py-6 border-t border-border flex gap-3 justify-center">
+           {type === "customer_rental" ? (
+          <div className="w-100">
+            <PickupCaptchaDialog
+              bookingId={booking._id}
+              productInfo={{ ProductName: product.name, productImg: product.images[0] ?? "https://placehold.co/600x400" }}
+              disabled={!isReadyForPickup && booking.status !== "In Progress"}
+              trigger={
+                <Button
+                  variant={"outline"}
+                  className="w-full border-[1px] border-primary text-primary rounded-xl py-6 text-lg"
+                >
+                  {booking.status === "pending"
+                    ? "Ready for Pickup"
+                    : booking.status === "In Progress"
+                      ? "Mark As Received"
+                      : booking.status === "Incomplete"
+                        ? "In Complete"
+                        : "Completed"}
+                </Button>
+              }
+            />
+          </div>
+        ) : (
+          <div className="w-100">
+             {booking.status === "pending"  && (
+                <>
+                  <Button
+                    variant={"outline"}
+                    onClick={() => setIsReturnModalOpen(true)}
+                    className="w-full border-[1px] border-primary text-primary rounded-xl py-6 text-lg"
+                  >
+                    Mark Item Collected
+                  </Button>
+                  <MarkAsReturnModal
+                    open={isReturnModalOpen}
+                    onOpenChange={setIsReturnModalOpen}
+                  />
+                </>
+              )}
+            {booking.status === "pending" ||
+              (booking.status === "Over Due" && (
+                <>
+                  <Button
+                    variant={"outline"}
+                    onClick={() => setIsReturnModalOpen(true)}
+                    className="w-full border-[1px] border-primary text-primary rounded-xl py-6 text-lg"
+                  >
+                    Mark As Return
+                  </Button>
+                  <MarkAsReturnModal
+                    open={isReturnModalOpen}
+                    onOpenChange={setIsReturnModalOpen}
+                  />
+                </>
+              ))}
+          </div>
+        )}
+
         {booking.status === "pending" && (
           <Button
             onClick={handleRejectBooking}

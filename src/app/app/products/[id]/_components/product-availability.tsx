@@ -95,10 +95,10 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
   const generateSlots = (date: Date): TimeSlot[] => {
     const dateKey = getDateKey(date);
     const dayData = availabilityMap.get(dateKey);
-    console.log(dayData,"avaliablity")
 
     if (!dayData || !dayData.slots?.length) return [];
-    
+
+    const nowEpoch = Math.floor(Date.now() / 1000);
 
     return dayData.slots.map((s) => {
       const startLabel = new Date(s.start * 1000).toLocaleTimeString("en-US", {
@@ -118,10 +118,10 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
         endLabel,
         label: `${startLabel} - ${endLabel}`,
         availableQuantity: s.availableQuantity,
+        disabled: s.end <= nowEpoch, // mark past slots as disabled
       } as TimeSlot;
     });
   };
-
   // Handle date selection
   const handleDateSelect = (date: Date) => {
     setSelectedDate(date);
@@ -131,7 +131,7 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
 
     // Generate slots for selected date
     const generatedSlots = generateSlots(new Date(date));
-    console.log(new Date(date),generatedSlots,"checking Dates")
+    console.log(new Date(date), generatedSlots, "checking Dates");
 
     setSlots(generatedSlots);
 
@@ -145,8 +145,6 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
   //     const slotIndex = slots.findIndex(
   //       (s) => s.startEpoch === slot.startEpoch,
   //     );
-
-      
 
   //     const selectedIndexes = prev
   //       .map((s) => slots.findIndex((sl) => sl.startEpoch === s.startEpoch))
@@ -187,57 +185,51 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
   //   return Math.floor(new Date(dateString + "T00:00:00Z").getTime() / 1000);
   // };
 
-
-
-  
-
   const handleSlotSelect = (slot: TimeSlot) => {
-  setSelectedSlots((prev) => {
-    const slotIndex = slots.findIndex(
-      (s) => s.startEpoch === slot.startEpoch,
-    );
+    setSelectedSlots((prev) => {
+      const slotIndex = slots.findIndex(
+        (s) => s.startEpoch === slot.startEpoch,
+      );
 
-    const selectedIndexes = prev
-      .map((s) =>
-        slots.findIndex((sl) => sl.startEpoch === s.startEpoch),
-      )
-      .sort((a, b) => a - b);
+      const selectedIndexes = prev
+        .map((s) => slots.findIndex((sl) => sl.startEpoch === s.startEpoch))
+        .sort((a, b) => a - b);
 
-    const isSelected = selectedIndexes.includes(slotIndex);
+      const isSelected = selectedIndexes.includes(slotIndex);
 
-    // ✅ Remove if already selected (toggle off)
-    if (isSelected) {
-      return prev.filter((s) => s.startEpoch !== slot.startEpoch);
-    }
+      // ✅ Remove if already selected (toggle off)
+      if (isSelected) {
+        return prev.filter((s) => s.startEpoch !== slot.startEpoch);
+      }
 
-    // ✅ First selection
-    if (selectedIndexes.length === 0) {
+      // ✅ First selection
+      if (selectedIndexes.length === 0) {
+        return [slot];
+      }
+
+      // ❌ Prevent selecting more than 4
+      if (prev.length >= 4) {
+        return prev;
+      }
+
+      const min = selectedIndexes[0];
+      const max = selectedIndexes[selectedIndexes.length - 1];
+
+      // ✅ Allow only adjacent expansion
+      if (slotIndex === min - 1 || slotIndex === max + 1) {
+        return [...prev, slot];
+      }
+
+      // 🔁 If non-adjacent → reset and start fresh
       return [slot];
+    });
+  };
+
+  React.useEffect(() => {
+    if (selectionMode === "hour" && selectedSlots.length >= 4) {
+      onSlotSelect?.(selectedSlots);
     }
-
-    // ❌ Prevent selecting more than 4
-    if (prev.length >= 4) {
-      return prev;
-    }
-
-    const min = selectedIndexes[0];
-    const max = selectedIndexes[selectedIndexes.length - 1];
-
-    // ✅ Allow only adjacent expansion
-    if (slotIndex === min - 1 || slotIndex === max + 1) {
-      return [...prev, slot];
-    }
-
-    // 🔁 If non-adjacent → reset and start fresh
-    return [slot];
-  });
-};
-
-React.useEffect(() => {
-  if (selectionMode === "hour" && selectedSlots.length >= 4) {
-    onSlotSelect?.(selectedSlots);
-  }
-}, [selectedSlots, selectionMode, onSlotSelect]);
+  }, [selectedSlots, selectionMode, onSlotSelect]);
 
   const getUnixTimestamp = (date: Date) => {
     return Math.floor(
@@ -298,17 +290,25 @@ React.useEffect(() => {
     });
     return product.availableDays.includes(dayName);
   };
+  const hasAvailableSlots = (date: Date): boolean => {
+    const dateKey = getDateKey(date);
+    const dayData = availabilityMap.get(dateKey);
 
+    if (!dayData || !dayData.slots?.length) return false;
+
+    const nowEpoch = Math.floor(Date.now() / 1000);
+
+    // Return true if at least one slot is in the future and has quantity
+    return dayData.slots.some(
+      (s) => s.end > nowEpoch && (s.availableQuantity ?? 1) > 0,
+    );
+  };
   // whenever availability info or the selected date changes, rebuild slot list
   // React.useEffect(() => {
   //   if (selectedDate) {
   //     setSlots(generateSlots(new Date(selectedDate)));
   //   }
   // }, [availabilityByDate, selectedDate, generateSlots]);
-
-
-const now = new Date();
-const currentHour = now.getHours();
 
   // Can submit when exactly 3 slots selected (for hourly mode)
   const canSubmit =
@@ -317,7 +317,6 @@ const currentHour = now.getHours();
       : selectionMode === "day"
         ? true
         : false;
-
 
   return (
     <div className="space-y-6">
@@ -414,26 +413,20 @@ const currentHour = now.getHours();
                   handleSelectDay) as any
             }
             disabled={(date) => {
-              // Disable past dates
               const today = new Date();
               today.setHours(0, 0, 0, 0);
               const checkDate = new Date(date);
               checkDate.setHours(0, 0, 0, 0);
 
+              // Disable past dates
               if (checkDate < today) return true;
 
-              // Disable dates not in availableDays or zero quantity
+              // Disable dates not in availableDays
               if (!isDateAvailable(date)) return true;
-              // also block if API says minQuantity === 0
-              // const epoch = Math.floor(
-              //   new Date(
-              //     date.getFullYear(),
-              //     date.getMonth(),
-              //     date.getDate(),
-              //   ).getTime() / 1000,
-              // );
-              // const dayData = availabilityByDate.get(epoch);
-              // if (dayData && dayData.minQuantity <= 0) return true;
+
+              // Disable dates with no remaining slots
+              if (!hasAvailableSlots(date)) return true;
+
               return false;
             }}
             className="shadow-lg border-2 border-primary/20"
@@ -468,49 +461,52 @@ const currentHour = now.getHours();
                     <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">
                       Available time slots:
                     </p>
-                    
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {slots
-  .filter(slot => {
-    const slotDate = new Date(slot.startEpoch * 1000);
-    const slotHour = slotDate.getHours();
-    return slotHour < 19; // only keep slots before 7 PM (19)
-  })
-  .map((slot) => {
-    const isSelected = isSlotSelected(slot);
-    const slotQty = slot.availableQuantity ?? undefined;
+                      {slots.map((slot) => {
+                        const isSelected = isSlotSelected(slot);
+                        const slotQty = slot.availableQuantity ?? undefined;
+                        const isDisabled =
+                          slot.disabled || // <--- disable past slots
+                          (!isSelected &&
+                            selectedSlots.length >= slots.length) ||
+                          (slot.availableQuantity !== undefined &&
+                            slot.availableQuantity <= 0);
 
-    const slotDate = new Date(slot.startEpoch * 1000);
-    const slotHour = slotDate.getHours();
-
-    const isSameDay = now.toDateString() === slotDate.toDateString();
-    const isPastTime = isSameDay && slotHour < currentHour;
-
-    const isDisabled =
-      isPastTime ||
-      (!isSelected && selectedSlots.length >= 4) ||
-      (slotQty !== undefined && slotQty <= 0);
-
-    return (
-      <button
-        key={slot.startEpoch}
-        type="button"
-        onClick={() => handleSlotSelect(slot)}
-        disabled={isDisabled}
-        className={[
-          "rounded-xl py-6 text-xs font-medium transition-colors duration-150 select-none whitespace-nowrap",
-          isSelected
-            ? "bg-orange-600 text-white shadow-md focus:ring-orange-400"
-            : isDisabled
-              ? "bg-gray-400 text-gray-300 cursor-not-allowed"
-              : "bg-gray-800 text-gray-200 hover:bg-gray-700 cursor-pointer",
-        ].join(" ")}
-        title={isDisabled ? "Slot unavailable" : undefined}
-      >
-        {slot.startLabel}–{slot.endLabel}
-      </button>
-    );
-  })}
+                        return (
+                          <button
+                            key={slot.startEpoch}
+                            type="button"
+                            onClick={() => handleSlotSelect(slot)}
+                            disabled={isDisabled}
+                            className={[
+                              "rounded-xl border px-3 py-2.5 text-sm font-medium transition-all duration-150",
+                              "focus:outline-none focus:ring-2 focus:ring-offset-1",
+                              isSelected
+                                ? " bg-primary text-white shadow-md focus:ring-bg-primary/50"
+                                : isDisabled
+                                  ? "border-gray-200 bg-gray-100 text-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500 cursor-not-allowed"
+                                  : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:border-primary/40 hover:bg-primary/10 dark:hover:bg-primary/20 cursor-pointer",
+                            ].join(" ")}
+                            title={
+                              slot.disabled
+                                ? "This time has passed"
+                                : isDisabled
+                                  ? "Maximum 4 slots allowed"
+                                  : undefined
+                            }
+                          >
+                            <span className="block">{slot.startLabel}</span>
+                            <span className="block text-xs opacity-70">
+                              – {slot.endLabel}
+                            </span>
+                            {slot.availableQuantity !== undefined && (
+                              <span className="block text-xs mt-1">
+                                {slot.availableQuantity} available
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
@@ -558,7 +554,7 @@ const currentHour = now.getHours();
                 </div>
               </div>
 
-              {/* <button
+              <button
                 type="button"
                 onClick={() => {
                   onSlotSelect?.([]);
@@ -567,7 +563,7 @@ const currentHour = now.getHours();
                 className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
               >
                 Confirm Day Selection
-              </button> */}
+              </button>
             </div>
           )}
         </div>
