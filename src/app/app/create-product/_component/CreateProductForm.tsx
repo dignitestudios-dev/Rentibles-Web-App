@@ -45,6 +45,12 @@ type LocationData = {
 };
 
 const TimeOptions = [
+  // { label: "12:00 AM", value: "00:00" },
+  { label: "01:00 AM", value: "01:00" },
+  { label: "02:00 AM", value: "02:00" },
+  { label: "03:00 AM", value: "03:00" },
+  { label: "04:00 AM", value: "04:00" },
+  { label: "05:00 AM", value: "05:00" },
   { label: "06:00 AM", value: "06:00" },
   { label: "07:00 AM", value: "07:00" },
   { label: "08:00 AM", value: "08:00" },
@@ -60,6 +66,9 @@ const TimeOptions = [
   { label: "06:00 PM", value: "18:00" },
   { label: "07:00 PM", value: "19:00" },
   { label: "08:00 PM", value: "20:00" },
+  { label: "09:00 PM", value: "21:00" },
+  { label: "10:00 PM", value: "22:00" },
+  { label: "11:00 PM", value: "23:00" },
 ];
 
 const CreateProductForm = () => {
@@ -362,14 +371,19 @@ const CreateProductForm = () => {
   const pickupTime = watch("pickupTime");
 
   const timeToMinutes = (time: string) => {
-  const [timePart, modifier] = time.split(" ");
-  let [hours, minutes] = timePart.split(":").map(Number);
-
-  if (modifier === "PM" && hours !== 12) hours += 12;
-  if (modifier === "AM" && hours === 12) hours = 0;
-
+  const [hours, minutes] = time.split(":").map(Number);
   return hours * 60 + minutes;
 };
+
+// const filteredDropOffOptions = TimeOptions.filter((option) => {
+//   if (!pickupTime) return TimeOptions;
+
+//   const pickupMinutes = timeToMinutes(pickupTime);
+//   const dropMinutes = timeToMinutes(option.value);
+
+//   return dropMinutes >= pickupMinutes + 240;
+// });
+
 
 const filteredDropOffOptions = TimeOptions.filter((option) => {
   if (!pickupTime) return TimeOptions;
@@ -377,11 +391,15 @@ const filteredDropOffOptions = TimeOptions.filter((option) => {
   const pickupMinutes = timeToMinutes(pickupTime);
   const dropMinutes = timeToMinutes(option.value);
 
-  // Handle next-day wrap properly
-  const diff = (dropMinutes - pickupMinutes + 1440) % 1440;
+  // Only allow forward progression OR next-day clearly
+  if (dropMinutes <= pickupMinutes) return false;
 
-  return diff >= 240; // 4 hours
+  return dropMinutes >= pickupMinutes + 240;
 });
+
+const pickupTimeOptions = TimeOptions.filter(
+  (option) => option.value <= "19:00"
+);
 
   return (
     <div className=" mx-auto px-4 py-6 text-white">
@@ -487,13 +505,13 @@ const filteredDropOffOptions = TimeOptions.filter((option) => {
         </div>
 
        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
-  <SelectField
-    label="Pick Up Time"
-    placeholder="Select"
-    options={TimeOptions}
-    error={errors.pickupTime?.message}
-    {...register("pickupTime")}
-  />
+ <SelectField
+  label="Pick Up Time"
+  placeholder="Select"
+  options={pickupTimeOptions}
+  error={errors.pickupTime?.message}
+  {...register("pickupTime")}
+/>
 
   <SelectField
     label="Drop Off Time"
