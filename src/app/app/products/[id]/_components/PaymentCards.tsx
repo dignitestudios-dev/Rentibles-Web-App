@@ -1,11 +1,26 @@
-import React from "react";
-import { CreditCard } from "lucide-react";
+"use client";
+
+import React, { useState } from "react";
+import { CreditCard, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+
+import { loadStripe } from "@stripe/stripe-js";
+import { Elements } from "@stripe/react-stripe-js";
+import StripeForm from "@/src/components/forms/StripeForm";
+
+const stripePromise = loadStripe(
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
+);
 
 interface PaymentCardsProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  cardsData: any; // Replace with proper CardsData type if available
+  cardsData: any;
   selectedCardId: string | null;
   setSelectedCardId: (id: string | null) => void;
 }
@@ -15,76 +30,105 @@ const PaymentCards: React.FC<PaymentCardsProps> = ({
   selectedCardId,
   setSelectedCardId,
 }) => {
-  const router = useRouter();
+  const [showAddCard, setShowAddCard] = useState(false);
+  const [open, setOpen] = useState(false); // ✅ control modal
 
   return (
-    <div className="mt-4 p-4 bg-muted rounded-lg">
-      <div className="flex justify-between items-center">
-        <div className="flex items-center gap-1">
-          <CreditCard className="w-5 h-5 text-blue-400" />
-          <p className="text-foreground">Payment Method</p>
-        </div>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button variant="outline">Select Payment Method</Button>
+      </DialogTrigger>
 
-        <Button
-          variant="ghost"
-          type="button"
-          title="Select Card"
-          onClick={() => router.push("/app/settings/card-details")}
-          className="text-black"
-        >
-          Add Card
-        </Button>
-      </div>
-      <div>
-        {cardsData && cardsData.data.length > 0 ? (
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          cardsData.data.map((card: any) => (
-            <div
-              key={card._id}
-              onClick={() => setSelectedCardId(card._id)}
-              className={`flex items-center justify-between border-2 rounded-lg p-4 my-2 cursor-pointer transition-all ${
-                selectedCardId === card._id
-                  ? "border-primary bg-primary/5"
-                  : "border-border hover:border-primary/50"
-              }`}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === " ") {
-                  setSelectedCardId(card._id);
-                }
+<DialogContent className="max-w-md max-h-[90vh] flex flex-col">
+          <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            {showAddCard && (
+              <ArrowLeft
+                className="w-4 h-4 cursor-pointer"
+                onClick={() => setShowAddCard(false)}
+              />
+            )}
+            <CreditCard className="w-5 h-5 text-blue-400" />
+            {showAddCard ? "Add Card" : "Payment Method"}
+          </DialogTitle>
+        </DialogHeader>
+
+        {/* 🔁 SWITCH VIEW */}
+        {showAddCard ? (
+          <Elements stripe={stripePromise}>
+            <StripeForm
+              onSaved={() => {
+                setShowAddCard(false);
               }}
-            >
-              <div className="flex items-center gap-4 flex-1">
-                <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center">
-                  <CreditCard className="w-5 h-5 text-muted-foreground" />
-                </div>
-                <div>
-                  <p className="font-medium text-foreground">
-                    {card.brand?.toUpperCase()}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    **** **** **** {card.last4}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Exp: {card.expMonth}/{card.expYear}
-                  </p>
-                </div>
-              </div>
-              {selectedCardId === card._id && (
-                <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
-                  <div className="w-2 h-2 rounded-full bg-primary-foreground"></div>
-                </div>
+            />
+          </Elements>
+        ) : (
+          <>
+            {/* Add Card Button */}
+            <div className="flex justify-end mb-2">
+              <Button variant="ghost" onClick={() => setShowAddCard(true)}>
+                Add Card
+              </Button>
+            </div>
+
+            {/* Cards List */}
+<div className="flex-1 overflow-y-auto pr-1">
+                {cardsData && cardsData.data.length > 0 ? (
+                cardsData.data.map((card: any) => (
+                  <div
+                    key={card._id}
+                    onClick={() => setSelectedCardId(card._id)}
+                    className={`flex items-center justify-between border-2 rounded-lg p-4 my-2 cursor-pointer transition-all ${
+                      selectedCardId === card._id
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/50"
+                    }`}
+                  >
+                    <div className="flex items-center gap-4 flex-1">
+                      <div className="w-10 h-10 rounded-md bg-muted flex items-center justify-center">
+                        <CreditCard className="w-5 h-5 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <p className="font-medium">
+                          {card.brand?.toUpperCase()}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          **** **** **** {card.last4}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Exp: {card.expMonth}/{card.expYear}
+                        </p>
+                      </div>
+                    </div>
+
+                    {selectedCardId === card._id && (
+                      <div className="w-5 h-5 rounded-full bg-primary flex items-center justify-center">
+                        <div className="w-2 h-2 rounded-full bg-primary-foreground"></div>
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <p className="text-muted-foreground text-center py-4">
+                  No cards available
+                </p>
               )}
             </div>
-          ))
-        ) : (
-          <p className="text-muted-foreground text-center py-4">
-            No cards available
-          </p>
+
+            {/* ✅ DONE BUTTON */}
+            <div className="mt-4">
+              <Button
+                className="w-full"
+                onClick={() => setOpen(false)}
+                disabled={!selectedCardId} // optional: force selection
+              >
+                Done
+              </Button>
+            </div>
+          </>
         )}
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

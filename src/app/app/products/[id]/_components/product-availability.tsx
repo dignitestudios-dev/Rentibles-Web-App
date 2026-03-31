@@ -98,6 +98,7 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
     console.log(dayData,"avaliablity")
 
     if (!dayData || !dayData.slots?.length) return [];
+    
 
     return dayData.slots.map((s) => {
       const startLabel = new Date(s.start * 1000).toLocaleTimeString("en-US", {
@@ -305,6 +306,10 @@ React.useEffect(() => {
   //   }
   // }, [availabilityByDate, selectedDate, generateSlots]);
 
+
+const now = new Date();
+const currentHour = now.getHours();
+
   // Can submit when exactly 3 slots selected (for hourly mode)
   const canSubmit =
     selectionMode === "hour"
@@ -312,6 +317,7 @@ React.useEffect(() => {
       : selectionMode === "day"
         ? true
         : false;
+
 
   return (
     <div className="space-y-6">
@@ -462,46 +468,49 @@ React.useEffect(() => {
                     <p className="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2">
                       Available time slots:
                     </p>
+                    
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {slots.map((slot) => {
-                        const isSelected = isSlotSelected(slot);
-                        const slotQty = slot.availableQuantity ?? undefined;
-                        const isDisabled =
-                          (!isSelected &&
-                            selectedSlots.length >= slots.length) ||
-                          (slotQty !== undefined && slotQty <= 0);
+                {slots
+  .filter(slot => {
+    const slotDate = new Date(slot.startEpoch * 1000);
+    const slotHour = slotDate.getHours();
+    return slotHour < 19; // only keep slots before 7 PM (19)
+  })
+  .map((slot) => {
+    const isSelected = isSlotSelected(slot);
+    const slotQty = slot.availableQuantity ?? undefined;
 
-                        return (
-                          <button
-                            key={slot.startEpoch}
-                            type="button"
-                            onClick={() => handleSlotSelect(slot)}
-                            disabled={isDisabled}
-                            className={[
-                              "rounded-xl border px-3 py-2.5 text-sm font-medium transition-all duration-150",
-                              "focus:outline-none focus:ring-2 focus:ring-offset-1",
-                              isSelected
-                                ? " bg-primary text-white shadow-md focus:ring-bg-primary/50"
-                                : isDisabled
-                                  ? "border-gray-200 bg-gray-100 text-gray-400 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-500 cursor-not-allowed"
-                                  : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-300 hover:border-primary/40 hover:bg-primary/10 dark:hover:bg-primary/20 cursor-pointer",
-                            ].join(" ")}
-                            title={
-                              isDisabled ? "Maximum 4 slots allowed" : undefined
-                            }
-                          >
-                            <span className="block">{slot.startLabel}</span>
-                            <span className="block text-xs opacity-70">
-                              – {slot.endLabel}
-                            </span>
-                            {slotQty !== undefined && (
-                              <span className="block text-xs mt-1">
-                                {slotQty} available
-                              </span>
-                            )}
-                          </button>
-                        );
-                      })}
+    const slotDate = new Date(slot.startEpoch * 1000);
+    const slotHour = slotDate.getHours();
+
+    const isSameDay = now.toDateString() === slotDate.toDateString();
+    const isPastTime = isSameDay && slotHour < currentHour;
+
+    const isDisabled =
+      isPastTime ||
+      (!isSelected && selectedSlots.length >= 4) ||
+      (slotQty !== undefined && slotQty <= 0);
+
+    return (
+      <button
+        key={slot.startEpoch}
+        type="button"
+        onClick={() => handleSlotSelect(slot)}
+        disabled={isDisabled}
+        className={[
+          "rounded-xl py-6 text-xs font-medium transition-colors duration-150 select-none whitespace-nowrap",
+          isSelected
+            ? "bg-orange-600 text-white shadow-md focus:ring-orange-400"
+            : isDisabled
+              ? "bg-gray-400 text-gray-300 cursor-not-allowed"
+              : "bg-gray-800 text-gray-200 hover:bg-gray-700 cursor-pointer",
+        ].join(" ")}
+        title={isDisabled ? "Slot unavailable" : undefined}
+      >
+        {slot.startLabel}–{slot.endLabel}
+      </button>
+    );
+  })}
                     </div>
                   </div>
 
@@ -549,7 +558,7 @@ React.useEffect(() => {
                 </div>
               </div>
 
-              <button
+              {/* <button
                 type="button"
                 onClick={() => {
                   onSlotSelect?.([]);
@@ -558,7 +567,7 @@ React.useEffect(() => {
                 className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
               >
                 Confirm Day Selection
-              </button>
+              </button> */}
             </div>
           )}
         </div>
