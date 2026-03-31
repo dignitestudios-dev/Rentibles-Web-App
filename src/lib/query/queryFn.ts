@@ -409,3 +409,5 @@ export const getBookingById = async (
   const { data } = await axiosInstance.get(`/booking/${id}`);
   return data;
 };
+
+

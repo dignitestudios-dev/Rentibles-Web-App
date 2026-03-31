@@ -888,6 +888,7 @@ export interface TimeSlot {
   endEpoch: number;
   startLabel: string; // "02:00 PM"
   endLabel: string; // "03:00 PM"
+  disabled?: boolean; // if the slot is in the past or unavailable for booking
   /**
    * optional quantity available for this slot. not every consumer of
    * TimeSlot will set it, so it remains optional.

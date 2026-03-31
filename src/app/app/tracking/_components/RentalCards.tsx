@@ -137,6 +137,7 @@ const RentalCard = ({
           <div className="w-full">
             <PickupCaptchaDialog
               bookingId={bookingId}
+              productInfo={{ ProductName: title, productImg: productImage?? "https://placehold.co/600x400" }}
               disabled={!isReadyForPickup && status !== "In Progress"}
               trigger={
                 <Button

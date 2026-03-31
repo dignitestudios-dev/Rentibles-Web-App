@@ -2,7 +2,7 @@ import React from "react";
 import { Star, Phone, Heart, Flag } from "lucide-react";
 import { IProductDetails, IUser } from "@/src/types/index.type";
 import { useSelector } from "react-redux";
-
+import Link from "next/link";
 
 interface ProductInfoSectionProps {
   product: IProductDetails;
@@ -25,7 +25,7 @@ const ProductInfoSection: React.FC<ProductInfoSectionProps> = ({
 }) => {
   const user = useSelector((state: any) => state.auth.user);
 
-const isOwner = user?._id === storeInfo?._id;
+  const isOwner = user?._id === storeInfo?._id;
   return (
     <>
       {/* Product Name & Rating */}
@@ -81,33 +81,30 @@ const isOwner = user?._id === storeInfo?._id;
       <hr className="my-6 border-border" />
 
       {/* Pickup & Phone */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        <div>
-          <h3 className="text-lg font-semibold mb-2">Pickup Location</h3>
-          <p className="text-sm text-gray-700 dark:text-gray-300">
-  {isOwner
-    ? product.pickupAddress ||
-      product.pickUpApartment ||
-      "Address not provided"
-    : "Visible after booking"}
-</p>
-        </div>
-
-        <div>
-          <h3 className="text-lg font-semibold mb-2">Contact</h3>
-          <div className="flex items-center gap-2 mb-3">
-  <Phone className="w-5 h-5 text-foreground/50" />
-  <span className="text-base text-[14px]">
-    {isOwner
-      ? storeInfo.phone || "Not provided"
-      : "Visible after booking"}
-  </span>
-</div>
-          <p className="text-sm text-foreground/40 dark:text-foreground/60">
-            {storeInfo.email || ""}
-          </p>
-        </div>
+      <div className="flex items-center gap-2 mb-3">
+        <Phone className="w-5 h-5 text-foreground/50" />
+        {isOwner && storeInfo.phone ? (
+          <Link
+            href={`tel:${storeInfo.phone}`}
+            className="text-base text-[14px] hover:underline"
+          >
+            {storeInfo.phone}
+          </Link>
+        ) : (
+          <span className="text-base text-[14px]">Visible after booking</span>
+        )}
       </div>
+
+      <p className="text-sm text-foreground/40 dark:text-foreground/60">
+        {storeInfo.email && (
+          <Link
+            href={`mailto:${storeInfo.email}`}
+            className="hover:underline"
+          >
+            {storeInfo.email}
+          </Link>
+        )}
+      </p>
 
       <hr className="my-6 border-border" />
 

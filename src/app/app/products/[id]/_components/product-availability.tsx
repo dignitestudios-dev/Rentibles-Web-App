@@ -94,8 +94,8 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
 
   const generateSlots = (date: Date): TimeSlot[] => {
     const dateKey = getDateKey(date);
-
     const dayData = availabilityMap.get(dateKey);
+    console.log(dayData,"avaliablity")
 
     if (!dayData || !dayData.slots?.length) return [];
 
@@ -130,6 +130,7 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
 
     // Generate slots for selected date
     const generatedSlots = generateSlots(new Date(date));
+    console.log(new Date(date),generatedSlots,"checking Dates")
 
     setSlots(generatedSlots);
 

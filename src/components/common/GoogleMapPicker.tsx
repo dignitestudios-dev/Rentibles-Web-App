@@ -197,7 +197,7 @@ const GoogleMapComponent = ({
           value={inputValue}
           disabled={isDisabled}
           placeholder="Enter your street, city, state, zip"
-          className="mb-2 w-full rounded-md border text-foreground border-gray-300 p-2 text-sm"
+          className="mb-2 w-full rounded-md text-black border  border-gray-300 p-2 text-sm"
           onChange={(e) => {
             setCurrentLocation(false);
             let value = e.target.value;

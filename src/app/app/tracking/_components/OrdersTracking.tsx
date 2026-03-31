@@ -146,9 +146,7 @@ const OrdersTracking: React.FC<OrdersTrackingProps> = ({
             );
           })
         ) : (
-          <p className="text-muted-foreground mt-10 text-center col-span-full">
-            No bookings found
-          </p>
+          null
         )}
       </div>
       {filteredBookings.length === 0 && (

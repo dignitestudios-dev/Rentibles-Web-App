@@ -23,13 +23,14 @@ import {
   RejectReasonContent,
   ReportUserContent,
 } from "../../users/[id]/_components/reportUserOptions";
+import Link from "next/link";
 
 const OrderDetailsPage = () => {
   const router = useRouter();
   const { id } = useParams();
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isMediaViewerOpen, setIsMediaViewerOpen] = useState(false);
-  const [distance, setDistance] = useState("");
+  const [distance, setDistance] = useState<number | null>(null);
   const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
   const [showReasonModal, setShowReasonModal] = useState(false);
 
@@ -64,28 +65,21 @@ const OrderDetailsPage = () => {
     }
   };
 
-  useEffect(() => {
-    if (bookingData?.data) {
-      // Select default card if exists, otherwise select first card
+useEffect(() => {
+  if (bookingData?.data && latitude && longitude) {
+    const productLat = bookingData?.data?.pickupLocation.coordinates[1];
+    const productLng = bookingData?.data?.pickupLocation.coordinates[0];
 
-      const productLat = bookingData?.data?.pickupLocation.coordinates[1];
-      const productLng = bookingData?.data?.pickupLocation.coordinates[0];
+    const dist = calculateDistanceMiles(
+      latitude,
+      longitude,
+      productLat,
+      productLng,
+    );
 
-      let distance = null;
-
-      if (latitude && longitude) {
-        distance = calculateDistanceMiles(
-          latitude,
-          longitude,
-          productLat,
-          productLng,
-        ).toFixed(2);
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setDistance(distance);
-      }
-    }
-  }, [bookingData?.data]);
-
+    setDistance(dist);
+  }
+}, [bookingData?.data, latitude, longitude]);
   const handleRejectionModal = useCallback(() => {
     setIsRejectionModalOpen(false);
     setShowReasonModal(true);
@@ -109,7 +103,7 @@ const OrderDetailsPage = () => {
   //     setQuantity(newQty);
   //   }
   // };
-
+console.log(distance,"distance")
   return (
     <div className="bg-background min-h-screen">
       <div className="sticky top-22.75 z-40 bg-background border-b border-border">
@@ -243,17 +237,21 @@ const OrderDetailsPage = () => {
                 <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">
                   {booking.pickupAddress}
                 </p>
-                <p className="text-xl font-bold">
-                  {distance ? `${distance} miles` : "N/A"}
-                </p>
+             <p className="text-xl font-bold">
+  {distance === null
+    ? "N/A"
+    : distance < 0.05
+    ? "Arrived"
+    : `${distance.toFixed(2)} miles`}
+</p>
               </div>
 
               <div>
                 <h3 className="text-lg font-semibold mb-2">Phone Number</h3>
-                <div className="flex items-center gap-2">
+                <Link href={`tel:${booking.user.phone}`} className="flex items-center gap-2">
                   <Phone className="w-5 h-5 text-gray-500" />
                   <span className="text-lg">{booking.user.phone}</span>
-                </div>
+                </Link >
               </div>
             </div>
 
