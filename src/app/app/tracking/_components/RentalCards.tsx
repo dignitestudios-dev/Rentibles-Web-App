@@ -233,7 +233,11 @@ const RentalCard = ({
                   >
                     Mark As Return
                   </Button>
-                  <MarkItemCollected
+                  
+                </>
+              )}
+            {(status === "In Progress" || status === "Completed") && (
+              <MarkItemCollected
                   open={isReturnModalOpen}
                   type={"dropOff"}
                   onOpenChange={setIsReturnModalOpen}
@@ -277,7 +281,6 @@ const RentalCard = ({
                   }}
                   isSubmitting={isUpdating}
                 />
-                </>
               )}
           </div>
         )}

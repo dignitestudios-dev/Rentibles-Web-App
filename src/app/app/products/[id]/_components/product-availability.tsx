@@ -478,7 +478,7 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
                             key={slot.startEpoch}
                             type="button"
                             onClick={() => handleSlotSelect(slot)}
-                            // disabled={isDisabled}
+                            disabled={isDisabled}
                             className={[
                               "rounded-xl border px-3 py-2.5 text-sm font-medium transition-all duration-150",
                               "focus:outline-none focus:ring-2 focus:ring-offset-1",

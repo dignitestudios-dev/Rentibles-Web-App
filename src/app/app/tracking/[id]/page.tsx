@@ -35,14 +35,28 @@ import { set } from "zod/v3";
 // ── Defined outside component — stable hook order ────────────────────────────
 const useCurrentEpoch = () => {
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
+
   useEffect(() => {
-    const interval = setInterval(
-      () => setNow(Math.floor(Date.now() / 1000)),
-      60000,
-    );
+    const interval = setInterval(() => {
+      setNow(Math.floor(Date.now() / 1000));
+    }, 1000); // update every second
+
     return () => clearInterval(interval);
   }, []);
+
   return now;
+};
+
+const formatTimeLeft = (seconds: number) => {
+  if (seconds <= 0) return "Expired";
+
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+
+  if (days > 0) return `${days}d ${hours}h left`;
+  if (hours > 0) return `${hours}h ${minutes}m left`;
+  return `${minutes}m left`;
 };
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -50,7 +64,7 @@ const OrderDetailsPage = () => {
   const router = useRouter();
   const { id } = useParams();
   const type = useSearchParams().get("type");
-const [showReviewModal, setShowReviewModal] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isMediaViewerOpen, setIsMediaViewerOpen] = useState(false);
   const [distance, setDistance] = useState<number | null>(null);
@@ -76,6 +90,10 @@ const [showReviewModal, setShowReviewModal] = useState(false);
 
   const cancelBookingMutation = useCancelBooking();
   const { mutate: updateBooking, isPending: isUpdating } = useUpdateBooking();
+  useEffect(() => {
+     refetch();
+  }, []);
+  
 
   useEffect(() => {
     if (bookingData?.data && latitude && longitude) {
@@ -121,6 +139,19 @@ const [showReviewModal, setShowReviewModal] = useState(false);
   const booking = bookingData.data;
   const product = booking.product;
   const detail = booking.detail;
+
+  const timeNow = now;
+  let timeLeftText = "";
+
+  if (timeNow < booking.pickupTime) {
+    const seconds = booking.pickupTime - timeNow;
+    timeLeftText = "Starts in " + formatTimeLeft(seconds);
+  } else if (timeNow > booking.dropOffTime) {
+    timeLeftText = "Expired";
+  } else {
+    const seconds = booking.dropOffTime - timeNow;
+    timeLeftText = formatTimeLeft(seconds);
+  }
 
   const isReadyForPickup =
     now >= booking.pickupTime && now <= booking.dropOffTime;
@@ -259,6 +290,13 @@ const [showReviewModal, setShowReviewModal] = useState(false);
                     {new Date(booking.pickupTime * 1000).toLocaleTimeString()}
                   </span>
                 </div>
+
+                <div className="flex justify-between">
+                  <span className="font-medium">Time Left:</span>
+                  <span className="text-primary font-semibold">
+                    {timeLeftText}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -358,15 +396,26 @@ const [showReviewModal, setShowReviewModal] = useState(false);
 
             <hr className="my-6 border-border" />
             <div>
-              <h3 className="text-2xl font-bold mb-4">Customer Feedback</h3>
+              {
+                !booking?.review&& booking.status === "completed"&&(
+                  <h3 className="text-2xl font-bold mb-4">Customer Feedback</h3>
+                )
+              }
 
-              { (
+              {
                 <>
-                  {!booking?.review && booking.status === "completed" &&  type === "my_rentals" &&(
-                    <Button onClick={()=>setShowReviewModal(!showReviewModal)} className="text-white w-full">Give Feedback</Button>
-                  )}
+                  {!booking?.review &&
+                    booking.status === "completed" &&
+                    type === "my_rentals" && (
+                      <Button
+                        onClick={() => setShowReviewModal(!showReviewModal)}
+                        className="text-white w-full"
+                      >
+                        Give Feedback
+                      </Button>
+                    )}
 
-                  {!booking?.review && (
+                  {!booking?.review&& booking.status === "completed" && (
                     <div className="border rounded-xl mt-3 p-4 text-center text-gray-500">
                       No Feedback Available
                     </div>
@@ -411,7 +460,7 @@ const [showReviewModal, setShowReviewModal] = useState(false);
                     </div>
                   )}
                 </>
-              )}
+              }
             </div>
           </div>
         </div>
@@ -475,14 +524,13 @@ const [showReviewModal, setShowReviewModal] = useState(false);
                       {
                         onSuccess: () => {
                           setIsReturnModalOpen(false);
-                          refetch();
+                          // refetch();
                         },
                         onError: (err) => console.error("Error:", err),
                       },
                     );
                   }}
                   isSubmitting={isUpdating}
-
                 />
               </>
             )}
@@ -515,7 +563,7 @@ const [showReviewModal, setShowReviewModal] = useState(false);
                       {
                         onSuccess: () => {
                           setIsReturnModalOpen(false);
-                          refetch();
+                          // refetch();
                         },
                         onError: (err) => console.error("Error:", err),
                       },
@@ -542,24 +590,24 @@ const [showReviewModal, setShowReviewModal] = useState(false);
           </Button>
         )}
       </div>
-  
+
       {/* ── Modals ── */}
-   <WriteReviewModal
-          open={showReviewModal}
-          onOpenChange={setShowReviewModal}
-          bookingId={bookingId}
-          product={{
-            name: product.name,
-            image: product.images[0] ?? "https://placehold.co/600x400",
-            quantity: booking.quantity,
-            price: booking.perUnitPrice,
-          }}
-          onSuccess={() => { 
-            refetch();
-            setShowReviewModal(false);
-          }}
-        />
-  
+      <WriteReviewModal
+        open={showReviewModal}
+        onOpenChange={setShowReviewModal}
+        bookingId={bookingId}
+        product={{
+          name: product.name,
+          image: product.images[0] ?? "https://placehold.co/600x400",
+          quantity: booking.quantity,
+          price: booking.perUnitPrice,
+        }}
+        onSuccess={() => {
+          refetch();
+          setShowReviewModal(false);
+        }}
+      />
+
       <MediaViewer
         images={product.images}
         initialIndex={activeImageIndex}
