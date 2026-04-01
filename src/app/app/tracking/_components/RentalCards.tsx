@@ -31,6 +31,7 @@ type RentalCardProps = {
   dropOffTime: number;
   type: string;
   handleRedirect: () => void;
+  refetch: () => void;
 };
 
 const statusStyles = {
@@ -60,6 +61,7 @@ const RentalCard = ({
   id,
   bookingId,
   handleRedirect,
+  refetch
 }: RentalCardProps) => {
   const useCurrentEpoch = () => {
     const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
@@ -142,6 +144,7 @@ const RentalCard = ({
         {type === "customer_rental" ? (
           <div className="w-full">
             <PickupCaptchaDialog
+            refetchBookings={refetch}
               bookingId={bookingId}
               productInfo={{
                 ProductName: title,
@@ -178,6 +181,14 @@ const RentalCard = ({
                 <MarkItemCollected
                   open={isReturnModalOpen}
                   onOpenChange={setIsReturnModalOpen}
+                  type={"pickup"}
+                  bookingId={bookingId}
+                  product={{
+                    name: title,
+                    image: productImage ?? "https://placehold.co/600x400",
+                    quantity: qty,
+                    price: price,
+                  }}
                   onScanned={(text) => {
                     console.log("QR Value:", text);
                     setScannedId(text);
@@ -207,6 +218,7 @@ const RentalCard = ({
                         },
                       },
                     );
+                    refetch();
                   }}
                   isSubmitting={isUpdating}
                 />
@@ -221,10 +233,50 @@ const RentalCard = ({
                   >
                     Mark As Return
                   </Button>
-                  <MarkAsReturnModal
-                    open={isReturnModalOpen}
-                    onOpenChange={setIsReturnModalOpen}
-                  />
+                  <MarkItemCollected
+                  open={isReturnModalOpen}
+                  type={"dropOff"}
+                  onOpenChange={setIsReturnModalOpen}
+                  bookingId={bookingId}
+                  product={{
+                    name: title,
+                    image: productImage ?? "https://placehold.co/600x400",
+                    quantity: qty,
+                    price: price,
+                  }}
+                  onScanned={(text) => {
+                    console.log("QR Value:", text);
+                    setScannedId(text);
+                  }}
+                  onEvidenceSubmit={(files) => {
+                    const images = files.filter((f) =>
+                      f.type.startsWith("image/"),
+                    );
+                    const videos = files.filter((f) =>
+                      f.type.startsWith("video/"),
+                    );
+
+                    updateBooking(
+                      {
+                        id: bookingId, // apna booking id
+                        type: "dropOff", // ya "dropOff"
+                        images,
+                        videos,
+                      },
+                      {
+                        onSuccess: (res) => {
+                          console.log("Updated:", res);
+                          setIsReturnModalOpen(false);
+                        },
+                        onError: (err) => {
+                          console.error("Error:", err);
+                        },
+                      },
+                    );
+                    refetch(); 
+                  }}
+                  isSubmitting={isUpdating}
+                />
                 </>
               )}
           </div>

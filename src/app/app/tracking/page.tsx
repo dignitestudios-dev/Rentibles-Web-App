@@ -9,7 +9,7 @@ const Tracking = () => {
     "customer_rental",
   );
   const type = activeTab === "customer_rental" ? "rental" : "own";
-  const { data, isLoading } = useTracking({ type });
+  const { data, isLoading,refetch } = useTracking({ type });
 
   return (
     <div>
@@ -18,6 +18,7 @@ const Tracking = () => {
         bookings={data?.data || []}
         isLoading={isLoading}
         type={activeTab}
+        refetch={refetch}
       />
     </div>
   );

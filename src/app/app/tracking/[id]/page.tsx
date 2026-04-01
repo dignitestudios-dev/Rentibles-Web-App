@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   ArrowLeft,
   Star,
@@ -10,7 +10,11 @@ import {
 } from "lucide-react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import MediaViewer from "../../products/[id]/_components/MediaViewer";
-import { useBookingDetails, useCancelBooking } from "@/src/lib/api/booking";
+import {
+  useBookingDetails,
+  useCancelBooking,
+  useUpdateBooking,
+} from "@/src/lib/api/booking";
 import { calculateDistanceMiles } from "@/src/utils/helperFunctions";
 import { useSelector } from "react-redux";
 import { RootState } from "@/src/lib/store";
@@ -19,39 +23,76 @@ import RejectionModal from "@/src/components/common/RejectionModal";
 import { Button } from "@/components/ui/button";
 import { ErrorToast, SuccessToast } from "@/src/components/common/Toaster";
 import ConfirmationModal from "@/src/components/common/ConfirmationModal";
-import {
-  RejectReasonContent,
-  ReportUserContent,
-} from "../../users/[id]/_components/reportUserOptions";
+import { RejectReasonContent } from "../../users/[id]/_components/reportUserOptions";
 import Link from "next/link";
-import MarkAsReturnModal from "../_components/MarkAsReturnModal";
 import PickupCaptchaDialog from "../_components/PickupCaptchaDialog";
+import MarkItemCollected from "../_components/MarkAsCollectedScaner";
+import EvidenceSlider from "../_components/EvidenceSlider";
+import AdjustBookingModal from "../_components/AdjustBooking";
+import WriteReviewModal from "../_components/Writereviewmodal";
+import { set } from "zod/v3";
+
+// ── Defined outside component — stable hook order ────────────────────────────
+const useCurrentEpoch = () => {
+  const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
+  useEffect(() => {
+    const interval = setInterval(
+      () => setNow(Math.floor(Date.now() / 1000)),
+      60000,
+    );
+    return () => clearInterval(interval);
+  }, []);
+  return now;
+};
+// ─────────────────────────────────────────────────────────────────────────────
 
 const OrderDetailsPage = () => {
   const router = useRouter();
   const { id } = useParams();
+  const type = useSearchParams().get("type");
+const [showReviewModal, setShowReviewModal] = useState(false);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isMediaViewerOpen, setIsMediaViewerOpen] = useState(false);
   const [distance, setDistance] = useState<number | null>(null);
   const [isRejectionModalOpen, setIsRejectionModalOpen] = useState(false);
   const [showReasonModal, setShowReasonModal] = useState(false);
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
-  // const swiperRef = useRef<SwiperRef>(null);
+  const [scannedId, setScannedId] = useState<string | null>(null);
+  const [showAdjust, setShowAdjust] = useState(false);
+  const now = useCurrentEpoch();
   const { latitude, longitude } = useSelector(
     (state: RootState) => state.location,
   );
+  const bookingId = scannedId || (id as string);
 
   const {
     data: bookingData,
     isLoading,
     error,
-  } = useBookingDetails(id as string);
+    refetch,
+  } = useBookingDetails(bookingId, {
+    enabled: !!bookingId,
+  });
 
   const cancelBookingMutation = useCancelBooking();
+  const { mutate: updateBooking, isPending: isUpdating } = useUpdateBooking();
 
-  const handleRejectBooking = () => {
-    setIsRejectionModalOpen(true);
-  };
+  useEffect(() => {
+    if (bookingData?.data && latitude && longitude) {
+      const productLat = bookingData.data.pickupLocation.coordinates[1];
+      const productLng = bookingData.data.pickupLocation.coordinates[0];
+      setDistance(
+        calculateDistanceMiles(latitude, longitude, productLat, productLng),
+      );
+    }
+  }, [bookingData?.data, latitude, longitude]);
+
+  const handleRejectionModal = useCallback(() => {
+    setIsRejectionModalOpen(false);
+    setShowReasonModal(true);
+  }, []);
+
+  const handleRejectBooking = () => setIsRejectionModalOpen(true);
 
   const handleConfirmRejection = async (reason: string) => {
     try {
@@ -62,31 +103,12 @@ const OrderDetailsPage = () => {
       SuccessToast("Booking rejected successfully");
       setShowReasonModal(false);
       router.back();
-    } catch (error) {
+    } catch {
       ErrorToast("Failed to reject booking. Please try again.");
     }
   };
 
-  useEffect(() => {
-    if (bookingData?.data && latitude && longitude) {
-      const productLat = bookingData?.data?.pickupLocation.coordinates[1];
-      const productLng = bookingData?.data?.pickupLocation.coordinates[0];
-      const dist = calculateDistanceMiles(
-        latitude,
-        longitude,
-        productLat,
-        productLng,
-      );
-
-      setDistance(dist);
-    }
-  }, [bookingData?.data, latitude, longitude]);
-
-  const handleRejectionModal = useCallback(() => {
-    setIsRejectionModalOpen(false);
-    setShowReasonModal(true);
-  }, [bookingData?.data]);
-
+  // ── Early returns after all hooks ────────────────────────────────────────
   if (isLoading)
     return (
       <div>
@@ -98,35 +120,36 @@ const OrderDetailsPage = () => {
 
   const booking = bookingData.data;
   const product = booking.product;
-  
-  // const handleQuantityChange = (change: number) => {
-  //   const newQty = quantity + change;
-  //   if (newQty > 0 && newQty <= product.totalQuantity) {
-  //     setQuantity(newQty);
-  //   }
-  // };
-  console.log(booking, "distance");
+  const detail = booking.detail;
 
- const useCurrentEpoch = () => {
-    const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
+  const isReadyForPickup =
+    now >= booking.pickupTime && now <= booking.dropOffTime;
 
-    useEffect(() => {
-      const interval = setInterval(() => {
-        setNow(Math.floor(Date.now() / 1000));
-      }, 60000);
+  // ── Pull evidence arrays from API response ───────────────────────────────
+  const pickupImages: string[] = detail?.pickupImages ?? [];
+  const pickupVideos: string[] = detail?.pickupVideos ?? [];
+  const dropOffImages: string[] = detail?.dropOffImages ?? [];
+  const dropOffVideos: string[] = detail?.dropOffVideos ?? [];
 
-      return () => clearInterval(interval);
-    }, []);
+  const hasEvidence =
+    pickupImages.length > 0 ||
+    pickupVideos.length > 0 ||
+    dropOffImages.length > 0 ||
+    dropOffVideos.length > 0;
 
-    return now;
+  const reviewProduct = {
+    name: product.name,
+    image: product.images[0] ?? "https://placehold.co/600x400",
+    quantity: booking.quantity,
+    price: booking.perUnitPrice,
   };
-
-  const now = useCurrentEpoch();
-  const type=useSearchParams().get("type");
-  const isReadyForPickup = now >= booking.pickupTime && now <= booking.dropOffTime;
- console.log(booking.status,"type")
+  const handleAdjustBooking = () => {
+    setShowAdjust(false);
+    refetch();
+  };
   return (
     <div className="bg-background min-h-screen">
+      {/* ── Header ── */}
       <div className="sticky top-22.75 z-40 bg-background border-b border-border">
         <div className="flex items-center justify-between px-4 py-4 md:px-6">
           <button
@@ -135,9 +158,7 @@ const OrderDetailsPage = () => {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-
           <h1 className="text-lg font-semibold">Tracking Dashboard</h1>
-
           <div className="w-10 h-10 rounded-full p-1 bg-primary ring-2 ring-primary overflow-hidden">
             <img
               src={
@@ -154,59 +175,73 @@ const OrderDetailsPage = () => {
 
       <div className="w-full px-0 md:px-6 py-6 pb-6">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* ── Left col: product slider + evidence slider ── */}
           <div className="lg:col-span-2">
-            <div className="mb-6 sticky top-20">
-              <div className="relative w-full bg-gray-100 dark:bg-gray-800 rounded-3xl overflow-hidden mb-3 flex items-center justify-center group">
-                <button
-                  onClick={() => {
-                    if (activeImageIndex > 0) {
-                      setActiveImageIndex(activeImageIndex - 1);
-                    }
-                  }}
-                  className="absolute left-4 z-10 bg-primary text-white rounded-full p-3 hover:bg-primary/90 transition-colors"
-                >
-                  <ChevronLeft className="w-6 h-6" />
-                </button>
-
-                <img
-                  src={product.images[activeImageIndex]}
-                  alt="product"
-                  onClick={() => setIsMediaViewerOpen(true)}
-                  className="w-full h-96 md:h-125 object-contain cursor-pointer hover:opacity-90 transition-opacity"
-                />
-
-                <button
-                  onClick={() => {
-                    if (activeImageIndex < product.images.length - 1) {
-                      setActiveImageIndex(activeImageIndex + 1);
-                    }
-                  }}
-                  className="absolute right-4 z-10 bg-primary text-white rounded-full p-3 hover:bg-primary/90 transition-colors"
-                >
-                  <ChevronRight className="w-6 h-6" />
-                </button>
-              </div>
-
-              <div className="flex items-center justify-center gap-2">
-                {product.images.map((_, idx) => (
+            <div className="mb-6 sticky top-20 flex flex-col gap-8">
+              {/* Product image slider */}
+              <div>
+                <div className="relative w-full bg-gray-100 dark:bg-gray-800 rounded-3xl overflow-hidden mb-3 flex items-center justify-center">
                   <button
-                    key={idx}
-                    onClick={() => setActiveImageIndex(idx)}
-                    className={`h-2 rounded-full transition-all ${
-                      idx === activeImageIndex
-                        ? "w-8 bg-primary"
-                        : "w-2 bg-gray-300 dark:bg-gray-600"
-                    }`}
+                    onClick={() =>
+                      setActiveImageIndex((i) => Math.max(i - 1, 0))
+                    }
+                    className="absolute left-4 z-10 bg-primary text-white rounded-full p-3 hover:bg-primary/90 transition-colors"
+                  >
+                    <ChevronLeft className="w-6 h-6" />
+                  </button>
+
+                  <img
+                    src={product.images[activeImageIndex]}
+                    alt="product"
+                    onClick={() => setIsMediaViewerOpen(true)}
+                    className="w-full h-96 md:h-125 object-contain cursor-pointer hover:opacity-90 transition-opacity"
                   />
-                ))}
+
+                  <button
+                    onClick={() =>
+                      setActiveImageIndex((i) =>
+                        Math.min(i + 1, product.images.length - 1),
+                      )
+                    }
+                    className="absolute right-4 z-10 bg-primary text-white rounded-full p-3 hover:bg-primary/90 transition-colors"
+                  >
+                    <ChevronRight className="w-6 h-6" />
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-center gap-2">
+                  {product.images.map((_: any, idx: number) => (
+                    <button
+                      key={idx}
+                      onClick={() => setActiveImageIndex(idx)}
+                      className={`h-2 rounded-full transition-all ${
+                        idx === activeImageIndex
+                          ? "w-8 bg-primary"
+                          : "w-2 bg-gray-300 dark:bg-gray-600"
+                      }`}
+                    />
+                  ))}
+                </div>
               </div>
+
+              {/* ── Evidence Slider — shown below product images ── */}
+              {hasEvidence && (
+                <div className="px-4 md:px-0">
+                  <EvidenceSlider
+                    pickupImages={pickupImages}
+                    pickupVideos={pickupVideos}
+                    dropOffImages={dropOffImages}
+                    dropOffVideos={dropOffVideos}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
+          {/* ── Right col: order info ── */}
           <div className="lg:col-span-1">
             <div className="shadow-md rounded-xl p-2 py-3 mb-6">
               <h2>Order Summary</h2>
-
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span className="font-medium">Order ID:</span>
@@ -237,14 +272,7 @@ const OrderDetailsPage = () => {
                   <span className="font-semibold">{product.productReview}</span>
                 </div>
               </div>
-
-              {/* <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base whitespace-pre-line overflow-x-auto" style={{
-                scrollbarWidth: 'thin',
-                scrollbarColor: '#F36815 #0000'
-              }}>
-                {product.description}
-              </p> */}
-              <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base truncate line-clamp-3">
+              <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base line-clamp-3">
                 {product.description}
               </p>
             </div>
@@ -253,7 +281,7 @@ const OrderDetailsPage = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
-                <h3 className="text-lg font-semibold mb-2">Pickup Locations</h3>
+                <h3 className="text-lg font-semibold mb-2">Pickup Location</h3>
                 <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">
                   {booking.pickupAddress}
                 </p>
@@ -265,7 +293,6 @@ const OrderDetailsPage = () => {
                       : `${distance.toFixed(2)} miles`}
                 </p>
               </div>
-
               <div>
                 <h3 className="text-lg font-semibold mb-2">Phone Number</h3>
                 <Link
@@ -287,7 +314,6 @@ const OrderDetailsPage = () => {
                   {product.category.name}
                 </p>
               </div>
-
               <div>
                 <h3 className="text-lg font-semibold mb-2">Sub Category</h3>
                 <p className="text-gray-500 dark:text-gray-400">
@@ -297,60 +323,112 @@ const OrderDetailsPage = () => {
             </div>
 
             <hr className="my-6 border-border" />
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-semibold">Quantity, </h3>
-                </div>
-
-                <p className="text-gray-500 dark:text-gray-400 text-sm ">
+                <h3 className="text-lg font-semibold mb-3">Quantity</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">
                   {booking.quantity} Items
                 </p>
               </div>
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-semibold">Date </h3>
-                </div>
-
-                <p className="text-gray-500 dark:text-gray-400 text-sm ">
+                <h3 className="text-lg font-semibold mb-3">Date</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">
                   {new Date(booking.bookingDate * 1000).toLocaleDateString()}
                 </p>
               </div>
             </div>
+
             <hr className="my-6 border-border" />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-semibold">Duration</h3>
-                </div>
-
-                <p className="text-gray-500 dark:text-gray-400 text-sm ">
+                <h3 className="text-lg font-semibold mb-3">Duration</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">
                   {booking.duration}
                 </p>
               </div>
               <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-lg font-semibold">Pickup Time</h3>
-                </div>
-
-                <p className="text-gray-500 dark:text-gray-400 text-sm ">
+                <h3 className="text-lg font-semibold mb-3">Pickup Time</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">
                   {new Date(booking.pickupTime * 1000).toLocaleTimeString()}
                 </p>
               </div>
             </div>
 
             <hr className="my-6 border-border" />
+            <div>
+              <h3 className="text-2xl font-bold mb-4">Customer Feedback</h3>
+
+              { (
+                <>
+                  {!booking?.review && booking.status === "completed" &&  type === "my_rentals" &&(
+                    <Button onClick={()=>setShowReviewModal(!showReviewModal)} className="text-white w-full">Give Feedback</Button>
+                  )}
+
+                  {!booking?.review && (
+                    <div className="border rounded-xl mt-3 p-4 text-center text-gray-500">
+                      No Feedback Available
+                    </div>
+                  )}
+
+                  {booking?.review && (
+                    <div className="border rounded-xl p-4 shadow-sm">
+                      <div className="flex items-center gap-3 mb-3">
+                        <img
+                          src={booking?.review?.user?.profilePicture}
+                          alt={booking?.review?.user?.name}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                        <div>
+                          <p className="font-semibold">
+                            {booking?.review?.user?.name}
+                          </p>
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: 5 }).map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-4 h-4 ${
+                                  i < booking?.review?.stars
+                                    ? "text-yellow-500 fill-yellow-500"
+                                    : "text-gray-300"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+
+                      <p className="text-gray-600 dark:text-gray-300">
+                        {booking?.review?.description}
+                      </p>
+
+                      <p className="text-xs text-gray-400 mt-2">
+                        {new Date(
+                          booking?.review?.createdAt,
+                        ).toLocaleDateString()}
+                      </p>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
+
+      {/* ── Action bar ── */}
       <div className="w-full px-6 py-6 border-t border-border flex gap-3 justify-center">
-           {type === "customer_rental" ? (
+        {type === "customer_rental" ? (
           <div className="w-100">
             <PickupCaptchaDialog
+              refetchBookings={refetch}
               bookingId={booking._id}
-              productInfo={{ ProductName: product.name, productImg: product.images[0] ?? "https://placehold.co/600x400" }}
-              disabled={!isReadyForPickup && booking.status !== "In Progress"}
+              productInfo={{
+                ProductName: product.name,
+                productImg: product.images[0] ?? "https://placehold.co/600x400",
+              }}
+              disabled={!isReadyForPickup && booking.status !== "in-progress"}
               trigger={
                 <Button
                   variant={"outline"}
@@ -358,7 +436,7 @@ const OrderDetailsPage = () => {
                 >
                   {booking.status === "pending"
                     ? "Ready for Pickup"
-                    : booking.status === "In Progress"
+                    : booking.status === "in-progress"
                       ? "Mark As Received"
                       : booking.status === "Incomplete"
                         ? "In Complete"
@@ -369,37 +447,85 @@ const OrderDetailsPage = () => {
           </div>
         ) : (
           <div className="w-100">
-             {booking.status === "pending"  && (
-                <>
-                  <Button
-                    variant={"outline"}
-                    onClick={() => setIsReturnModalOpen(true)}
-                    className="w-full border-[1px] border-primary text-primary rounded-xl py-6 text-lg"
-                  >
-                    Mark Item Collected
-                  </Button>
-                  <MarkAsReturnModal
-                    open={isReturnModalOpen}
-                    onOpenChange={setIsReturnModalOpen}
-                  />
-                </>
-              )}
-            {booking.status === "pending" ||
-              (booking.status === "Over Due" && (
-                <>
-                  <Button
-                    variant={"outline"}
-                    onClick={() => setIsReturnModalOpen(true)}
-                    className="w-full border-[1px] border-primary text-primary rounded-xl py-6 text-lg"
-                  >
-                    Mark As Return
-                  </Button>
-                  <MarkAsReturnModal
-                    open={isReturnModalOpen}
-                    onOpenChange={setIsReturnModalOpen}
-                  />
-                </>
-              ))}
+            {booking.status === "pending" && (
+              <>
+                <Button
+                  variant={"outline"}
+                  onClick={() => setIsReturnModalOpen(true)}
+                  className="w-full border-[1px] border-primary text-primary rounded-xl py-6 text-lg"
+                >
+                  Mark Item Collected
+                </Button>
+                <MarkItemCollected
+                  open={isReturnModalOpen}
+                  onOpenChange={setIsReturnModalOpen}
+                  type={"pickup"}
+                  product={reviewProduct}
+                  bookingId={booking._id}
+                  onScanned={(text) => setScannedId(text)}
+                  onEvidenceSubmit={(files) => {
+                    const images = files.filter((f) =>
+                      f.type.startsWith("image/"),
+                    );
+                    const videos = files.filter((f) =>
+                      f.type.startsWith("video/"),
+                    );
+                    updateBooking(
+                      { id: bookingId, type: "pickup", images, videos },
+                      {
+                        onSuccess: () => {
+                          setIsReturnModalOpen(false);
+                          refetch();
+                        },
+                        onError: (err) => console.error("Error:", err),
+                      },
+                    );
+                  }}
+                  isSubmitting={isUpdating}
+
+                />
+              </>
+            )}
+
+            {booking.status === "in-progress" && (
+              <>
+                <Button
+                  variant={"outline"}
+                  onClick={() => setIsReturnModalOpen(true)}
+                  className="w-full border-[1px] border-primary text-primary rounded-xl py-6 text-lg"
+                >
+                  Mark As Return
+                </Button>
+                <MarkItemCollected
+                  open={isReturnModalOpen}
+                  type={"dropOff"}
+                  onOpenChange={setIsReturnModalOpen}
+                  product={reviewProduct}
+                  bookingId={booking._id}
+                  onScanned={(text) => setScannedId(text)}
+                  onEvidenceSubmit={(files) => {
+                    const images = files.filter((f) =>
+                      f.type.startsWith("image/"),
+                    );
+                    const videos = files.filter((f) =>
+                      f.type.startsWith("video/"),
+                    );
+                    updateBooking(
+                      { id: bookingId, type: "dropOff", images, videos },
+                      {
+                        onSuccess: () => {
+                          setIsReturnModalOpen(false);
+                          refetch();
+                        },
+                        onError: (err) => console.error("Error:", err),
+                      },
+                    );
+                  }}
+                  isSubmitting={isUpdating}
+                  onBackToHome={() => router.back()}
+                />
+              </>
+            )}
           </div>
         )}
 
@@ -416,7 +542,24 @@ const OrderDetailsPage = () => {
           </Button>
         )}
       </div>
-
+  
+      {/* ── Modals ── */}
+   <WriteReviewModal
+          open={showReviewModal}
+          onOpenChange={setShowReviewModal}
+          bookingId={bookingId}
+          product={{
+            name: product.name,
+            image: product.images[0] ?? "https://placehold.co/600x400",
+            quantity: booking.quantity,
+            price: booking.perUnitPrice,
+          }}
+          onSuccess={() => { 
+            refetch();
+            setShowReviewModal(false);
+          }}
+        />
+  
       <MediaViewer
         images={product.images}
         initialIndex={activeImageIndex}
@@ -432,18 +575,34 @@ const OrderDetailsPage = () => {
         title="Reject Reasons"
         reasons={RejectReasonContent}
       />
+
       <ConfirmationModal
         isOpen={isRejectionModalOpen}
         onClose={() => setIsRejectionModalOpen(false)}
         onConfirm={handleRejectionModal}
         title=""
-        message={`Are you sure you want to cancel/Reject this booking? Please let us know why by providing a reason fro the cancellation.`}
-        confirmText="Confirm "
+        message="Are you sure you want to cancel/Reject this booking? Please let us know why by providing a reason for the cancellation."
+        confirmText="Confirm"
         cancelText="Cancel"
         type="danger"
         isDangerous={false}
         showIcon={true}
       />
+      {!booking?.isPopupShown && type === "customer_rental" && (
+        <AdjustBookingModal
+          bookingId={booking?._id}
+          isOpen={!booking?.isPopupShown}
+          onClose={() => setShowAdjust(false)}
+          onConfirm={handleAdjustBooking}
+          title="Product Damage"
+          message="Click Adjust Booking if there are any bookings scheduled within the next 24 hours that you want to cancel."
+          confirmText="Adjust Booking"
+          cancelText="Skip"
+          type="danger"
+          isDangerous={false}
+          showIcon={true}
+        />
+      )}
     </div>
   );
 };

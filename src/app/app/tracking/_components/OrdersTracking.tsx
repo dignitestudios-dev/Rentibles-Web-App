@@ -40,12 +40,14 @@ interface OrdersTrackingProps {
   bookings: TrackingBooking[];
   isLoading: boolean;
   type: "customer_rental" | "my_rentals";
+  refetch: () => void;
 }
 
 const OrdersTracking: React.FC<OrdersTrackingProps> = ({
   bookings,
   isLoading,
   type,
+  refetch
 }) => {
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState("all");
@@ -143,6 +145,7 @@ const OrdersTracking: React.FC<OrdersTrackingProps> = ({
                       : booking?.user?._id
                 }
                 type={type}
+                refetch={refetch}
               />
             );
           })

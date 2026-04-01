@@ -70,7 +70,7 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
 
   // API call to fetch availability data for the month
   const { data: availabilityResp, isLoading: availabilityLoading } =
-    useProductAvailability(product._id, queryDate);
+    useProductAvailability(product._id, 1775006536);
 
   // Availability Data Setup
   const availabilityMap = React.useMemo(() => {
@@ -290,6 +290,7 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
     });
     return product.availableDays.includes(dayName);
   };
+
   const hasAvailableSlots = (date: Date): boolean => {
     const dateKey = getDateKey(date);
     const dayData = availabilityMap.get(dateKey);
@@ -425,7 +426,7 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
               if (!isDateAvailable(date)) return true;
 
               // Disable dates with no remaining slots
-              if (!hasAvailableSlots(date)) return true;
+              // if (!hasAvailableSlots(date)) return true;
 
               return false;
             }}
