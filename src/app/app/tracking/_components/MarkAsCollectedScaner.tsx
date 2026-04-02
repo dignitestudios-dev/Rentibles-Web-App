@@ -28,11 +28,12 @@ type MarkItemCollectedProps = {
   onScanned: (decodedText: string) => void;
   onEvidenceSubmit?: (files: File[]) => void;
   onBackToHome?: () => void;
+  onSubmitSuccess?: () => void; // ← NEW: called after successful submission
   isSubmitting?: boolean;
   type: "pickup" | "dropOff";
   // Required for review modal on dropOff
   bookingId?: any;
-  product?:any;
+  product?: any;
 };
 
 type Step = "scan" | "evidence";
@@ -83,7 +84,7 @@ const RentalReturnModal = ({
   onFeedback: () => void;
   onBackToHome: () => void;
 }) => (
-  <Dialog open={open} >
+  <Dialog open={open}>
     <DialogContent className="max-w-sm rounded-3xl p-8 text-center">
       <div className="flex justify-center mb-5">
         <img src="/images/pickup-icon.png" alt="return confirmed" />
@@ -118,7 +119,7 @@ const MarkItemCollected = ({
   onOpenChange,
   onScanned,
   onEvidenceSubmit,
-  onBackToHome,
+  onSubmitSuccess, // ← NEW prop, no internal success modal here
   isSubmitting = false,
   type,
   bookingId,
@@ -127,17 +128,15 @@ const MarkItemCollected = ({
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [step, setStep] = useState<Step>("scan");
   const [previews, setPreviews] = useState<FilePreview[]>([]);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [showReviewModal, setShowReviewModal] = useState(false);
   const prevIsSubmitting = useRef(false);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
 
-  // ── Auto-advance to success when mutation settles ────────────────────────
+  // ── Auto-advance: when isSubmitting flips false → notify parent ──────────
   useEffect(() => {
     if (prevIsSubmitting.current && !isSubmitting && step === "evidence") {
       onOpenChange(false);
-      setShowSuccessModal(true);
+      onSubmitSuccess?.(); // ← delegate success handling to parent
     }
     prevIsSubmitting.current = isSubmitting;
   }, [isSubmitting]);
@@ -233,202 +232,157 @@ const MarkItemCollected = ({
     onOpenChange(val);
   };
 
-  // ── Give Feedback → open review modal ───────────────────────────────────
-
-  const handleGiveFeedback = () => {
-    setShowSuccessModal(false);
-    setShowReviewModal(true);
-  };
-
-  const handleBackToHome = () => {
-    setShowSuccessModal(false);
-    onBackToHome?.();
-  };
-
   // ── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <>
-      {/* ── Main Dialog ── */}
-      <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent>
-          {/* STEP 1 — QR Scanner */}
-          {step === "scan" && (
-            <>
-              <DialogHeader className="text-center">
-                <DialogTitle className="text-center text-lg font-semibold">
-                  Scan QR Code
+    <Dialog open={open} onOpenChange={handleClose}>
+      <DialogContent>
+        {/* STEP 1 — QR Scanner */}
+        {step === "scan" && (
+          <>
+            <DialogHeader className="text-center">
+              <DialogTitle className="text-center text-lg font-semibold">
+                Scan QR Code
+              </DialogTitle>
+              <DialogDescription className="text-center text-sm">
+                Point camera at the QR code to continue
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col items-center gap-4 py-4">
+              <div
+                id="qr-reader"
+                className="w-full rounded-lg overflow-hidden"
+              />
+              <p className="text-sm text-muted-foreground">
+                Point camera at QR code to scan
+              </p>
+            </div>
+          </>
+        )}
+
+        {/* STEP 2 — Upload Evidence */}
+        {step === "evidence" && (
+          <>
+            <DialogHeader>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-green-500" />
+                <DialogTitle className="text-lg font-semibold">
+                  Upload {type === "pickup" ? "Pickup" : "Drop-off"} Evidence
                 </DialogTitle>
-                <DialogDescription className="text-center text-sm">
-                  Point camera at the QR code to continue
-                </DialogDescription>
-              </DialogHeader>
-              <div className="flex flex-col items-center gap-4 py-4">
-                <div id="qr-reader" className="w-full rounded-lg overflow-hidden" />
-                <p className="text-sm text-muted-foreground">
-                  Point camera at QR code to scan
-                </p>
               </div>
-            </>
-          )}
+              <DialogDescription className="text-sm">
+                Add photos or videos as proof of{" "}
+                {type === "pickup" ? "pickup" : "drop-off"}
+              </DialogDescription>
+            </DialogHeader>
 
-          {/* STEP 2 — Upload Evidence */}
-          {step === "evidence" && (
-            <>
-              <DialogHeader>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-5 h-5 text-green-500" />
-                  <DialogTitle className="text-lg font-semibold">
-                    Upload {type === "pickup" ? "Pickup" : "Drop-off"} Evidence
-                  </DialogTitle>
-                </div>
-                <DialogDescription className="text-sm">
-                  Add photos or videos as proof of{" "}
-                  {type === "pickup" ? "pickup" : "drop-off"}
-                </DialogDescription>
-              </DialogHeader>
+            <div className="flex gap-3 w-full mt-2">
+              <button
+                onClick={() => imageInputRef.current?.click()}
+                className="flex-1 flex flex-col items-center gap-2 border-2 border-dashed border-border rounded-xl py-5 hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer"
+              >
+                <ImageIcon className="w-6 h-6 text-muted-foreground" />
+                <span className="text-sm font-medium">Photo</span>
+                <span className="text-xs text-muted-foreground">JPG, PNG</span>
+              </button>
 
-              <div className="flex gap-3 w-full mt-2">
-                <button
-                  onClick={() => imageInputRef.current?.click()}
-                  className="flex-1 flex flex-col items-center gap-2 border-2 border-dashed border-border rounded-xl py-5 hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer"
-                >
-                  <ImageIcon className="w-6 h-6 text-muted-foreground" />
-                  <span className="text-sm font-medium">Photo</span>
-                  <span className="text-xs text-muted-foreground">JPG, PNG</span>
-                </button>
+              <button
+                onClick={() => videoInputRef.current?.click()}
+                className="flex-1 flex flex-col items-center gap-2 border-2 border-dashed border-border rounded-xl py-5 hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer"
+              >
+                <VideoIcon className="w-6 h-6 text-muted-foreground" />
+                <span className="text-sm font-medium">Video</span>
+                <span className="text-xs text-muted-foreground">MP4, MOV</span>
+              </button>
+            </div>
 
-                <button
-                  onClick={() => videoInputRef.current?.click()}
-                  className="flex-1 flex flex-col items-center gap-2 border-2 border-dashed border-border rounded-xl py-5 hover:border-primary hover:bg-primary/5 transition-colors cursor-pointer"
-                >
-                  <VideoIcon className="w-6 h-6 text-muted-foreground" />
-                  <span className="text-sm font-medium">Video</span>
-                  <span className="text-xs text-muted-foreground">MP4, MOV</span>
-                </button>
-              </div>
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => handleFileSelect(e, "image")}
+            />
+            <input
+              ref={videoInputRef}
+              type="file"
+              accept="video/*"
+              multiple
+              className="hidden"
+              onChange={(e) => handleFileSelect(e, "video")}
+            />
 
-              <input
-                ref={imageInputRef}
-                type="file"
-                accept="image/*"
-                multiple
-                className="hidden"
-                onChange={(e) => handleFileSelect(e, "image")}
-              />
-              <input
-                ref={videoInputRef}
-                type="file"
-                accept="video/*"
-                multiple
-                className="hidden"
-                onChange={(e) => handleFileSelect(e, "video")}
-              />
-
-              {previews.length > 0 && (
-                <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto mt-1">
-                  {previews.map((preview, index) => (
-                    <div
-                      key={index}
-                      className="relative rounded-lg overflow-hidden aspect-square bg-muted"
-                    >
-                      {preview.type === "image" ? (
-                        <img
-                          src={preview.url}
-                          alt={`Evidence ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <video
-                          src={preview.url}
-                          className="w-full h-full object-cover"
-                          controls
-                        />
-                      )}
-                      <div className="absolute bottom-1 left-1 bg-black/60 rounded px-1">
-                        {preview.type === "image" ? (
-                          <ImageIcon className="w-3 h-3 text-white" />
-                        ) : (
-                          <VideoIcon className="w-3 h-3 text-white" />
-                        )}
-                      </div>
-                      <button
-                        onClick={() => removePreview(index)}
-                        className="absolute cursor-pointer top-1 right-1 bg-black/60 rounded-full p-0.5 hover:bg-black/80 transition-colors"
-                      >
-                        <X className="w-3 h-3 text-white" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <DialogFooter className="flex gap-4 mt-2">
-                <div>
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={previews.length === 0 || isSubmitting}
-                    className="w-full text-white flex items-center justify-center gap-2"
+            {previews.length > 0 && (
+              <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto mt-1">
+                {previews.map((preview, index) => (
+                  <div
+                    key={index}
+                    className="relative rounded-lg overflow-hidden aspect-square bg-muted"
                   >
-                    {isSubmitting ? (
-                      "Submitting..."
+                    {preview.type === "image" ? (
+                      <img
+                        src={preview.url}
+                        alt={`Evidence ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
-                      <>
-                        Submit
-                        <Upload />
-                      </>
+                      <video
+                        src={preview.url}
+                        className="w-full h-full object-cover"
+                        controls
+                      />
                     )}
-                  </Button>
-                </div>
-                <div>
-                  <Button
-                    variant="ghost"
-                    onClick={() => onOpenChange(false)}
-                    className="w-full"
-                    disabled={isSubmitting}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </DialogFooter>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+                    <div className="absolute bottom-1 left-1 bg-black/60 rounded px-1">
+                      {preview.type === "image" ? (
+                        <ImageIcon className="w-3 h-3 text-white" />
+                      ) : (
+                        <VideoIcon className="w-3 h-3 text-white" />
+                      )}
+                    </div>
+                    <button
+                      onClick={() => removePreview(index)}
+                      className="absolute cursor-pointer top-1 right-1 bg-black/60 rounded-full p-0.5 hover:bg-black/80 transition-colors"
+                    >
+                      <X className="w-3 h-3 text-white" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
 
-      {/* ── Pickup Success Modal ── */}
-      {type === "pickup" && (
-        <PickupSuccessModal
-          open={showSuccessModal}
-          onClose={() => {
-            setShowSuccessModal(false);
-            onOpenChange(false);
-          }}
-        />
-      )}
-
-      {/* ── Rental Return Confirmed Modal ── */}
-      {type === "dropOff" && (
-        <RentalReturnModal
-          open={showSuccessModal}
-          onFeedback={handleGiveFeedback}
-          onBackToHome={handleBackToHome}
-        />
-      )}
-
-      {/* ── Write Review Modal (opens after Give Feedback) ── */}
-      {type === "dropOff" && bookingId && product && (
-        <WriteReviewModal
-          open={showReviewModal}
-          onOpenChange={setShowReviewModal}
-          bookingId={bookingId}
-          product={product}
-          onSuccess={() => {
-            onBackToHome?.();
-          }}
-        />
-       )} 
-    </>
+            <DialogFooter className="flex gap-4 mt-2">
+              <div>
+                <Button
+                  onClick={handleSubmit}
+                  disabled={previews.length === 0 || isSubmitting}
+                  className="w-full text-white flex items-center justify-center gap-2"
+                >
+                  {isSubmitting ? (
+                    "Submitting..."
+                  ) : (
+                    <>
+                      Submit
+                      <Upload />
+                    </>
+                  )}
+                </Button>
+              </div>
+              <div>
+                <Button
+                  variant="ghost"
+                  onClick={() => onOpenChange(false)}
+                  className="w-full"
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </DialogFooter>
+          </>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 };
 

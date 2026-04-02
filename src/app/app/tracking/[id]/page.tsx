@@ -26,11 +26,13 @@ import ConfirmationModal from "@/src/components/common/ConfirmationModal";
 import { RejectReasonContent } from "../../users/[id]/_components/reportUserOptions";
 import Link from "next/link";
 import PickupCaptchaDialog from "../_components/PickupCaptchaDialog";
-import MarkItemCollected from "../_components/MarkAsCollectedScaner";
+import MarkItemCollected, {
+  PickupSuccessModal,
+  RentalReturnModal,
+} from "../_components/MarkAsCollectedScaner";
 import EvidenceSlider from "../_components/EvidenceSlider";
 import AdjustBookingModal from "../_components/AdjustBooking";
 import WriteReviewModal from "../_components/Writereviewmodal";
-import { set } from "zod/v3";
 
 // ── Defined outside component — stable hook order ────────────────────────────
 const useCurrentEpoch = () => {
@@ -39,7 +41,7 @@ const useCurrentEpoch = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       setNow(Math.floor(Date.now() / 1000));
-    }, 1000); // update every second
+    }, 1000);
 
     return () => clearInterval(interval);
   }, []);
@@ -64,7 +66,12 @@ const OrderDetailsPage = () => {
   const router = useRouter();
   const { id } = useParams();
   const type = useSearchParams().get("type");
+
+  // ── Modal states ─────────────────────────────────────────────────────────
   const [showReviewModal, setShowReviewModal] = useState(false);
+  const [showPickupSuccess, setShowPickupSuccess] = useState(false);   // ← lifted from MarkItemCollected
+  const [showReturnSuccess, setShowReturnSuccess] = useState(false);   // ← lifted from MarkItemCollected
+
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isMediaViewerOpen, setIsMediaViewerOpen] = useState(false);
   const [distance, setDistance] = useState<number | null>(null);
@@ -73,6 +80,7 @@ const OrderDetailsPage = () => {
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
   const [scannedId, setScannedId] = useState<string | null>(null);
   const [showAdjust, setShowAdjust] = useState(false);
+
   const now = useCurrentEpoch();
   const { latitude, longitude } = useSelector(
     (state: RootState) => state.location,
@@ -90,10 +98,10 @@ const OrderDetailsPage = () => {
 
   const cancelBookingMutation = useCancelBooking();
   const { mutate: updateBooking, isPending: isUpdating } = useUpdateBooking();
+
   useEffect(() => {
-     refetch();
+    refetch();
   }, []);
-  
 
   useEffect(() => {
     if (bookingData?.data && latitude && longitude) {
@@ -174,10 +182,12 @@ const OrderDetailsPage = () => {
     quantity: booking.quantity,
     price: booking.perUnitPrice,
   };
+
   const handleAdjustBooking = () => {
     setShowAdjust(false);
     refetch();
   };
+
   return (
     <div className="bg-background min-h-screen">
       {/* ── Header ── */}
@@ -255,7 +265,7 @@ const OrderDetailsPage = () => {
                 </div>
               </div>
 
-              {/* ── Evidence Slider — shown below product images ── */}
+              {/* ── Evidence Slider ── */}
               {hasEvidence && (
                 <div className="px-4 md:px-0">
                   <EvidenceSlider
@@ -290,7 +300,6 @@ const OrderDetailsPage = () => {
                     {new Date(booking.pickupTime * 1000).toLocaleTimeString()}
                   </span>
                 </div>
-
                 <div className="flex justify-between">
                   <span className="font-medium">Time Left:</span>
                   <span className="text-primary font-semibold">
@@ -395,72 +404,67 @@ const OrderDetailsPage = () => {
             </div>
 
             <hr className="my-6 border-border" />
+
             <div>
-              {
-                !booking?.review&& booking.status === "completed"&&(
-                  <h3 className="text-2xl font-bold mb-4">Customer Feedback</h3>
-                )
-              }
+              {!booking?.review && booking.status === "completed" && (
+                <h3 className="text-2xl font-bold mb-4">Customer Feedback</h3>
+              )}
 
-              {
-                <>
-                  {!booking?.review &&
-                    booking.status === "completed" &&
-                    type === "my_rentals" && (
-                      <Button
-                        onClick={() => setShowReviewModal(!showReviewModal)}
-                        className="text-white w-full"
-                      >
-                        Give Feedback
-                      </Button>
-                    )}
-
-                  {!booking?.review&& booking.status === "completed" && (
-                    <div className="border rounded-xl mt-3 p-4 text-center text-gray-500">
-                      No Feedback Available
-                    </div>
+              <>
+                {!booking?.review &&
+                  booking.status === "completed" &&
+                  type === "my_rentals" && (
+                    <Button
+                      onClick={() => setShowReviewModal(!showReviewModal)}
+                      className="text-white w-full"
+                    >
+                      Give Feedback
+                    </Button>
                   )}
 
-                  {booking?.review && (
-                    <div className="border rounded-xl p-4 shadow-sm">
-                      <div className="flex items-center gap-3 mb-3">
-                        <img
-                          src={booking?.review?.user?.profilePicture}
-                          alt={booking?.review?.user?.name}
-                          className="w-12 h-12 rounded-full object-cover"
-                        />
-                        <div>
-                          <p className="font-semibold">
-                            {booking?.review?.user?.name}
-                          </p>
-                          <div className="flex items-center gap-1">
-                            {Array.from({ length: 5 }).map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`w-4 h-4 ${
-                                  i < booking?.review?.stars
-                                    ? "text-yellow-500 fill-yellow-500"
-                                    : "text-gray-300"
-                                }`}
-                              />
-                            ))}
-                          </div>
+                {!booking?.review && booking.status === "completed" && (
+                  <div className="border rounded-xl mt-3 p-4 text-center text-gray-500">
+                    No Feedback Available
+                  </div>
+                )}
+
+                {booking?.review && (
+                  <div className="border rounded-xl p-4 shadow-sm">
+                    <div className="flex items-center gap-3 mb-3">
+                      <img
+                        src={booking?.review?.user?.profilePicture}
+                        alt={booking?.review?.user?.name}
+                        className="w-12 h-12 rounded-full object-cover"
+                      />
+                      <div>
+                        <p className="font-semibold">
+                          {booking?.review?.user?.name}
+                        </p>
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: 5 }).map((_, i) => (
+                            <Star
+                              key={i}
+                              className={`w-4 h-4 ${
+                                i < booking?.review?.stars
+                                  ? "text-yellow-500 fill-yellow-500"
+                                  : "text-gray-300"
+                              }`}
+                            />
+                          ))}
                         </div>
                       </div>
-
-                      <p className="text-gray-600 dark:text-gray-300">
-                        {booking?.review?.description}
-                      </p>
-
-                      <p className="text-xs text-gray-400 mt-2">
-                        {new Date(
-                          booking?.review?.createdAt,
-                        ).toLocaleDateString()}
-                      </p>
                     </div>
-                  )}
-                </>
-              }
+                    <p className="text-gray-600 dark:text-gray-300">
+                      {booking?.review?.description}
+                    </p>
+                    <p className="text-xs text-gray-400 mt-2">
+                      {new Date(
+                        booking?.review?.createdAt,
+                      ).toLocaleDateString()}
+                    </p>
+                  </div>
+                )}
+              </>
             </div>
           </div>
         </div>
@@ -496,6 +500,7 @@ const OrderDetailsPage = () => {
           </div>
         ) : (
           <div className="w-100">
+            {/* ── Pickup flow ── */}
             {booking.status === "pending" && (
               <>
                 <Button
@@ -508,7 +513,7 @@ const OrderDetailsPage = () => {
                 <MarkItemCollected
                   open={isReturnModalOpen}
                   onOpenChange={setIsReturnModalOpen}
-                  type={"pickup"}
+                  type="pickup"
                   product={reviewProduct}
                   bookingId={booking._id}
                   onScanned={(text) => setScannedId(text)}
@@ -524,17 +529,23 @@ const OrderDetailsPage = () => {
                       {
                         onSuccess: () => {
                           setIsReturnModalOpen(false);
-                          // refetch();
                         },
                         onError: (err) => console.error("Error:", err),
                       },
                     );
                   }}
                   isSubmitting={isUpdating}
+                  onSubmitSuccess={() => {
+                    // scanner modal is already closed by MarkItemCollected
+                    // now safely show pickup success modal
+                    setShowPickupSuccess(true);
+                    refetch();
+                  }}
                 />
               </>
             )}
 
+            {/* ── Drop-off flow ── */}
             {booking.status === "in-progress" && (
               <>
                 <Button
@@ -546,7 +557,7 @@ const OrderDetailsPage = () => {
                 </Button>
                 <MarkItemCollected
                   open={isReturnModalOpen}
-                  type={"dropOff"}
+                  type="dropOff"
                   onOpenChange={setIsReturnModalOpen}
                   product={reviewProduct}
                   bookingId={booking._id}
@@ -563,14 +574,18 @@ const OrderDetailsPage = () => {
                       {
                         onSuccess: () => {
                           setIsReturnModalOpen(false);
-                          // refetch();
                         },
                         onError: (err) => console.error("Error:", err),
                       },
                     );
                   }}
                   isSubmitting={isUpdating}
-                  onBackToHome={() => router.back()}
+                  onSubmitSuccess={() => {
+                    // scanner modal is already closed by MarkItemCollected
+                    // now safely show return success modal
+                    setShowReturnSuccess(true);
+                    refetch();
+                  }}
                 />
               </>
             )}
@@ -591,7 +606,26 @@ const OrderDetailsPage = () => {
         )}
       </div>
 
-      {/* ── Modals ── */}
+      {/* ── Pickup Success Modal (owned by parent, survives scanner close) ── */}
+      <PickupSuccessModal
+        open={showPickupSuccess}
+        onClose={() => setShowPickupSuccess(false)}
+      />
+
+      {/* ── Rental Return Confirmed Modal (owned by parent) ── */}
+      <RentalReturnModal
+        open={showReturnSuccess}
+        onFeedback={() => {
+          setShowReturnSuccess(false);
+          setShowReviewModal(true); // open review modal after feedback click
+        }}
+        onBackToHome={() => {
+          setShowReturnSuccess(false);
+          router.back();
+        }}
+      />
+
+      {/* ── Write Review Modal ── */}
       <WriteReviewModal
         open={showReviewModal}
         onOpenChange={setShowReviewModal}
@@ -636,6 +670,7 @@ const OrderDetailsPage = () => {
         isDangerous={false}
         showIcon={true}
       />
+
       {!booking?.isPopupShown && type === "customer_rental" && (
         <AdjustBookingModal
           bookingId={booking?._id}
