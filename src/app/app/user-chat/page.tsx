@@ -12,6 +12,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   blockUserByChatId,
   ensureChatRoom,
@@ -57,6 +58,8 @@ type ChatDisplayMessage = {
   clientMessageId?: string;
 };
 
+// ─── Outside components (never re-created on parent render) ──────────────────
+
 type MessageInputProps = {
   messageInput: string;
   isBlocked: boolean;
@@ -68,15 +71,6 @@ type MessageInputProps = {
   onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   onSend: () => void;
   onImageSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
-};
-
-type MessageBubbleProps = {
-  message: ChatDisplayMessage;
-  index: number;
-  activeSenderUid: string;
-  displayMessages: ChatDisplayMessage[];
-  formatTime: (date: Date) => string;
-  getDayLabel: (msg: ChatDisplayMessage) => string;
 };
 
 const MessageInput = ({
@@ -142,6 +136,15 @@ const MessageInput = ({
   </div>
 );
 
+type MessageBubbleProps = {
+  message: ChatDisplayMessage;
+  index: number;
+  activeSenderUid: string;
+  displayMessages: ChatDisplayMessage[];
+  formatTime: (date: Date) => string;
+  getDayLabel: (msg: ChatDisplayMessage) => string;
+};
+
 const MessageBubble = ({
   message,
   index,
@@ -171,11 +174,10 @@ const MessageBubble = ({
       )}
       <div className={`flex gap-2 ${isMe ? "justify-end" : "justify-start"}`}>
         <div
-          className={`max-w-[75%] sm:max-w-md rounded-xl px-3 py-2 sm:px-4 ${
-            isMe
-              ? "bg-primary text-primary-foreground rounded-tr-none"
-              : "bg-card text-card-foreground rounded-tl-none border border-border"
-          }`}
+          className={`max-w-[75%] sm:max-w-md rounded-xl px-3 py-2 sm:px-4 ${isMe
+            ? "bg-primary text-primary-foreground rounded-tr-none"
+            : "bg-card text-card-foreground rounded-tl-none border border-border"
+            }`}
         >
           {message.type === "file" ? (
             <div className="relative">
@@ -197,9 +199,8 @@ const MessageBubble = ({
             </p>
           )}
           <span
-            className={`flex items-center justify-end gap-1 text-xs mt-1 ${
-              isMe ? "text-primary-foreground/80" : "text-muted-foreground"
-            }`}
+            className={`flex items-center justify-end gap-1 text-xs mt-1 ${isMe ? "text-primary-foreground/80" : "text-muted-foreground"
+              }`}
           >
             {formatTime(message.time)}
             {isMe && (
@@ -208,11 +209,10 @@ const MessageBubble = ({
                   <CircleAlert className="w-3 h-3 text-red-400" />
                 ) : (
                   <CheckCheck
-                    className={`w-3 h-3 ${
-                      message.isSeen
-                        ? "text-green-500"
-                        : "text-primary-foreground/80"
-                    }`}
+                    className={`w-3 h-3 ${message.isSeen
+                      ? "text-green-500"
+                      : "text-primary-foreground/80"
+                      }`}
                   />
                 )}
               </>
@@ -269,41 +269,42 @@ const MessagesArea = ({
   </div>
 );
 
-// ─── Component ────────────────────────────────────────────────────────────────
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 const UserChat = () => {
+  const searchParams = useSearchParams();
+
+  // ?id=<otherUserId> — set when navigating from a booking/chat button.
+  // When null the page behaves normally: show list, user picks a chat.
+  const targetUserId = searchParams.get("id");
+
   // ── State ──────────────────────────────────────────────────────────────────
   const [messageInput, setMessageInput] = useState("");
   const [messages, setMessages] = useState<FireChatMessage[]>([]);
   const [currentUser, setCurrentUser] = useState<CurrentChatUser | null>(null);
+
   const [activeSenderUid, setActiveSenderUid] = useState("");
   const [activeChatId, setActiveChatId] = useState("");
   const [blockedBy, setBlockedBy] = useState<string[]>([]);
-  const [optimisticImages, setOptimisticImages] = useState<
-    OptimisticImageMessage[]
-  >([]);
+  const [optimisticImages, setOptimisticImages] = useState<OptimisticImageMessage[]>([]);
   const [isSending, setIsSending] = useState(false);
   const [isBlockingAction, setIsBlockingAction] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const [otherUserOnline, setOtherUserOnline] = useState(false);
-
-  // ── Chat list from Firebase (replaces /api/users) ─────────────────────────
-  // Mirrors Flutter's getUserChatsWithDetails() — populated from Firestore,
-  // never from an HTTP endpoint.
   const [chatList, setChatList] = useState<UserChatModel[]>([]);
   const [isLoadingChats, setIsLoadingChats] = useState(true);
-
   const [selectedChat, setSelectedChat] = useState<UserChatModel | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
-
-  // Active chat subscriptions — cancelled when switching conversations
   const cleanupRef = useRef<(() => void) | null>(null);
 
-  // ── Derived block state ────────────────────────────────────────────────────
+  // Prevents the auto-select effect from firing more than once per page load.
+  const autoSelectedRef = useRef(false);
+
+  // ── Derived state ──────────────────────────────────────────────────────────
   const isBlockedByMe = useMemo(
     () => (currentUser ? blockedBy.includes(currentUser.uid) : false),
     [blockedBy, currentUser],
@@ -316,7 +317,6 @@ const UserChat = () => {
 
   const isBlocked = isBlockedByMe || isBlockedByOther;
 
-  // ── Filtered chat list for sidebar search ─────────────────────────────────
   const filteredChats = useMemo(
     () =>
       chatList.filter(
@@ -327,7 +327,7 @@ const UserChat = () => {
     [chatList, searchQuery],
   );
 
-  // ── Merged display messages (persisted + optimistic) ──────────────────────
+
   const displayMessages = useMemo<ChatDisplayMessage[]>(() => {
     const persisted = messages.map((msg) => ({
       id: msg.id,
@@ -341,9 +341,7 @@ const UserChat = () => {
     }));
 
     const deliveredIds = new Set(
-      persisted
-        .map((m) => m.clientMessageId)
-        .filter((v): v is string => Boolean(v)),
+      persisted.map((m) => m.clientMessageId).filter((v): v is string => Boolean(v)),
     );
 
     const pending = optimisticImages
@@ -365,21 +363,16 @@ const UserChat = () => {
     );
   }, [messages, optimisticImages]);
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
+  // ── Pure helpers (stable, no closure over state) ──────────────────────────
   const formatTime = (date: Date): string =>
-    date.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
+    date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true });
 
   const getDayLabel = (msg: ChatDisplayMessage): string => {
     const today = new Date();
     if (msg.time.toDateString() === today.toDateString()) return "Today";
     const yesterday = new Date(today);
     yesterday.setDate(today.getDate() - 1);
-    if (msg.time.toDateString() === yesterday.toDateString())
-      return "Yesterday";
+    if (msg.time.toDateString() === yesterday.toDateString()) return "Yesterday";
     return msg.time.toLocaleDateString([], { month: "short", day: "numeric" });
   };
 
@@ -395,34 +388,78 @@ const UserChat = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
-  // ── Bootstrap current user ────────────────────────────────────────────────
+  // ── Bootstrap ─────────────────────────────────────────────────────────────
   useEffect(() => {
     setCurrentUser(getCurrentChatUser());
   }, []);
 
-  // ── Subscribe to chat list from Firebase ─────────────────────────────────
-  // This is the direct replacement for `fetch("/api/users")`.
-  // It calls subscribeToUserChatsWithDetails() which mirrors Flutter's
-  // getUserChatsWithDetails() stream — no HTTP endpoint needed.
+  // ── Chat list subscription ────────────────────────────────────────────────
   useEffect(() => {
     if (!currentUser?.uid) return;
-
     setIsLoadingChats(true);
-
     const unsub = subscribeToUserChatsWithDetails(currentUser.uid, (chats) => {
       setChatList(chats);
       setIsLoadingChats(false);
     });
-
     return unsub;
   }, [currentUser?.uid]);
 
-  // ── Auto-scroll on new messages ───────────────────────────────────────────
+  // ── Auto-select from URL param (?id=<otherUserId>) ────────────────────────
+  //
+  // Strategy:
+  //   • Wait until the chat list has finished loading (isLoadingChats = false).
+  //   • Run only once per mount (autoSelectedRef guard).
+  //   • Case A — existing chat found in chatList → open it directly.
+  //   • Case B — no existing chat → create the room, build a minimal stub,
+  //               open it. The sidebar will hydrate the real name/avatar once
+  //               the Firestore listener picks up the new doc.
+  useEffect(() => {
+    if (!targetUserId || !currentUser?.uid || isLoadingChats || autoSelectedRef.current)
+      return;
+
+    autoSelectedRef.current = true;
+
+    const existing = chatList.find((c) => c.otherUserId === targetUserId);
+
+    if (existing) {
+      void handleSelectChat(existing);
+    } else {
+      void (async () => {
+        try {
+          const chatId = await resolveSupportChatId(currentUser.uid, targetUserId);
+          await ensureChatRoom(chatId, [currentUser.uid, targetUserId]);
+
+          const stub: UserChatModel = {
+            chatId,
+            otherUserId: targetUserId,
+            name: "Loading…",
+            email: "",
+            profilePicture: undefined,
+            lastMessage: "",
+            lastMessageType: "text",
+            timestamp: null,
+            unreadCount: 0,
+            blockedBy: [],
+          };
+
+          void handleSelectChat(stub);
+        } catch (error) {
+          ErrorToast(
+            error instanceof Error
+              ? `Failed to open chat: ${error.message}`
+              : "Failed to open chat",
+          );
+        }
+      })();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [targetUserId, currentUser?.uid, isLoadingChats, chatList]);
+
+  // ── Standard effects ──────────────────────────────────────────────────────
   useEffect(() => {
     scrollToBottom();
   }, [displayMessages, scrollToBottom]);
 
-  // ── Revoke blob URLs on cleanup ───────────────────────────────────────────
   useEffect(() => {
     return () => {
       optimisticImages.forEach((msg) => {
@@ -432,20 +469,14 @@ const UserChat = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Self online status while chat is open ─────────────────────────────────
   useEffect(() => {
     if (!currentUser?.uid || !selectedChat) return;
-
     const uid = currentUser.uid;
     void setUserOnlineStatus(uid, true);
-
-    const handleVisibility = () =>
-      void setUserOnlineStatus(uid, !document.hidden);
+    const handleVisibility = () => void setUserOnlineStatus(uid, !document.hidden);
     const handleBeforeUnload = () => void setUserOnlineStatus(uid, false);
-
     document.addEventListener("visibilitychange", handleVisibility);
     window.addEventListener("beforeunload", handleBeforeUnload);
-
     return () => {
       void setUserOnlineStatus(uid, false);
       document.removeEventListener("visibilitychange", handleVisibility);
@@ -453,19 +484,14 @@ const UserChat = () => {
     };
   }, [currentUser?.uid, selectedChat]);
 
-  // ── Subscribe to other user's online status ───────────────────────────────
   useEffect(() => {
     if (!selectedChat) return;
-    const unsub = subscribeToUserStatus(
-      selectedChat.otherUserId,
-      (isOnline) => {
-        setOtherUserOnline(isOnline);
-      },
+    const unsub = subscribeToUserStatus(selectedChat.otherUserId, (isOnline) =>
+      setOtherUserOnline(isOnline),
     );
     return unsub;
   }, [selectedChat]);
 
-  // ── Subscription cleanup on chat switch / unmount ─────────────────────────
   useEffect(() => {
     return () => {
       cleanupRef.current?.();
@@ -473,9 +499,8 @@ const UserChat = () => {
     };
   }, [selectedChat]);
 
-  // ── Open a conversation from the sidebar ─────────────────────────────────
+  // ── Open a conversation ───────────────────────────────────────────────────
   const handleSelectChat = async (chat: UserChatModel) => {
-    // Tear down the previous listeners immediately
     cleanupRef.current?.();
     cleanupRef.current = null;
 
@@ -487,13 +512,10 @@ const UserChat = () => {
     setIsLoadingMessages(true);
 
     try {
-      // The chatId already exists in the UserChatModel — no need to resolve
       const chatId = chat.chatId;
-
       setActiveChatId(chatId);
       setActiveSenderUid(currentUser?.uid ?? "");
 
-      // Ensure the Firestore doc exists (idempotent)
       await ensureChatRoom(chatId, [currentUser?.uid ?? "", chat.otherUserId]);
 
       const unsubMessages = subscribeToMessages(chatId, (items) => {
@@ -502,9 +524,9 @@ const UserChat = () => {
         void markMessagesAsSeen(chatId, currentUser?.uid ?? "");
       });
 
-      const unsubBlockedBy = subscribeToBlockedBy(chatId, (list) => {
-        setBlockedBy(list);
-      });
+      const unsubBlockedBy = subscribeToBlockedBy(chatId, (list) =>
+        setBlockedBy(list),
+      );
 
       cleanupRef.current = () => {
         unsubMessages();
@@ -520,20 +542,14 @@ const UserChat = () => {
     }
   };
 
-  // ── Send text message ─────────────────────────────────────────────────────
+  // ── Send text ─────────────────────────────────────────────────────────────
   const handleSendMessage = async () => {
     const content = messageInput.trim();
     if (!content || !activeSenderUid || !activeChatId || !selectedChat) return;
-
     if (isBlocked) {
-      ErrorToast(
-        isBlockedByMe
-          ? "Unblock this user to send messages."
-          : "You cannot send messages to this user.",
-      );
+      ErrorToast(isBlockedByMe ? "Unblock this user to send messages." : "You cannot send messages to this user.");
       return;
     }
-
     try {
       setIsSending(true);
       await sendChatMessage({
@@ -542,17 +558,11 @@ const UserChat = () => {
         receiverId: selectedChat.otherUserId,
         content,
         type: "text",
-        receiverData: {
-          name: selectedChat.name,
-          email: selectedChat.email,
-          profilePicture: selectedChat.profilePicture,
-        },
+        receiverData: { name: selectedChat.name, email: selectedChat.email, profilePicture: selectedChat.profilePicture },
       });
       setMessageInput("");
     } catch (error) {
-      ErrorToast(
-        error instanceof Error ? error.message : "Failed to send message",
-      );
+      ErrorToast(error instanceof Error ? error.message : "Failed to send message");
     } finally {
       setIsSending(false);
     }
@@ -565,64 +575,34 @@ const UserChat = () => {
     }
   };
 
-  // ── Send image (optimistic) ───────────────────────────────────────────────
+  // ── Send image ────────────────────────────────────────────────────────────
   const handleSelectImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
-
     if (!file || !activeSenderUid || !activeChatId || !selectedChat) return;
-
     if (isBlocked) {
-      ErrorToast(
-        isBlockedByMe
-          ? "Unblock this user to send images."
-          : "You can't send images. You're blocked.",
-      );
+      ErrorToast(isBlockedByMe ? "Unblock this user to send images." : "You can't send images. You're blocked.");
       return;
     }
-
     const tempId = `temp-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     const previewUrl = URL.createObjectURL(file);
-
     setOptimisticImages((prev) => [
       ...prev,
-      {
-        id: tempId,
-        content: previewUrl,
-        type: "file",
-        senderUid: activeSenderUid,
-        receiverId: selectedChat.otherUserId,
-        isSeen: false,
-        localCreatedAt: new Date(),
-        deliveryStatus: "sending",
-      },
+      { id: tempId, content: previewUrl, type: "file", senderUid: activeSenderUid, receiverId: selectedChat.otherUserId, isSeen: false, localCreatedAt: new Date(), deliveryStatus: "sending" },
     ]);
-
     try {
       const imageUrl = await uploadChatImage(file);
       await sendChatMessage({
-        chatId: activeChatId,
-        senderUid: activeSenderUid,
-        receiverId: selectedChat.otherUserId,
-        content: imageUrl,
-        type: "file",
-        clientMessageId: tempId,
-        receiverData: {
-          name: selectedChat.name,
-          email: selectedChat.email,
-          profilePicture: selectedChat.profilePicture,
-        },
+        chatId: activeChatId, senderUid: activeSenderUid, receiverId: selectedChat.otherUserId,
+        content: imageUrl, type: "file", clientMessageId: tempId,
+        receiverData: { name: selectedChat.name, email: selectedChat.email, profilePicture: selectedChat.profilePicture },
       });
       URL.revokeObjectURL(previewUrl);
       setOptimisticImages((prev) => prev.filter((m) => m.id !== tempId));
     } catch (error) {
-      ErrorToast(
-        error instanceof Error ? error.message : "Unable to send image",
-      );
+      ErrorToast(error instanceof Error ? error.message : "Unable to send image");
       setOptimisticImages((prev) =>
-        prev.map((m) =>
-          m.id === tempId ? { ...m, deliveryStatus: "failed" } : m,
-        ),
+        prev.map((m) => m.id === tempId ? { ...m, deliveryStatus: "failed" } : m),
       );
     }
   };
@@ -646,50 +626,20 @@ const UserChat = () => {
     }
   };
 
-  // ── Sub-components ────────────────────────────────────────────────────────
+  // ── Render helpers (these are safe inline because they have no hooks) ─────
 
-  const ChatAvatar = ({
-    name,
-    profilePicture,
-    size = "md",
-  }: {
-    name: string;
-    profilePicture?: string;
-    size?: "sm" | "md";
-  }) => {
+  const ChatAvatar = ({ name, profilePicture, size = "md" }: { name: string; profilePicture?: string; size?: "sm" | "md" }) => {
     const dim = size === "sm" ? "w-8 h-8 text-[10px]" : "w-10 h-10 text-xs";
     return (
-      <div
-        className={`${dim} rounded-full bg-muted flex-shrink-0 overflow-hidden`}
-      >
+      <div className={`${dim} rounded-full bg-muted flex-shrink-0 overflow-hidden`}>
         {profilePicture ? (
-          <img
-            src={profilePicture}
-            alt={name}
-            className="w-full h-full object-cover"
-          />
+          <img src={profilePicture} alt={name} className="w-full h-full object-cover" />
         ) : (
           <div className="w-full h-full bg-primary/20 flex items-center justify-center font-semibold">
-            {name
-              .split(" ")
-              .map((n) => n[0])
-              .join("")
-              .toUpperCase()
-              .slice(0, 2)}
+            {name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)}
           </div>
         )}
       </div>
-    );
-  };
-
-  const BlockBanner = () => {
-    if (!isBlocked) return null;
-    return (
-      <p className="text-sm text-center text-muted-foreground mb-3">
-        {isBlockedByMe
-          ? "You have blocked this user. Unblock to send messages."
-          : "You have been blocked by this user."}
-      </p>
     );
   };
 
@@ -700,58 +650,36 @@ const UserChat = () => {
         <div className="flex items-center justify-between px-4 py-3 md:px-6">
           <div className="flex items-center gap-3">
             {onBack && (
-              <button
-                onClick={onBack}
-                className="p-2 hover:bg-muted rounded-md transition-colors"
-                aria-label="Back"
-              >
+              <button onClick={onBack} className="p-2 hover:bg-muted rounded-md transition-colors" aria-label="Back">
                 <ArrowLeft className="w-5 h-5" />
               </button>
             )}
             <div className="relative">
-              <ChatAvatar
-                name={selectedChat.name}
-                profilePicture={selectedChat.profilePicture}
-              />
+              <ChatAvatar name={selectedChat.name} profilePicture={selectedChat.profilePicture} />
               {otherUserOnline && (
                 <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-background rounded-full" />
               )}
             </div>
             <div>
-              <h1 className="text-base font-semibold leading-tight">
-                {selectedChat.name}
-              </h1>
+              <h1 className="text-base font-semibold leading-tight">{selectedChat.name}</h1>
               <p className="text-xs text-muted-foreground">
                 {otherUserOnline ? "Online" : selectedChat.email}
               </p>
             </div>
           </div>
-
           {activeChatId && (
             <button
               onClick={handleToggleBlock}
               disabled={isBlockingAction || isBlockedByOther}
-              title={
-                isBlockedByOther
-                  ? "You have been blocked"
-                  : isBlockedByMe
-                    ? "Unblock user"
-                    : "Block user"
-              }
+              title={isBlockedByOther ? "You have been blocked" : isBlockedByMe ? "Unblock user" : "Block user"}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-lg border border-border hover:bg-muted transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {isBlockingAction ? (
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : isBlockedByMe ? (
-                <>
-                  <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
-                  <span>Unblock</span>
-                </>
+                <><ShieldCheck className="w-3.5 h-3.5 text-green-500" /><span>Unblock</span></>
               ) : (
-                <>
-                  <ShieldBan className="w-3.5 h-3.5 text-destructive" />
-                  <span>Block</span>
-                </>
+                <><ShieldBan className="w-3.5 h-3.5 text-destructive" /><span>Block</span></>
               )}
             </button>
           )}
@@ -763,8 +691,17 @@ const UserChat = () => {
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="bg-background flex h-screen overflow-hidden">
-      {/* ── Left Sidebar: existing chats from Firebase ── */}
-      <div className="w-full md:w-80 border-r border-border bg-background flex flex-col flex-shrink-0">
+
+      {/* ── Left Sidebar ──────────────────────────────────────────────────── */}
+      {/* When ?id= is present and a chat is open, hide the sidebar on mobile
+          so the user lands directly in the conversation (same as Flutter's
+          Navigator.push behaviour). On desktop the sidebar is always shown. */}
+      <div
+        className={`border-r border-border bg-background flex flex-col flex-shrink-0 ${selectedChat && targetUserId
+          ? "hidden md:flex md:w-80"  // deep-linked: full-screen chat on mobile
+          : "w-full md:w-80 flex"     // normal: sidebar visible
+          }`}
+      >
         <div className="sticky top-0 z-30 bg-background border-b border-border p-4">
           <h2 className="text-lg font-semibold mb-3">Messages</h2>
           <div className="relative">
@@ -790,9 +727,7 @@ const UserChat = () => {
             </p>
           ) : (
             filteredChats.map((chat) => {
-              const isMeBlocked = currentUser
-                ? chat.blockedBy.includes(currentUser.uid)
-                : false;
+              const isMeBlocked = currentUser ? chat.blockedBy.includes(currentUser.uid) : false;
               const isOtherBlocked = chat.blockedBy.includes(chat.otherUserId);
               const chatIsBlocked = isMeBlocked || isOtherBlocked;
 
@@ -800,48 +735,29 @@ const UserChat = () => {
                 <button
                   key={chat.chatId}
                   onClick={() => void handleSelectChat(chat)}
-                  className={`w-full px-4 py-3 flex items-center gap-3 border-b border-border transition-all hover:bg-muted text-left ${
-                    selectedChat?.chatId === chat.chatId ? "bg-primary/10" : ""
-                  }`}
+                  className={`w-full px-4 py-3 flex items-center gap-3 border-b border-border transition-all hover:bg-muted text-left ${selectedChat?.chatId === chat.chatId ? "bg-primary/10" : ""
+                    }`}
                 >
                   <div className="relative flex-shrink-0">
-                    <ChatAvatar
-                      name={chat.name}
-                      profilePicture={chat.profilePicture}
-                    />
-                    {/* Unread badge */}
+                    <ChatAvatar name={chat.name} profilePicture={chat.profilePicture} />
                     {chat.unreadCount > 0 && (
                       <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
                         {chat.unreadCount > 99 ? "99+" : chat.unreadCount}
                       </span>
                     )}
                   </div>
-
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-1">
-                      <p className="font-medium text-sm truncate">
-                        {chat.name}
-                      </p>
+                      <p className="font-medium text-sm truncate">{chat.name}</p>
                       {chat.timestamp && (
                         <span className="text-[10px] text-muted-foreground flex-shrink-0">
-                          {chat.timestamp.toDate().toLocaleDateString([], {
-                            month: "short",
-                            day: "numeric",
-                          })}
+                          {chat.timestamp.toDate().toLocaleDateString([], { month: "short", day: "numeric" })}
                         </span>
                       )}
                     </div>
                     <div className="flex items-center gap-1">
-                      {chatIsBlocked && (
-                        <ShieldBan className="w-3 h-3 text-muted-foreground flex-shrink-0" />
-                      )}
-                      <p
-                        className={`text-xs truncate ${
-                          chat.unreadCount > 0
-                            ? "text-foreground font-medium"
-                            : "text-muted-foreground"
-                        }`}
-                      >
+                      {chatIsBlocked && <ShieldBan className="w-3 h-3 text-muted-foreground flex-shrink-0" />}
+                      <p className={`text-xs truncate ${chat.unreadCount > 0 ? "text-foreground font-medium" : "text-muted-foreground"}`}>
                         {formatLastMessagePreview(chat)}
                       </p>
                     </div>
@@ -899,7 +815,15 @@ const UserChat = () => {
       {/* ── Mobile: Full-screen Chat Overlay ── */}
       {selectedChat && (
         <div className="md:hidden absolute inset-0 bg-background z-20 flex flex-col">
-          <ChatHeader onBack={() => setSelectedChat(null)} />
+          <ChatHeader
+            onBack={
+              // Deep-linked (?id=...) → go back to the booking page.
+              // Normal selection → deselect and show the chat list.
+              targetUserId
+                ? () => window.history.back()
+                : () => setSelectedChat(null)
+            }
+          />
           <div className="flex-1 flex flex-col min-h-0">
             <MessagesArea
               isLoadingMessages={isLoadingMessages}

@@ -42,8 +42,6 @@ export default function UserProfilePage() {
     enabled: Boolean(userId),
   });
 
-  console.log("userData", userData);
-
   const tabs: { id: Tab; label: string }[] = [
     { id: "information", label: "Information" },
     { id: "listing", label: "Listing" },

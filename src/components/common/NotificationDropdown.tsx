@@ -48,7 +48,7 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
     if (metaType === "product" && n.metaData?.product?._id) {
       router.push(`/app/products/${n.metaData.product._id}`);
     } else if (metaType === "booking" && n.metaData?.booking?._id) {
-      router.push(`/app/rental-tracking/${n.metaData.booking._id}`);
+      router.push(`/app/tracking/${n.metaData.booking._id}`);
     }
 
     onItemClick?.(n);
@@ -127,19 +127,12 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
         <DropdownMenuSeparator />
 
         <div className="p-3 text-center">
-          {hasNextPage ? (
-            <button
-              onClick={loadMore}
-              disabled={isFetching}
-              className="text-sm text-primary hover:underline"
-            >
-              {isFetching ? "Loading..." : "Show more"}
-            </button>
-          ) : (
-            <span className="text-sm text-muted-foreground">
-              No more notifications
-            </span>
-          )}
+          <button
+            onClick={() => router.push("/app/notifications")}
+            className="text-sm text-primary hover:underline"
+          >
+            Show more
+          </button>
         </div>
       </DropdownMenuContent>
     </DropdownMenu>

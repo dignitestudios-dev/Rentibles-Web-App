@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Calendar, Check, ChevronDown } from "lucide-react";
+import { Calendar, ChevronDown } from "lucide-react";
 import { DaySchedule, DaysOfWeek } from "@/src/types/index.type";
 
 export const defaultDaysOfWeek: DaySchedule[] = [
@@ -29,17 +29,12 @@ const DaySelector: React.FC<DaySelectorProps> = ({
   label = "Select Days",
   showSelectedCount = true,
 }) => {
-  const [days, setDays] = useState<DaysOfWeek>(
-    selectedDays || defaultDaysOfWeek,
+  const [internalDays, setInternalDays] = useState<DaysOfWeek>(
+    selectedDays ?? defaultDaysOfWeek,
   );
+  const days = selectedDays ?? internalDays;
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (selectedDays) {
-      setDays(selectedDays);
-    }
-  }, [selectedDays]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -61,12 +56,31 @@ const DaySelector: React.FC<DaySelectorProps> = ({
     };
   }, [isOpen]);
 
+  const isAllSelected = days.every((day) => day.enabled);
+
   const handleToggleDay = (dayId: string) => {
     const updatedDays = days.map((day) =>
       day.id === dayId ? { ...day, enabled: !day.enabled } : day,
     );
 
-    setDays(updatedDays);
+    if (!selectedDays) {
+      setInternalDays(updatedDays);
+    }
+
+    if (onChange) {
+      onChange(updatedDays);
+    }
+  };
+
+  const handleToggleAllDays = () => {
+    const updatedDays = days.map((day) => ({
+      ...day,
+      enabled: !isAllSelected,
+    }));
+
+    if (!selectedDays) {
+      setInternalDays(updatedDays);
+    }
 
     if (onChange) {
       onChange(updatedDays);
@@ -126,27 +140,30 @@ const DaySelector: React.FC<DaySelectorProps> = ({
       {/* Days List with Toggles - Absolute Positioned Dropdown */}
       {isOpen && (
         <div className="absolute z-50 w-full mt-2 bg-background text-foreground border border-gray-200 rounded-lg shadow-lg divide-y divide-gray-200 max-h-80 overflow-y-auto">
+          <div className="flex items-center justify-between px-4 py-3">
+            <div className="flex items-center gap-3">
+              <Calendar className="w-4 h-4 text-muted-foreground" />
+              <div>
+                <p className="font-medium text-foreground">All Days</p>
+                {/* <p className="text-xs text-muted-foreground">
+                  Select or deselect every day
+                </p> */}
+              </div>
+            </div>
+            <Switch
+              checked={isAllSelected}
+              onCheckedChange={handleToggleAllDays}
+              aria-label="Toggle all days"
+            />
+          </div>
+
           {days.map((day) => (
             <div
               key={day.id}
-              className={`flex items-center justify-between px-4 py-3 transition-colors`}
+              className="flex items-center justify-between px-4 py-3 transition-colors"
             >
               <div className="flex items-center gap-3">
-                {/* <div
-                  className={`w-6 h-6 rounded-full flex items-center justify-center transition-all ${
-                    day.enabled ? "bg-blue-600" : "bg-gray-200"
-                  }`}
-                >
-                  {day.enabled && <Check className="w-4 h-4 text-white" />}
-                </div> */}
-
-                <p
-                  className={`font-medium ${
-                    day.enabled ? "text-foreground" : "text-foreground"
-                  }`}
-                >
-                  {day.day}
-                </p>
+                <p className="font-medium text-foreground">{day.day}</p>
               </div>
 
               <Switch

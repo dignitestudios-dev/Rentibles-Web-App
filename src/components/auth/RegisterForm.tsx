@@ -115,6 +115,7 @@ const RegisterForm = () => {
         idToken = firebaseRes.idToken;
       } catch (firebaseError: any) {
         if (firebaseError.code === "auth/email-already-in-use") {
+          ErrorToast("Email already registered.");
           const loginRes = await firebaseLogin(data.email, data.password);
           idToken = loginRes.idToken;
         } else {
@@ -158,6 +159,7 @@ const RegisterForm = () => {
     mutationFn: (payload: FormData) => RegisterUser(payload),
 
     onSuccess: (response) => {
+      console.log("🚀 ~ RegisterForm ~ response:", response);
       invalidateAll();
       const userInfo = response?.data;
       const normalizedUser = {
@@ -179,6 +181,7 @@ const RegisterForm = () => {
     },
     onError: (err) => {
       const message = getAxiosErrorMessage(err);
+      console.log("🚀 ~ RegisterForm ~ message:", message);
       setError("root", { type: "manual", message });
       ErrorToast(message);
     },
@@ -253,7 +256,9 @@ const RegisterForm = () => {
         />
       </div>
       {errors.image && (
-        <p className="text-red-500 text-xs mt-1">{errors.image.message as string}</p>
+        <p className="text-red-500 text-xs mt-1">
+          {errors.image.message as string}
+        </p>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -333,7 +338,7 @@ const RegisterForm = () => {
           placeholder="Password"
           error={errors.password?.message}
           {...register("password")}
-          maxLength={16}
+          maxLength={32}
           inputType="password"
         />
 
@@ -342,7 +347,7 @@ const RegisterForm = () => {
           placeholder="Confirm Password"
           error={errors.confirmPassword?.message}
           {...register("confirmPassword")}
-          maxLength={16}
+          maxLength={32}
           inputType="password"
         />
       </div>

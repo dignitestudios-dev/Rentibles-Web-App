@@ -8,7 +8,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Navigation, A11y } from "swiper/modules";
 import type { SwiperRef } from "swiper/react";
 import { useProductReviewById } from "@/src/lib/api/products";
-import { NoDataFound } from "@/public/images/export";
+import { DummyAvatar, NoDataFound } from "@/public/images/export";
 
 interface ReviewSectionProps {
   productId: string;
@@ -61,7 +61,7 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
                 <div className="flex items-start gap-4 mb-4">
                   <div className="w-12 h-12 rounded-full p-1 bg-primary ring-2 ring-primary shrink-0 overflow-hidden">
                     <img
-                      src={review.user.profilePicture}
+                      src={review.user.profilePicture || DummyAvatar}
                       alt={review.user.name}
                       className="w-full h-full object-fill rounded-full"
                     />

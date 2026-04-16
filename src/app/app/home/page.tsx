@@ -1,5 +1,5 @@
 "use client";
-import  { Suspense, useState, useCallback } from "react";
+import { Suspense, useState, useCallback } from "react";
 import LocationAndSearch from "./_components/location-and-search";
 import Stores from "./_components/stores";
 import Categories from "./_components/categories";

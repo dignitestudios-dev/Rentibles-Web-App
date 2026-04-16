@@ -189,11 +189,47 @@ export const calculateDistanceMiles = (
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(toRad(lat1)) *
-      Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+    Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) *
+    Math.sin(dLon / 2);
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
   return R * c;
 };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const getFirebaseErrorMessage = (error: any) => {
+  switch (error.code) {
+    case "auth/email-already-in-use":
+      return "This email is already registered.";
+
+    case "auth/wrong-password":
+    case "auth/invalid-credential":
+      return "Incorrect password. Please try again.";
+
+    case "auth/user-not-found":
+      return "No account found with this email.";
+
+    case "auth/too-many-requests":
+      return "Too many attempts. Try again later.";
+
+    default:
+      return "Something went wrong. Please try again.";
+  }
+};
+
+
+
+export const formatTimeToDisplay = (isoString: string) => {
+  const date = new Date(isoString);
+
+  // Options for 12-hour clock (hour, minute, am/pm)
+  const options = {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  };
+
+  return date.toLocaleTimeString('en-US', options);
+}

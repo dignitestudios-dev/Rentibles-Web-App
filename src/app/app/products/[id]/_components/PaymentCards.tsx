@@ -36,7 +36,10 @@ const PaymentCards: React.FC<PaymentCardsProps> = ({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">Select Payment Method</Button>
+        <Button variant="outline">
+          <CreditCard className="w-4 h-4 mr-2" />
+          Select Payment Method
+        </Button>
       </DialogTrigger>
 
 <DialogContent className="max-w-md max-h-[90vh] flex flex-col">

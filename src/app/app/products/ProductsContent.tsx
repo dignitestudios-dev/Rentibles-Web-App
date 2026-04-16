@@ -1,7 +1,7 @@
 "use client";
 import { ArrowLeft, Search } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import Categories from "../home/_components/categories";
 import ProductCard from "../home/_components/product-card";
@@ -14,14 +14,18 @@ import { createWishlist } from "@/src/lib/query/queryFn";
 import { getAxiosErrorMessage } from "@/src/utils/errorHandlers";
 import { ErrorToast } from "@/src/components/common/Toaster";
 import Loader from "@/src/components/common/Loader";
+import Pagination from "@/src/components/common/Pagination";
 import { useRequireLogin } from "@/src/hooks/useRequireLogin";
 import { RootState } from "@/src/lib/store";
+
+const ITEMS_PER_PAGE = 10;
 
 const ProductsContent = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { requireLogin } = useRequireLogin();
   const queryClient = useQueryClient();
+  const [currentPage, setCurrentPage] = useState(1);
   const { latitude, longitude } = useSelector(
     (state: RootState) => state.location,
   );
@@ -29,10 +33,15 @@ const ProductsContent = () => {
   // Get selected category from URL params
   const selectedCategory = searchParams?.get("category");
 
+  const effectivePage =
+    selectedCategory || latitude || longitude ? 1 : currentPage;
+
   const { data: products, isLoading } = useProducts({
     categoryId: selectedCategory || undefined,
     latitude: latitude || undefined,
     longitude: longitude || undefined,
+    page: effectivePage,
+    limit: ITEMS_PER_PAGE,
   });
 
   // Track wishlist state locally
@@ -78,6 +87,12 @@ const ProductsContent = () => {
 
   const handleProductClick = (productId: string) => {
     router.push(`/app/products/${productId}`);
+  };
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Scroll to top for better UX
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
@@ -156,6 +171,17 @@ const ProductsContent = () => {
                   </div>
                 </div>
               )}
+
+              {/* Pagination */}
+              {products?.pagination?.totalPages &&
+                products.pagination.totalPages > 1 && (
+                  <Pagination
+                    currentPage={products.pagination.currentPage || 1}
+                    totalPages={products.pagination.totalPages}
+                    onPageChange={handlePageChange}
+                    isLoading={isLoading}
+                  />
+                )}
             </div>
           </>
         )}

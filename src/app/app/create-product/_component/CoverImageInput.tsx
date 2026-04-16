@@ -19,7 +19,7 @@ export const CoverImageInput: React.FC<CoverImageInputProps> = ({
   prefilledImage,
   onChange,
   error,
-  maxSizeMB = 5,
+  maxSizeMB = 20,
 }) => {
   const [preview, setPreview] = React.useState<{
     type: "file" | "url";
@@ -92,7 +92,7 @@ export const CoverImageInput: React.FC<CoverImageInputProps> = ({
   return (
     <div className="space-y-3 w-full">
       <div
-        className={`border border-dashed rounded-2xl h-56 flex items-center justify-center transition min-h-[440px] overflow-hidden
+        className={`border border-dashed rounded-lg sm:rounded-2xl h-56 flex items-center justify-center transition min-h-[300px] sm:min-h-[440px] overflow-hidden
           ${
             error
               ? "border-red-500 text-red-500"
@@ -116,7 +116,7 @@ export const CoverImageInput: React.FC<CoverImageInputProps> = ({
               <button
                 type="button"
                 onClick={replaceImage}
-                className="opacity-0 group-hover:opacity-100 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-3 shadow-lg transition px-4 text-sm font-medium"
+                className="opacity-0 group-hover:opacity-100 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-2 sm:p-3 shadow-lg transition px-3 sm:px-4 text-xs sm:text-sm font-medium"
                 title="Replace with new image"
               >
                 Replace
@@ -136,20 +136,22 @@ export const CoverImageInput: React.FC<CoverImageInputProps> = ({
               htmlFor="cover-image"
               className="flex flex-col items-center justify-center w-full h-full cursor-pointer"
             >
-              <Camera size={36} />
-              <p className="mt-3 font-medium">
+              <Camera size={24} className="sm:w-9 sm:h-9" />
+              <p className="mt-2 sm:mt-3 font-medium text-xs sm:text-sm text-center px-2">
                 {showNewUploadOption
                   ? "Upload New Cover Image"
-                  : "Upload a High Quality Cover Image (must not exceed 20MB) "}
+                  : "Upload Cover Image (max 20MB)"}
               </p>
-              <p className="text-xs mt-1 opacity-70">PNG, JPG, JPEG or WEBP</p>
+              <p className="text-xs mt-1 opacity-70 px-2 text-center">
+                PNG, JPG, JPEG, WEBP
+              </p>
             </label>
           </>
         )}
       </div>
 
       {/* Error */}
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {error && <p className="text-xs sm:text-sm text-red-500">{error}</p>}
     </div>
   );
 };

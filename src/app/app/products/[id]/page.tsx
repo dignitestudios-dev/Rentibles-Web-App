@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import {
   ArrowLeft,
   Minus,
@@ -33,8 +34,9 @@ import Link from "next/link";
 import { useMutation } from "@tanstack/react-query";
 import { createWishlist } from "@/src/lib/query/queryFn";
 import { reportUser } from "@/src/lib/api/user";
-import ConfirmationModal from "@/src/components/common/ConfirmationModal";
 import Loader from "@/src/components/common/Loader";
+import ReportProductModal from "./_components/ReportProductModal";
+import { ReportProductContent } from "./_components/reportProductOptions";
 
 const ProductDetailsPage = () => {
   const router = useRouter();
@@ -82,7 +84,7 @@ const ProductDetailsPage = () => {
   const [isLiked, setIsLiked] = useState<boolean>(false);
 
   // Report state
-  const [showReportConfirmation, setShowReportConfirmation] =
+  const [showReportProductForm, setShowReportProductForm] =
     useState<boolean>(false);
   const [isReporting, setIsReporting] = useState<boolean>(false);
 
@@ -143,19 +145,28 @@ const ProductDetailsPage = () => {
   };
 
   // Handle report product
-  const handleReportProduct = async () => {
+  const handleReportProduct = async (reasonId: string, details?: string) => {
     if (!product?.user?._id) return;
+
+    const selectedReason = ReportProductContent.find(
+      (reason) => reason.id === reasonId,
+    );
 
     setIsReporting(true);
     try {
       const payload = {
-        title: "Inappropriate Product",
-        description: "Inappropriate Product",
+        title: selectedReason?.label || "Report Product",
+        description:
+          reasonId === "other"
+            ? details || selectedReason?.description || "Other"
+            : selectedReason?.description ||
+              selectedReason?.label ||
+              "Report Product",
         userId: product.user._id,
       };
       await reportUser(payload);
       SuccessToast("Product reported successfully");
-      setShowReportConfirmation(false);
+      setShowReportProductForm(false);
     } catch (error) {
       const message = getAxiosErrorMessage(error || "Failed to report product");
       ErrorToast(message);
@@ -167,18 +178,17 @@ const ProductDetailsPage = () => {
   // Extract product data from API response
 
   // const product = apiResponse?.data;
-//show thumbnail first
-const rawProduct = apiResponse?.data;
+  //show thumbnail first
+  const rawProduct = apiResponse?.data;
 
-const product = rawProduct
-  ? {
-      ...rawProduct,
-      images: rawProduct.cover
-        ? [rawProduct.cover, ...(rawProduct.images || [])]
-        : rawProduct.images || [],
-    }
-  : null;
-
+  const product = rawProduct
+    ? {
+        ...rawProduct,
+        images: rawProduct.cover
+          ? [rawProduct.cover, ...(rawProduct.images || [])]
+          : rawProduct.images || [],
+      }
+    : null;
 
   // Initialize selected card on mount or when cardsData changes
   useEffect(() => {
@@ -210,9 +220,7 @@ const product = rawProduct
 
   // Guard clause for loading/error states
   if (isLoading) {
-    return (
-      <Loader show={isLoading} />
-    );
+    return <Loader show={isLoading} />;
   }
 
   if (isError || !product) {
@@ -363,7 +371,7 @@ const product = rawProduct
                   />
                 </button>
                 <button
-                  onClick={() => setShowReportConfirmation(true)}
+                  onClick={() => setShowReportProductForm(true)}
                   className="p-2 hover:bg-muted rounded-md transition-colors"
                   title="Report product"
                 >
@@ -373,14 +381,19 @@ const product = rawProduct
             )}
             <Link
               href={
-                product?.user?._id ? `/app/users/${product?.user?._id}` : "#"
+                product?.user?._id
+                  ? `/app/users/${product?.user?._id}`
+                  : `/app/store/${product?.store?._id}`
               }
               className="cursor-pointer w-12 h-12 rounded-full p-1 bg-primary ring-[.5px] ring-primary overflow-hidden"
             >
-              <img
+              <Image
                 src={storeImage}
                 alt="store"
+                width={48}
+                height={48}
                 className="w-full h-full object-cover rounded-full"
+                unoptimized
               />
             </Link>
           </div>
@@ -460,9 +473,23 @@ const product = rawProduct
               storeInfo={storeInfo}
               isLiked={isLiked}
               onWishlistToggle={handleWishlistToggle}
-              onReport={() => setShowReportConfirmation(true)}
+              onReport={() => setShowReportProductForm(true)}
               isWishlistLoading={wishlistMutation.isPending}
             />
+
+            <div className="my-2">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-lg font-semibold">Contracted Product</h3>
+                <Button> View Contract </Button>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">
+                  Booking made simple! Check your email, sign the contract, and
+                  you&apos;re good to pickup. No signature, no item -- it&apos;s
+                  that easy!
+                </p>
+              </div>
+            </div>
 
             {product?.user?._id !== userId && (
               <>
@@ -630,18 +657,13 @@ const product = rawProduct
         />
       )}
 
-      {/* Report Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={showReportConfirmation}
-        onClose={() => setShowReportConfirmation(false)}
-        onConfirm={handleReportProduct}
+      <ReportProductModal
+        isOpen={showReportProductForm}
+        onClose={() => setShowReportProductForm(false)}
+        onSubmit={handleReportProduct}
+        isLoading={isReporting}
         title="Report Product"
-        message="Are you sure you want to report this product? This will help us maintain quality standards."
-        confirmText="Yes, Report"
-        cancelText="Cancel"
-        type="danger"
-        isDangerous={false}
-        showIcon={true}
+        reasons={ReportProductContent}
       />
     </div>
   );

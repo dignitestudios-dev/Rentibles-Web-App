@@ -73,19 +73,37 @@ export interface ReportBookingDamageResponse {
   data?: unknown;
 }
 
+export interface ReportIssuePayload {
+  bookingId: string;
+  title: string;
+  description: string;
+}
+
+export interface ReportIssueResponse {
+  success: boolean;
+  message?: string;
+  data?: unknown;
+}
+
 // ─── API functions ────────────────────────────────────────────────────────────
 
-export const createBooking = async (payload: CreateBookingPayload): Promise<CreateBookingResponse> => {
+export const createBooking = async (
+  payload: CreateBookingPayload,
+): Promise<CreateBookingResponse> => {
   const { data } = await axiosInstance.post("/booking", payload);
   return data;
 };
 
-export const cancelBooking = async (payload: CancelBookingPayload): Promise<CancelBookingResponse> => {
+export const cancelBooking = async (
+  payload: CancelBookingPayload,
+): Promise<CancelBookingResponse> => {
   const { data } = await axiosInstance.post("/booking/cancel", payload);
   return data;
 };
 
-export const createReview = async (payload: CreateReviewPayload): Promise<CreateReviewResponse> => {
+export const createReview = async (
+  payload: CreateReviewPayload,
+): Promise<CreateReviewResponse> => {
   const { data } = await axiosInstance.post("/review", payload);
   return data;
 };
@@ -94,14 +112,18 @@ export const reportBookingDamage = async (
   payload: ReportBookingDamagePayload,
 ): Promise<ReportBookingDamageResponse> => {
   const { data } = await axiosInstance.post("/booking/damage", payload);
-  console.log(data,"data---checking")
+  console.log(data, "data---checking");
   return data;
 };
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
 
-export const useCreateBooking = (): UseMutationResult<CreateBookingResponse, Error, CreateBookingPayload, unknown> =>
-  useMutation({ mutationFn: createBooking });
+export const useCreateBooking = (): UseMutationResult<
+  CreateBookingResponse,
+  Error,
+  CreateBookingPayload,
+  unknown
+> => useMutation({ mutationFn: createBooking });
 
 export const useTracking = (
   params: GetTrackingParams,
@@ -127,14 +149,26 @@ export const useBookingDetails = (
     enabled: options?.enabled ?? !!id,
   });
 
-export const useCancelBooking = (): UseMutationResult<CancelBookingResponse, Error, CancelBookingPayload, unknown> =>
-  useMutation({ mutationFn: cancelBooking });
+export const useCancelBooking = (): UseMutationResult<
+  CancelBookingResponse,
+  Error,
+  CancelBookingPayload,
+  unknown
+> => useMutation({ mutationFn: cancelBooking });
 
-export const useUpdateBooking = (): UseMutationResult<UpdateBookingResponse, Error, UpdateBookingPayload, unknown> =>
-  useMutation({ mutationFn: updateBooking });
+export const useUpdateBooking = (): UseMutationResult<
+  UpdateBookingResponse,
+  Error,
+  UpdateBookingPayload,
+  unknown
+> => useMutation({ mutationFn: updateBooking });
 
-export const useCreateReview = (): UseMutationResult<CreateReviewResponse, Error, CreateReviewPayload, unknown> =>
-  useMutation({ mutationFn: createReview });
+export const useCreateReview = (): UseMutationResult<
+  CreateReviewResponse,
+  Error,
+  CreateReviewPayload,
+  unknown
+> => useMutation({ mutationFn: createReview });
 
 export const useReportBookingDamage = (): UseMutationResult<
   ReportBookingDamageResponse,
@@ -142,3 +176,17 @@ export const useReportBookingDamage = (): UseMutationResult<
   ReportBookingDamagePayload,
   unknown
 > => useMutation({ mutationFn: reportBookingDamage });
+
+export const reportIssue = async (
+  payload: ReportIssuePayload,
+): Promise<ReportIssueResponse> => {
+  const { data } = await axiosInstance.post("/report", payload);
+  return data;
+};
+
+export const useReportIssue = (): UseMutationResult<
+  ReportIssueResponse,
+  Error,
+  ReportIssuePayload,
+  unknown
+> => useMutation({ mutationFn: reportIssue });

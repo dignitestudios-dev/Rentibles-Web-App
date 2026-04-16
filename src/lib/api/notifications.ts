@@ -68,13 +68,9 @@ export const markNotificationAsRead = async (
   return data;
 };
 
-export const useMarkNotificationAsRead = (): UseMutationResult<
-  MarkNotificationAsReadResponse,
-  Error,
-  MarkNotificationAsReadPayload,
-  unknown
-> => {
-  return useMutation({
-    mutationFn: markNotificationAsRead,
+export const usePaginatedNotifications = (page: number, limit: number = 10) => {
+  return useQuery<GetNotificationsResponse, Error>({
+    queryKey: ["notifications", "paginated", page, limit],
+    queryFn: () => fetchNotifications(page, limit),
   });
 };

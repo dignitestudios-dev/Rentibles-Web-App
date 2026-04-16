@@ -15,11 +15,14 @@ import Submitted_img from "./submitted_img.png";
 import Checkmark_orange from "./checkmark_orange.png";
 import ProductSearch from "./searchImg.png";
 import NoDataFound from "./no_data.png";
+import AppleIcon from "./appleIcon.png";
+import DummyAvatar from "./dummyAvatar.jpg";
 
 export {
   OrangeLogo,
   WhiteLogo,
   GoogleIcon,
+  AppleIcon,
   ForgotPassword,
   Otp_Icon,
   Eng_flag,
@@ -34,4 +37,5 @@ export {
   Checkmark_orange,
   ProductSearch,
   NoDataFound,
+  DummyAvatar,
 };

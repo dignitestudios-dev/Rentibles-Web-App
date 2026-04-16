@@ -8,7 +8,7 @@ import { UpdateProductPayload, updateProductSchema } from "@/src/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertCircle, Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useForm, SubmitHandler, Resolver } from "react-hook-form";
+import { useForm, SubmitHandler, Resolver, useWatch } from "react-hook-form";
 import DaySelector from "./DaySelector";
 import { DaysOfWeek, User } from "@/src/types/index.type";
 import { useAppDispatch, useAppSelector } from "@/src/lib/store/hooks";
@@ -142,6 +142,7 @@ const UpdateProductForm: React.FC<Props> = ({ productId }) => {
     reset,
     clearErrors,
     watch,
+    control,
     formState: { errors },
   } = useForm<UpdateProductPayload>({
     // this cast forces the resolver to match our strict payload type
@@ -149,6 +150,27 @@ const UpdateProductForm: React.FC<Props> = ({ productId }) => {
       updateProductSchema,
     ) as Resolver<UpdateProductPayload>,
   });
+
+  // Watch category and subcategory form fields to sync with local state
+  const watchedCategoryId = useWatch({ control, name: "category" });
+  const watchedSubCategoryId = useWatch({ control, name: "subCategory" });
+
+  // Sync watched category to local state (triggers subcategory fetch)
+  useEffect(() => {
+    if (watchedCategoryId && watchedCategoryId !== selectedCategoryId) {
+      setSelectedCategoryId(watchedCategoryId);
+    }
+  }, [watchedCategoryId, selectedCategoryId]);
+
+  // Sync watched subcategory to local state
+  useEffect(() => {
+    if (
+      watchedSubCategoryId &&
+      watchedSubCategoryId !== selectedSubCategoryId
+    ) {
+      setSelectedSubCategoryId(watchedSubCategoryId);
+    }
+  }, [watchedSubCategoryId, selectedSubCategoryId]);
 
   // read the images once so we don't pass the callable watch function itself to props
   const watchedImages = watch("images");
@@ -229,6 +251,7 @@ const UpdateProductForm: React.FC<Props> = ({ productId }) => {
       SuccessToast("Product updated");
       // navigate to updated product page
       queryClient.invalidateQueries({ queryKey: ["productById"] });
+      queryClient.invalidateQueries({ queryKey: ["products"] });
       router.push(`/app/products/${productId}`);
     },
     onError: (err) => {
@@ -308,7 +331,7 @@ const UpdateProductForm: React.FC<Props> = ({ productId }) => {
       </div>
 
       <form action="" onSubmit={handleSubmit(onsubmit)}>
-        <div className="space-y-6">
+        <div className="flex w-full gap-2 items-stretch ">
           <ProductImagesInput
             value={watchedImages}
             prefilledImages={productResp?.data?.images || []}
@@ -317,18 +340,20 @@ const UpdateProductForm: React.FC<Props> = ({ productId }) => {
             error={errors.images?.message}
           />
 
-          <CoverImageInput
-            value={watch("coverImage")} // New upload only
-            prefilledImage={productResp?.data?.cover} // Prefilled URL from backend
-            onChange={(file) =>
-              file &&
-              setValue("coverImage", file, {
-                shouldValidate: true,
-                shouldDirty: true,
-              })
-            }
-            error={errors.coverImage?.message as string}
-          />
+          <div className="w-[50%]  flex-shrink-0">
+            <CoverImageInput
+              value={watch("coverImage")} // New upload only
+              prefilledImage={productResp?.data?.cover} // Prefilled URL from backend
+              onChange={(file) =>
+                file &&
+                setValue("coverImage", file, {
+                  shouldValidate: true,
+                  shouldDirty: true,
+                })
+              }
+              error={errors.coverImage?.message as string}
+            />
+          </div>
         </div>
 
         <div className="mt-8 space-y-6">
@@ -359,10 +384,7 @@ const UpdateProductForm: React.FC<Props> = ({ productId }) => {
               label="Category"
               placeholder="Select Category"
               options={categoryOptions}
-              onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                setSelectedCategoryId(e.target.value);
-                setValue("category", e.target.value, { shouldValidate: true });
-              }}
+              {...register("category")}
               error={errors?.category?.message}
             />
           </div>
@@ -377,12 +399,7 @@ const UpdateProductForm: React.FC<Props> = ({ productId }) => {
                     : "Select Subcategory"
                 }
                 options={subCategoryOptions}
-                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                  setSelectedSubCategoryId(e.target.value);
-                  setValue("subCategory", e.target.value, {
-                    shouldValidate: true,
-                  });
-                }}
+                {...register("subCategory")}
                 disabled={isSubCategoriesLoading || !selectedCategoryId}
                 error={errors?.subCategory?.message}
               />

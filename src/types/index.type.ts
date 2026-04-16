@@ -580,6 +580,12 @@ export interface GetProductsResponse {
   success: boolean;
   message: string;
   data: Products[];
+  pagination?: {
+    currentPage?: number;
+    itemsPerPage?: number;
+    totalItems?: number;
+    totalPages?: number;
+  };
 }
 
 export interface ICategory {
@@ -602,6 +608,13 @@ export interface IUser {
   profilePicture: string;
 }
 
+export interface IStore {
+  _id: string;
+  name: string;
+  email: string;
+  profilePicture: string;
+}
+
 export interface IPickupLocation {
   type: "Point";
   coordinates: [number, number]; // [lng, lat]
@@ -619,7 +632,7 @@ export interface IProductDetails {
   subCategory: ISubCategory;
 
   user: IUser;
-  store: string | null;
+  store: IStore;
 
   quantity: number;
   totalQuantity?: number;

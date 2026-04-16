@@ -4,17 +4,16 @@ import { Button } from "@/components/ui/button";
 import GoogleMapComponent from "@/src/components/common/GoogleMapPicker";
 import { InputField } from "@/src/components/common/InputField";
 import { SelectField } from "@/src/components/common/SelectField";
-import ToggleSelectField from "@/src/components/common/ToggleSelectField";
 import { CreateProductPayload, createProductSchema } from "@/src/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, Camera, ImagePlus, Plus, X } from "lucide-react";
+import { AlertCircle, Plus } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import DaySelector from "./DaySelector";
 import { DaysOfWeek, User } from "@/src/types/index.type";
 import { useAppDispatch, useAppSelector } from "@/src/lib/store/hooks";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { createProduct, getCategories } from "@/src/lib/query/queryFn";
+import { useMutation } from "@tanstack/react-query";
+import { createProduct } from "@/src/lib/query/queryFn";
 import {
   setCategoriesError,
   setCategoriesLoading,
@@ -22,7 +21,6 @@ import {
 } from "@/src/lib/store/feature/appSlice";
 import { useCategories, useSubCategories } from "@/src/lib/api/products";
 import { ErrorToast, SuccessToast } from "@/src/components/common/Toaster";
-import { Input } from "@/components/ui/input";
 import { getAxiosErrorMessage } from "@/src/utils/errorHandlers";
 import { toUnixTimestamp } from "@/src/utils/helperFunctions";
 import { ProductImagesInput } from "./ProductImagesInput";
@@ -91,7 +89,7 @@ const CreateProductForm = () => {
   const userId = user?._id;
 
   // ✅ call query
-  const { data: userData, isLoading: usersLoading } = useUser(userId ?? "", {
+  const { data: userData } = useUser(userId ?? "", {
     enabled: Boolean(userId),
   });
 
@@ -117,12 +115,8 @@ const CreateProductForm = () => {
   const { categories } = useAppSelector((state) => state.categories);
 
   const { data, isLoading, isError, error } = useCategories();
-  const {
-    data: subCategoriesData,
-    isLoading: isSubCategoriesLoading,
-    isError: isSubCategoriesError,
-    error: subCategoriesError,
-  } = useSubCategories(selectedCategoryId);
+  const { data: subCategoriesData, isLoading: isSubCategoriesLoading } =
+    useSubCategories(selectedCategoryId);
 
   useEffect(() => {
     if (userData?.data) {
@@ -188,10 +182,9 @@ const CreateProductForm = () => {
     register,
     handleSubmit,
     setValue,
-    setError,
     clearErrors,
     watch,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<CreateProductPayload>({
     resolver: zodResolver(createProductSchema),
     defaultValues: {
@@ -250,6 +243,22 @@ const CreateProductForm = () => {
       ErrorToast(message);
     },
   });
+
+  // ✅ Warn user about unsaved changes before leaving or refreshing
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isDirty && !createProductMutation.isPending) {
+        e.preventDefault();
+        e.returnValue = "";
+        return "";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isDirty, createProductMutation.isPending]);
 
   const onsubmit = (data: CreateProductPayload) => {
     const formData = new FormData();
@@ -371,50 +380,53 @@ const CreateProductForm = () => {
   const pickupTime = watch("pickupTime");
 
   const timeToMinutes = (time: string) => {
-  const [hours, minutes] = time.split(":").map(Number);
-  return hours * 60 + minutes;
-};
+    const [hours, minutes] = time.split(":").map(Number);
+    return hours * 60 + minutes;
+  };
 
-// const filteredDropOffOptions = TimeOptions.filter((option) => {
-//   if (!pickupTime) return TimeOptions;
+  // const filteredDropOffOptions = TimeOptions.filter((option) => {
+  //   if (!pickupTime) return TimeOptions;
 
-//   const pickupMinutes = timeToMinutes(pickupTime);
-//   const dropMinutes = timeToMinutes(option.value);
+  //   const pickupMinutes = timeToMinutes(pickupTime);
+  //   const dropMinutes = timeToMinutes(option.value);
 
-//   return dropMinutes >= pickupMinutes + 240;
-// });
+  //   return dropMinutes >= pickupMinutes + 240;
+  // });
 
+  const filteredDropOffOptions = TimeOptions.filter((option) => {
+    if (!pickupTime) return TimeOptions;
 
-const filteredDropOffOptions = TimeOptions.filter((option) => {
-  if (!pickupTime) return TimeOptions;
+    const pickupMinutes = timeToMinutes(pickupTime);
+    const dropMinutes = timeToMinutes(option.value);
 
-  const pickupMinutes = timeToMinutes(pickupTime);
-  const dropMinutes = timeToMinutes(option.value);
+    // Only allow forward progression OR next-day clearly
+    if (dropMinutes <= pickupMinutes) return false;
 
-  // Only allow forward progression OR next-day clearly
-  if (dropMinutes <= pickupMinutes) return false;
+    return dropMinutes >= pickupMinutes + 240;
+  });
 
-  return dropMinutes >= pickupMinutes + 240;
-});
-
-const pickupTimeOptions = TimeOptions.filter(
-  (option) => option.value <= "19:00"
-);
+  const pickupTimeOptions = TimeOptions.filter(
+    (option) => option.value <= "19:00",
+  );
 
   return (
-    <div className=" mx-auto px-4 py-6 text-white">
-      <div className="flex items-center gap-3 mb-8">
-        <h1 className="text-xl font-semibold text-foreground">Add Product</h1>
+    <div className="mx-auto px-3 sm:px-4 py-4 sm:py-6 text-white">
+      <div className="flex items-center gap-3 mb-6 sm:mb-8">
+        <h1 className="text-lg sm:text-xl font-semibold text-foreground">
+          Add Product
+        </h1>
       </div>
       <form action="" onSubmit={handleSubmit(onsubmit)}>
-        <div className="flex w-full gap-6 items-stretch ">
-          <ProductImagesInput
-            value={watch("images")}
-            onChange={handleImageChange}
-            error={errors.images?.message}
-          />
+        <div className="grid grid-cols-1 lg:grid-cols-2 w-full gap-4 sm:gap-6 items-stretch">
+          <div className="w-full">
+            <ProductImagesInput
+              value={watch("images")}
+              onChange={handleImageChange}
+              error={errors.images?.message}
+            />
+          </div>
 
-          <div className="w-[50%] flex-shrink-0">
+          <div className="w-full">
             <CoverImageInput
               value={watch("coverImage")}
               onChange={(file) => {
@@ -430,8 +442,8 @@ const pickupTimeOptions = TimeOptions.filter(
           </div>
         </div>
 
-        <div className="mt-8 space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="mt-6 sm:mt-8 space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <InputField
               label="Product Name"
               error={errors.productName?.message}
@@ -446,7 +458,7 @@ const pickupTimeOptions = TimeOptions.filter(
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <InputField
               inputType="numeric"
               label="Quantity"
@@ -463,7 +475,7 @@ const pickupTimeOptions = TimeOptions.filter(
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {selectedCategoryId && (
               <SelectField
                 label="Sub Category"
@@ -473,14 +485,13 @@ const pickupTimeOptions = TimeOptions.filter(
                     : "Select Subcategory"
                 }
                 options={subCategoryOptions}
-                // value={selectedSubCategoryId}
                 onChange={handleSubCategoryChange}
                 disabled={isSubCategoriesLoading || !selectedCategoryId}
                 error={errors?.subCategory?.message}
               />
             )}
 
-            <div className="">
+            <div>
               <DaySelector
                 selectedDays={selectedDays}
                 onChange={handleDaysChange}
@@ -488,7 +499,7 @@ const pickupTimeOptions = TimeOptions.filter(
                 showSelectedCount={true}
               />
               {errors?.availableDays && (
-                <p className="text-red-600 text-sm font-medium">
+                <p className="text-red-600 text-xs sm:text-sm font-medium">
                   {errors?.availableDays?.message}
                 </p>
               )}
@@ -496,33 +507,33 @@ const pickupTimeOptions = TimeOptions.filter(
           </div>
         </div>
 
-        <div className="flex items-start gap-2 mt-6 text-sm text-muted-foreground">
-          <AlertCircle size={16} />
+        <div className="flex items-start gap-2 mt-4 sm:mt-6 text-xs sm:text-sm text-muted-foreground">
+          <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
           <p>
             The product location you select must match your device&apos;s
             timezone for accurate booking.
           </p>
         </div>
 
-       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
- <SelectField
-  label="Pick Up Time"
-  placeholder="Select"
-  options={pickupTimeOptions}
-  error={errors.pickupTime?.message}
-  {...register("pickupTime")}
-/>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-4 sm:mt-6">
+          <SelectField
+            label="Pick Up Time"
+            placeholder="Select"
+            options={pickupTimeOptions}
+            error={errors.pickupTime?.message}
+            {...register("pickupTime")}
+          />
 
-  <SelectField
-    label="Drop Off Time"
-    placeholder="Select"
-    options={filteredDropOffOptions}
-    error={errors.dropOffTime?.message}
-    {...register("dropOffTime")}
-  />
-</div>
+          <SelectField
+            label="Drop Off Time"
+            placeholder="Select"
+            options={filteredDropOffOptions}
+            error={errors.dropOffTime?.message}
+            {...register("dropOffTime")}
+          />
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-4 sm:mt-6">
           <InputField
             inputType="numeric"
             label="Hourly Price"
@@ -538,11 +549,11 @@ const pickupTimeOptions = TimeOptions.filter(
             {...register("dailyPrice")}
           />
         </div>
-        <div className="flex gap-4 mt-6">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-4 sm:mt-6">
           <button
             onClick={handleSameAsProfile}
             type="button"
-            className="bg-primary cursor-pointer h-12 rounded-xl px-6 text-sm font-medium"
+            className="bg-primary cursor-pointer h-10 sm:h-12 rounded-xl px-4 sm:px-6 text-xs sm:text-sm font-medium whitespace-nowrap"
           >
             Same as Profile
           </button>
@@ -550,7 +561,7 @@ const pickupTimeOptions = TimeOptions.filter(
           <button
             type="button"
             onClick={handleClearLocation}
-            className="bg-accent text-foreground h-12  cursor-pointer rounded-xl px-6 flex items-center gap-2 text-sm font-medium"
+            className="bg-accent text-foreground h-10 sm:h-12 cursor-pointer rounded-xl px-4 sm:px-6 flex items-center justify-center gap-2 text-xs sm:text-sm font-medium whitespace-nowrap"
           >
             <Plus size={16} />
             Add New
@@ -558,9 +569,11 @@ const pickupTimeOptions = TimeOptions.filter(
         </div>
 
         {isMap && (
-          <p className="text-lg text-foreground mt-3"> Pickup Address</p>
+          <p className="text-base sm:text-lg text-foreground mt-3 sm:mt-4">
+            Pickup Address
+          </p>
         )}
-        <div className="mt-3">
+        <div className="mt-3 sm:mt-4">
           {/* <GoogleMapComponent onLocationSelect={onLocationSelect} /> */}
           <GoogleMapComponent
             onLocationSelect={onLocationSelect}
@@ -579,8 +592,8 @@ const pickupTimeOptions = TimeOptions.filter(
             error={errors?.location?.message}
           />
         </div>
-        <div className="flex items-start gap-2 my-6 text-sm text-muted-foreground">
-          <AlertCircle size={16} />
+        <div className="flex items-start gap-2 my-4 sm:my-6 text-xs sm:text-sm text-muted-foreground">
+          <AlertCircle size={14} className="mt-0.5 flex-shrink-0" />
           <p>
             Every booking comes with peace of mind! You&apos;ll get an email to
             review and sign the contract before pickup-every time. No signature,
@@ -592,7 +605,7 @@ const pickupTimeOptions = TimeOptions.filter(
           <Loader show={createProductMutation.isPending} />
         ) : (
           <Button
-            className="w-full h-12 "
+            className="w-full h-10 sm:h-12 text-sm sm:text-base"
             type="submit"
             disabled={createProductMutation.isPending}
           >

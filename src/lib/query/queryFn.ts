@@ -430,4 +430,3 @@ export const updateBooking = async (
 
   return data;
 };
-

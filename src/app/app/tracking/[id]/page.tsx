@@ -1,6 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import {
   ArrowLeft,
   Star,
@@ -15,7 +17,10 @@ import {
   useCancelBooking,
   useUpdateBooking,
 } from "@/src/lib/api/booking";
-import { calculateDistanceMiles } from "@/src/utils/helperFunctions";
+import {
+  calculateDistanceMiles,
+  formatTimeToDisplay,
+} from "@/src/utils/helperFunctions";
 import { useSelector } from "react-redux";
 import { RootState } from "@/src/lib/store";
 import Loader from "@/src/components/common/Loader";
@@ -33,15 +38,16 @@ import MarkItemCollected, {
 import EvidenceSlider from "../_components/EvidenceSlider";
 import AdjustBookingModal from "../_components/AdjustBooking";
 import WriteReviewModal from "../_components/Writereviewmodal";
-
-// ── Defined outside component — stable hook order ────────────────────────────
+import ReportIssueModal from "../_components/ReportIssueModal";
+import { useReportIssue } from "@/src/lib/api/booking";
+import { DummyAvatar, NoDataFound } from "@/public/images/export";
 const useCurrentEpoch = () => {
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
 
   useEffect(() => {
     const interval = setInterval(() => {
       setNow(Math.floor(Date.now() / 1000));
-    }, 1000);
+    }, 100000);
 
     return () => clearInterval(interval);
   }, []);
@@ -69,8 +75,8 @@ const OrderDetailsPage = () => {
 
   // ── Modal states ─────────────────────────────────────────────────────────
   const [showReviewModal, setShowReviewModal] = useState(false);
-  const [showPickupSuccess, setShowPickupSuccess] = useState(false);   // ← lifted from MarkItemCollected
-  const [showReturnSuccess, setShowReturnSuccess] = useState(false);   // ← lifted from MarkItemCollected
+  const [showPickupSuccess, setShowPickupSuccess] = useState(false); // ← lifted from MarkItemCollected
+  const [showReturnSuccess, setShowReturnSuccess] = useState(false); // ← lifted from MarkItemCollected
 
   const [activeImageIndex, setActiveImageIndex] = useState(0);
   const [isMediaViewerOpen, setIsMediaViewerOpen] = useState(false);
@@ -80,6 +86,7 @@ const OrderDetailsPage = () => {
   const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
   const [scannedId, setScannedId] = useState<string | null>(null);
   const [showAdjust, setShowAdjust] = useState(false);
+  const [isReportIssueModalOpen, setIsReportIssueModalOpen] = useState(false);
 
   const now = useCurrentEpoch();
   const { latitude, longitude } = useSelector(
@@ -98,6 +105,7 @@ const OrderDetailsPage = () => {
 
   const cancelBookingMutation = useCancelBooking();
   const { mutate: updateBooking, isPending: isUpdating } = useUpdateBooking();
+  const reportIssueMutation = useReportIssue();
 
   useEffect(() => {
     refetch();
@@ -145,6 +153,8 @@ const OrderDetailsPage = () => {
   if (!bookingData?.data) return <div>No data found</div>;
 
   const booking = bookingData.data;
+  console.log("🚀 ~ OrderDetailsPage ~ booking: 154 tracking", booking);
+
   const product = booking.product;
   const detail = booking.detail;
 
@@ -160,6 +170,19 @@ const OrderDetailsPage = () => {
     const seconds = booking.dropOffTime - timeNow;
     timeLeftText = formatTimeLeft(seconds);
   }
+
+  const createdTime = Math.floor(new Date(booking.createdAt).getTime() / 1000);
+
+  const remainingSeconds = Math.max(0, 3600 - (now - createdTime));
+
+  const remainingMinutes = Math.floor(remainingSeconds / 60);
+
+  const remainingTime =
+    remainingMinutes > 0
+      ? `${remainingMinutes} minute(s)`
+      : `${remainingSeconds} sec`;
+
+  const isWithinOneHour = now - createdTime <= 3600;
 
   const isReadyForPickup =
     now >= booking.pickupTime && now <= booking.dropOffTime;
@@ -178,7 +201,7 @@ const OrderDetailsPage = () => {
 
   const reviewProduct = {
     name: product.name,
-    image: product.images[0] ?? "https://placehold.co/600x400",
+    image: product.images[0] ?? NoDataFound,
     quantity: booking.quantity,
     price: booking.perUnitPrice,
   };
@@ -200,16 +223,30 @@ const OrderDetailsPage = () => {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-lg font-semibold">Tracking Dashboard</h1>
-          <div className="w-10 h-10 rounded-full p-1 bg-primary ring-2 ring-primary overflow-hidden">
-            <img
-              src={
-                booking?.type === "own"
-                  ? booking?.user?.profilePicture
-                  : booking.customer.profilePicture
-              }
-              alt="user"
-              className="w-full h-full object-cover rounded-full"
-            />
+          <div className="flex items-center gap-8">
+            {booking?.type === "own" && (
+              <button
+                className="text-primary bg-primary/10 px-4 py-2 rounded-md hover:bg-primary/20 transition-colors cursor-pointer"
+                onClick={() =>
+                  router.push(`/app/user-chat?id=${booking?.user?.uid}`)
+                }
+              >
+                Chat
+              </button>
+            )}
+            <div className="w-10 h-10 rounded-full p-1 bg-primary ring-2 ring-primary overflow-hidden">
+              <Image
+                src={
+                  booking?.type === "own"
+                    ? booking?.user?.profilePicture
+                    : booking.customer.profilePicture
+                }
+                alt="user"
+                width={40}
+                height={40}
+                className="w-full h-full object-cover rounded-full"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -281,7 +318,7 @@ const OrderDetailsPage = () => {
 
           {/* ── Right col: order info ── */}
           <div className="lg:col-span-1">
-            <div className="shadow-md rounded-xl p-2 py-3 mb-6">
+            <div className="border border-[1px] rounded-xl p-2 py-3 mb-6">
               <h2>Order Summary</h2>
               <div className="space-y-4">
                 <div className="flex justify-between">
@@ -297,15 +334,19 @@ const OrderDetailsPage = () => {
                 <div className="flex justify-between">
                   <span className="font-medium">Order Time:</span>
                   <span>
-                    {new Date(booking.pickupTime * 1000).toLocaleTimeString()}
+                    {/* {new Date(booking.pickupTime * 1000).toLocaleTimeString()} */}
+                    {formatTimeToDisplay(booking.createdAt)}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="font-medium">Time Left:</span>
-                  <span className="text-primary font-semibold">
-                    {timeLeftText}
-                  </span>
-                </div>
+                {booking.status !== "completed" &&
+                  booking.status !== "incomplete" && (
+                    <div className="flex justify-between">
+                      <span className="font-medium">Time Left:</span>
+                      <span className="text-primary font-semibold">
+                        {timeLeftText}
+                      </span>
+                    </div>
+                  )}
               </div>
             </div>
 
@@ -319,7 +360,7 @@ const OrderDetailsPage = () => {
                   <span className="font-semibold">{product.productReview}</span>
                 </div>
               </div>
-              <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base line-clamp-3">
+              <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base line-clamp-3 break-words overflow-hidden w-full">
                 {product.description}
               </p>
             </div>
@@ -396,9 +437,9 @@ const OrderDetailsPage = () => {
                 </p>
               </div>
               <div>
-                <h3 className="text-lg font-semibold mb-3">Pickup Time</h3>
+                <h3 className="text-lg font-semibold mb-3">Total Amount</h3>
                 <p className="text-gray-500 dark:text-gray-400 text-sm">
-                  {new Date(booking.pickupTime * 1000).toLocaleTimeString()}
+                  ${booking.totalAmount}
                 </p>
               </div>
             </div>
@@ -604,6 +645,27 @@ const OrderDetailsPage = () => {
               : "Reject Booking"}
           </Button>
         )}
+
+        {booking.status === "in-progress" &&
+          !booking.isReported &&
+          booking.type === "own" &&
+          isWithinOneHour && (
+            <div className="text-sm text-red-500">
+              <Button
+                onClick={() => {
+                  setIsReportIssueModalOpen(true);
+                }}
+                variant="destructive"
+                className="w-100 py-6"
+              >
+                Report an issue
+              </Button>
+
+              <p className="mt-1">
+                The claim will be disabled in {remainingTime}
+              </p>
+            </div>
+          )}
       </div>
 
       {/* ── Pickup Success Modal (owned by parent, survives scanner close) ── */}
@@ -669,6 +731,26 @@ const OrderDetailsPage = () => {
         type="danger"
         isDangerous={false}
         showIcon={true}
+      />
+
+      <ReportIssueModal
+        isOpen={isReportIssueModalOpen}
+        onClose={() => setIsReportIssueModalOpen(false)}
+        isLoading={reportIssueMutation.isPending}
+        onSubmit={async (title, description) => {
+          try {
+            await reportIssueMutation.mutateAsync({
+              bookingId: bookingId,
+              title,
+              description,
+            });
+            refetch();
+            SuccessToast("Issue reported successfully");
+            setIsReportIssueModalOpen(false);
+          } catch (error) {
+            ErrorToast("Failed to report issue");
+          }
+        }}
       />
 
       {!booking?.isPopupShown && type === "customer_rental" && (

@@ -10,6 +10,7 @@ type ProductImagesInputProps = {
   onRemainingImages?: (remainingUrls: string[]) => void; // Track remaining prefilled images
   error?: string;
   maxImages?: number;
+  maxSizeMB?: number;
 };
 
 const VALID_TYPES = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
@@ -27,9 +28,10 @@ export const ProductImagesInput: React.FC<ProductImagesInputProps> = ({
   onRemainingImages,
   error,
   maxImages = 10,
+  maxSizeMB = 20,
 }) => {
   const [imagePreviews, setImagePreviews] = React.useState<ImagePreview[]>([]);
-  const [removedPrefilled, setRemovedPrefilled] = React.useState<string[]>([]); // Track removed prefilled image URLs
+  const [removedPrefilled, setRemovedPrefilled] = React.useState<string[]>([]);
 
   React.useEffect(() => {
     const previews: ImagePreview[] = [];
@@ -116,6 +118,15 @@ export const ProductImagesInput: React.FC<ProductImagesInputProps> = ({
       return;
     }
 
+    const maxSize = maxSizeMB * 1024 * 1024;
+    const oversizedFiles = files.filter((file) => file.size > maxSize);
+
+    if (oversizedFiles.length > 0) {
+      ErrorToast(`File size must be less than ${maxSizeMB}MB`);
+      event.target.value = "";
+      return;
+    }
+
     onChange([...value, ...files]);
     event.target.value = "";
   };
@@ -154,9 +165,9 @@ export const ProductImagesInput: React.FC<ProductImagesInputProps> = ({
     prefilledImages.length - removedPrefilled.length + value.length;
 
   return (
-    <div className="space-y-4 w-[50%]">
+    <div className="space-y-3 sm:space-y-4 w-full">
       <div
-        className={`border border-dashed rounded-2xl flex flex-col items-center justify-center p-4 transition min-h-[440px]
+        className={`border border-dashed rounded-lg sm:rounded-2xl flex flex-col items-center justify-center p-2 sm:p-4 transition min-h-[300px] sm:min-h-[440px]
           ${
             error
               ? "border-red-500 text-red-500"
@@ -166,15 +177,13 @@ export const ProductImagesInput: React.FC<ProductImagesInputProps> = ({
       >
         {/* Image Previews */}
         {imagePreviews.length > 0 && (
-          <div className="w-full pb-2">
-            <div className="grid grid-cols-5 gap-3">
+          <div className="w-full pb-2 overflow-x-auto">
+            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-2 sm:gap-3 min-w-min">
               {imagePreviews.map((preview, index) => {
-                const isPreFilled = preview.type === "url";
-
                 return (
                   <div
                     key={preview.sourceUrl || index}
-                    className="relative group w-full aspect-square rounded-lg overflow-hidden shadow-md hover:shadow-xl transition"
+                    className="relative group w-20 sm:w-24 lg:w-full aspect-square rounded-lg overflow-hidden shadow-md hover:shadow-xl transition flex-shrink-0"
                   >
                     <img
                       src={preview.data}
@@ -186,13 +195,13 @@ export const ProductImagesInput: React.FC<ProductImagesInputProps> = ({
                     <button
                       type="button"
                       onClick={() => removeImage(index)}
-                      className="absolute top-1 right-1 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition"
+                      className="absolute top-0.5 right-0.5 bg-red-500 hover:bg-red-600 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition"
                     >
                       <X className="h-3 w-3" />
                     </button>
 
                     {/* Image number badge */}
-                    <div className="absolute bottom-1 left-1 bg-white bg-opacity-90 px-1.5 py-0.5 rounded text-xs font-semibold text-gray-700">
+                    <div className="absolute bottom-0.5 left-0.5 bg-white bg-opacity-90 px-1 py-0.5 rounded text-xs font-semibold text-gray-700">
                       {index + 1}
                     </div>
 
@@ -211,7 +220,7 @@ export const ProductImagesInput: React.FC<ProductImagesInputProps> = ({
 
         {/* Upload section - show only if limit not reached */}
         {totalImages < maxImages && (
-          <div className="relative w-full mt-4">
+          <div className="relative w-full mt-2 sm:mt-4">
             <Input
               id="product-images"
               type="file"
@@ -222,12 +231,14 @@ export const ProductImagesInput: React.FC<ProductImagesInputProps> = ({
             />
             <label
               htmlFor="product-images"
-              className="flex flex-col items-center justify-center w-full h-32 cursor-pointer transition group"
+              className="flex flex-col items-center justify-center w-full h-20 sm:h-32 cursor-pointer transition group"
             >
-              <Camera size={36} />
-              <p className="mt-3 font-medium">Upload Product Images</p>
-              <p className="text-xs mt-1 opacity-70">
-                PNG, JPG supported • {totalImages}/{maxImages}
+              <Camera size={24} className="sm:w-9 sm:h-9" />
+              <p className="mt-1 sm:mt-3 font-medium text-xs sm:text-sm text-center px-1">
+                Upload Product Images
+              </p>
+              <p className="text-xs mt-0.5 sm:mt-1 opacity-70 text-center px-1">
+                PNG, JPG (max 20MB) • {totalImages}/{maxImages}
               </p>
             </label>
           </div>
@@ -235,8 +246,8 @@ export const ProductImagesInput: React.FC<ProductImagesInputProps> = ({
 
         {/* Show message when max reached */}
         {totalImages >= maxImages && (
-          <div className="w-full text-center py-4">
-            <p className="text-sm font-semibold text-gray-600">
+          <div className="w-full text-center py-2 sm:py-4">
+            <p className="text-xs sm:text-sm font-semibold text-gray-600">
               Maximum {maxImages} images reached
             </p>
           </div>
@@ -245,7 +256,7 @@ export const ProductImagesInput: React.FC<ProductImagesInputProps> = ({
 
       {/* Error */}
       {error && (
-        <p className="text-sm text-red-500">
+        <p className="text-xs sm:text-sm text-red-500">
           {error || "Please upload at least 4 images"}
         </p>
       )}

@@ -3,10 +3,7 @@
 import { useState } from "react";
 import { Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { useCreateReview } from "@/src/lib/api/booking";
 import { ErrorToast, SuccessToast } from "@/src/components/common/Toaster";
 
@@ -86,7 +83,9 @@ const WriteReviewModal = ({
           onSuccess?.();
         },
         onError: (err: any) => {
-          ErrorToast(err?.message || "Failed to submit review. Please try again.");
+          ErrorToast(
+            err?.message || "Failed to submit review. Please try again.",
+          );
         },
       },
     );
@@ -101,7 +100,7 @@ const WriteReviewModal = ({
     if (!val) reset();
     onOpenChange(val);
   };
-console.log(product,"product testing")
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-sm p-0 overflow-hidden rounded-2xl">

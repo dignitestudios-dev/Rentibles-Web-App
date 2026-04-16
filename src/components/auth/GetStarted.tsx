@@ -1,6 +1,6 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { GoogleIcon, OrangeLogo } from "@/public/images/export";
+import { AppleIcon, GoogleIcon, OrangeLogo } from "@/public/images/export";
 import { socialRegister } from "@/src/lib/query/queryFn";
 import { useMutation } from "@tanstack/react-query";
 import Image from "next/image";
@@ -8,7 +8,7 @@ import Link from "next/link";
 import { ErrorToast, SuccessToast } from "../common/Toaster";
 import { getAxiosErrorMessage } from "@/src/utils/errorHandlers";
 import { signInWithPopup } from "firebase/auth";
-import { auth, googleProvider } from "@/src/firebase/firebase";
+import { appleProvider, auth, googleProvider } from "@/src/firebase/firebase";
 import Loader from "../common/Loader";
 import { useDispatch } from "react-redux";
 import { setGuestMode, singUp } from "@/src/lib/store/feature/authSlice";
@@ -18,6 +18,33 @@ const GetStarted = () => {
   const dispatch = useDispatch();
   const router = useRouter();
   const googlemutation = useMutation({
+    mutationFn: socialRegister,
+    onSuccess: (response) => {
+      const userInfo = response?.data;
+      const normalizedUser = {
+        ...userInfo.user,
+        _id: userInfo.user.id,
+      };
+
+      dispatch(
+        singUp({
+          token: {
+            access: userInfo.token,
+            refresh: userInfo.token,
+          },
+          user: normalizedUser,
+        }),
+      );
+      SuccessToast(response?.message);
+      router.push("/auth/identity-verification");
+    },
+    onError: (err) => {
+      const message = getAxiosErrorMessage(err);
+      ErrorToast(message);
+    },
+  });
+
+  const applemutation = useMutation({
     mutationFn: socialRegister,
     onSuccess: (response) => {
       const userInfo = response?.data;
@@ -55,6 +82,19 @@ const GetStarted = () => {
       ErrorToast("Google login failed");
     }
   };
+
+  const handleAppleLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, appleProvider);
+      const idToken = await result.user.getIdToken();
+
+      applemutation.mutate({ idToken, role: "user" });
+    } catch (err) {
+      console.error(err);
+      ErrorToast("Apple login failed");
+    }
+  };
+
   return (
     <div className="w-full h-auto flex justify-center">
       <div className="w-full flex flex-col items-center p-6 md:w-125 rounded-[19px] bg-background">
@@ -132,6 +172,32 @@ const GetStarted = () => {
           >
             <Image src={GoogleIcon} alt="google_icon" className="h-6 w-6" />
             Continue with Google
+          </Button>
+          <Button
+            className="
+              h-14
+              rounded-xl
+              bg-background
+              border-2
+              border-orange-400
+              text-orange-400
+              text-base
+              font-medium
+                            hover:bg-background
+
+              hover:text-orange-400
+              hover:border-orange-400
+              flex
+              items-center
+              justify-center
+              gap-3
+              cursor-pointer
+            "
+            disabled={googlemutation.isPending}
+            onClick={handleAppleLogin}
+          >
+            <Image src={AppleIcon} alt="apple_icon" className="h-6 w-6" />
+            Continue with Apple
           </Button>
         </div>
       </div>

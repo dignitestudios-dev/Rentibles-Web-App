@@ -131,7 +131,6 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
 
     // Generate slots for selected date
     const generatedSlots = generateSlots(new Date(date));
-    console.log(new Date(date), generatedSlots, "checking Dates");
 
     setSlots(generatedSlots);
 
@@ -320,7 +319,7 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
         : false;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 mt-4">
       <h3 className="text-lg font-semibold">Availability</h3>
 
       {/* Price Buttons - Selection Mode Indicator */}

@@ -31,7 +31,6 @@ const ProductInfoSection: React.FC<ProductInfoSectionProps> = ({
       {/* Product Name & Rating */}
       <div className="mb-6">
         <div className="flex items-start justify-end gap-4 mb-4">
-       
           {product.productReview !== undefined && (
             <div className="flex items-center gap-3">
               {/* Star Rating */}
@@ -70,9 +69,9 @@ const ProductInfoSection: React.FC<ProductInfoSectionProps> = ({
             </div>
           )}
         </div>
-   <h2 className="text-3xl md:text-4xl mt-10 font-bold">
-            {product.name || "Unnamed Product"}
-          </h2>
+        <h2 className="text-3xl md:text-4xl mt-10 font-bold">
+          {product.name || "Unnamed Product"}
+        </h2>
         <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base">
           {product.description || "No description available"}
         </p>
@@ -81,30 +80,48 @@ const ProductInfoSection: React.FC<ProductInfoSectionProps> = ({
       <hr className="my-6 border-border" />
 
       {/* Pickup & Phone */}
-      <div className="flex items-center gap-2 mb-3">
-        <Phone className="w-5 h-5 text-foreground/50" />
-        {isOwner && storeInfo.phone ? (
-          <Link
-            href={`tel:${storeInfo.phone}`}
-            className="text-base text-[14px] hover:underline"
-          >
-            {storeInfo.phone}
-          </Link>
-        ) : (
-          <span className="text-base text-[14px]">Visible after booking</span>
-        )}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div>
+          <h3 className="text-lg font-semibold mb-2">Pickup Location</h3>
+          <div className="flex items-center gap-2 mb-3">
+            {isOwner && product.pickupAddress ? (
+              <p className="text-base text-[14px] ">
+                {product.pickupAddress || "Pickup address not specified"}
+              </p>
+            ) : (
+              <span className="text-base text-[14px]">
+                Visible after booking
+              </span>
+            )}
+          </div>
+        </div>
+        <div>
+          <h3 className="text-lg font-semibold mb-2">Phone Number</h3>
+          <div className="flex items-center gap-2 mb-3">
+            <Phone className="w-5 h-5 text-foreground/50" />
+            {isOwner && storeInfo.phone ? (
+              <Link
+                href={`tel:${storeInfo.phone}`}
+                className="text-base text-[14px] hover:underline"
+              >
+                {storeInfo.phone}
+              </Link>
+            ) : (
+              <span className="text-base text-[14px]">
+                Visible after booking
+              </span>
+            )}
+          </div>
+        </div>
       </div>
 
-      <p className="text-sm text-foreground/40 dark:text-foreground/60">
+      {/* <p className="text-sm text-foreground/40 dark:text-foreground/60">
         {storeInfo.email && (
-          <Link
-            href={`mailto:${storeInfo.email}`}
-            className="hover:underline"
-          >
+          <Link href={`mailto:${storeInfo.email}`} className="hover:underline">
             {storeInfo.email}
           </Link>
         )}
-      </p>
+      </p> */}
 
       <hr className="my-6 border-border" />
 

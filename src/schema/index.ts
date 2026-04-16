@@ -93,9 +93,7 @@ export const RegisterSchema = z
       ),
     confirmPassword: z.string().min(8, "Confirm your password"),
 
-    image: z
-      .any()
-      .optional(),
+    image: z.any().optional(),
 
     location: z
       .object({
@@ -131,31 +129,38 @@ export const identitySchema = z.object({
 export type IdentityFormValues = z.infer<typeof identitySchema>;
 
 export const createProductSchema = z.object({
- productName: z
-  .string()
-  .min(3, { message: "Product name must be at least 3 characters" })
-  .trim()
-  .refine((val) => !/\d/.test(val), {
-    message: "Product name should not contain numbers",
-  }),
+  productName: z
+    .string()
+    .min(1, "Product name is required")
+    .min(3, { message: "Product name must be at least 3 characters" })
+    .trim(),
+  // .refine((val) => !/\d/.test(val), {
+  //   message: "Product name should not contain numbers",
+  // }),
 
   description: z
     .string()
+    .min(1, "Description is required")
     .min(10, { message: "Description must be at least 10 characters" })
     .trim(),
 
-  quantity: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-    message: "Please enter a valid quantity greater than 0",
-  }),
+  quantity: z
+    .string()
+    .min(1, "Quantity is required")
+    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+      message: "Please enter a valid quantity greater than 0",
+    }),
 
   hourlyPrice: z
     .string()
+    .min(1, "Hourly price is required")
     .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
       message: "Hourly price must be a positive number",
     }),
 
   dailyPrice: z
     .string()
+    .min(1, "Daily price is required")
     .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
       message: "Daily price must be a positive number",
     }),
@@ -170,6 +175,7 @@ export const createProductSchema = z.object({
         message: "Each image must be a valid file",
       }),
     )
+    .min(1, { message: "At least 1 product image is required" })
     .min(4, { message: "At least 4 product images are required" })
     .max(10, { message: "Maximum 10 images allowed" }),
 
@@ -231,12 +237,12 @@ export type CreateProductPayload = z.infer<typeof createProductSchema>;
 export const updateProductSchema = z
   .object({
     productName: z
-  .string()
-  .min(3, { message: "Product name must be at least 3 characters" })
-  .trim()
-  .refine((val) => !/\d/.test(val), {
-    message: "Product name should not contain numbers",
-  }),
+      .string()
+      .min(3, { message: "Product name must be at least 3 characters" })
+      .trim()
+      .refine((val) => !/\d/.test(val), {
+        message: "Product name should not contain numbers",
+      }),
 
     description: z
       .string()

@@ -17,6 +17,23 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
   dateRange,
   timeSlots,
 }) => {
+  const totalAmount = (() => {
+    if (selectionMode === "day" && dateRange?.from) {
+      const from = dateRange.from;
+      const to = dateRange.to ?? dateRange.from;
+      const days =
+        Math.ceil((to.getTime() - from.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      return product.pricePerDay * quantity * days;
+    } else if (selectionMode === "hour" && timeSlots.length > 0) {
+      const sorted = [...timeSlots].sort((a, b) => a.startEpoch - b.startEpoch);
+      const start = new Date(sorted[0].startEpoch * 1000);
+      const end = new Date(sorted[sorted.length - 1].endEpoch * 1000);
+      const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+      const durationHours = Math.max(1, Math.ceil(hours));
+      return product.pricePerHour * quantity * durationHours;
+    }
+    return 0;
+  })();
   return (
     <>
       {/* Booking Summary */}
@@ -24,7 +41,10 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
         {[
           {
             label: "Subtotal",
-            value: `$${(product.pricePerDay * quantity).toFixed(2)}`,
+            value:
+              selectionMode === "day"
+                ? `$${product.pricePerDay.toFixed(2)}`
+                : `$${product.pricePerHour.toFixed(2)}`,
           },
           {
             label: "Duration",
@@ -138,7 +158,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
           <p>Total Amount</p>
         </div>
         <div className="flex justify-end">
-          <p>${(product.pricePerDay * quantity).toFixed(2)}</p>
+          <p>${totalAmount.toFixed(2)}</p>
         </div>
       </div>
     </>

@@ -9,6 +9,7 @@ import MarkItemCollected, {
 } from "./MarkAsCollectedScaner";
 import WriteReviewModal from "./Writereviewmodal";
 import { useUpdateBooking } from "@/src/lib/api/booking";
+import { DummyAvatar } from "@/public/images/export";
 
 type RentalCardProps = {
   bookingId: string;
@@ -18,7 +19,7 @@ type RentalCardProps = {
   productImage?: string;
   title: string;
   price: number;
-  hours: number;
+  duration: string;
   status:
     | "Completed"
     | "Incomplete"
@@ -53,7 +54,7 @@ const RentalCard = ({
   productImage,
   title,
   price,
-  hours,
+  duration,
   status,
   qty,
   date,
@@ -108,7 +109,7 @@ const RentalCard = ({
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-orange-500">
             <Image
-              src={userAvatar || "https://placehold.co/600x400"}
+              src={userAvatar || DummyAvatar}
               alt={userName}
               width={40}
               height={40}
@@ -146,7 +147,7 @@ const RentalCard = ({
           <h3 className="text-lg font-semibold">{title}</h3>
           <p className="text-base">
             ${price}
-            <span className="text-muted-foreground">/{hours} hrs</span>
+            <span className="text-muted-foreground">/{duration} </span>
           </p>
           <p className={`text-sm font-medium ${statusStyles[status]}`}>
             {status}
@@ -212,7 +213,12 @@ const RentalCard = ({
                       f.type.startsWith("video/"),
                     );
                     updateBooking(
-                      { id: scannedId || bookingId, type: "pickup", images, videos },
+                      {
+                        id: scannedId || bookingId,
+                        type: "pickup",
+                        images,
+                        videos,
+                      },
                       {
                         onSuccess: () => {
                           setIsReturnModalOpen(false);
@@ -255,7 +261,12 @@ const RentalCard = ({
                       f.type.startsWith("video/"),
                     );
                     updateBooking(
-                      { id: scannedId || bookingId, type: "dropOff", images, videos },
+                      {
+                        id: scannedId || bookingId,
+                        type: "dropOff",
+                        images,
+                        videos,
+                      },
                       {
                         onSuccess: () => {
                           setIsReturnModalOpen(false);
@@ -291,6 +302,7 @@ const RentalCard = ({
           status !== "Incomplete" &&
           status !== "Cancelled" &&
           status !== "Rejected" &&
+          status !== "In Progress" &&
           "Can be mark at the time of booking"}
       </p>
 
