@@ -13,6 +13,7 @@ import {
 } from "@/src/lib/api/notifications";
 import { Notification as TNotification } from "@/src/types/index.type";
 import Pagination from "@/src/components/common/Pagination";
+import Loader from "@/src/components/common/Loader";
 
 const NotificationsPage: React.FC = () => {
   const router = useRouter();
@@ -62,7 +63,9 @@ const NotificationsPage: React.FC = () => {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8">Loading...</div>
+            <div className="text-center py-8">
+              <Loader show={true} />
+            </div>
           ) : notifications.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
               No notifications
