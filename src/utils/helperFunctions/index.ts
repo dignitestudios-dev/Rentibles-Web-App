@@ -189,9 +189,9 @@ export const calculateDistanceMiles = (
   const a =
     Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos(toRad(lat1)) *
-    Math.cos(toRad(lat2)) *
-    Math.sin(dLon / 2) *
-    Math.sin(dLon / 2);
+      Math.cos(toRad(lat2)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
 
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
@@ -219,17 +219,14 @@ export const getFirebaseErrorMessage = (error: any) => {
   }
 };
 
-
-
 export const formatTimeToDisplay = (isoString: string) => {
   const date = new Date(isoString);
 
-  // Options for 12-hour clock (hour, minute, am/pm)
-  const options = {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true
+  const options: Intl.DateTimeFormatOptions = {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
   };
 
-  return date.toLocaleTimeString('en-US', options);
-}
+  return date.toLocaleTimeString("en-US", options);
+};
