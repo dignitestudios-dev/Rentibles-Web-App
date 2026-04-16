@@ -60,10 +60,13 @@ const ReviewSection: React.FC<ReviewSectionProps> = ({
               <div className="bg-muted dark:bg-card p-6 rounded-2xl h-full">
                 <div className="flex items-start gap-4 mb-4">
                   <div className="w-12 h-12 rounded-full p-1 bg-primary ring-2 ring-primary shrink-0 overflow-hidden">
-                    <img
+                    <Image
                       src={review.user.profilePicture || DummyAvatar}
                       alt={review.user.name}
+                      width={48}
+                      height={48}
                       className="w-full h-full object-fill rounded-full"
+                      unoptimized
                     />
                   </div>
 
