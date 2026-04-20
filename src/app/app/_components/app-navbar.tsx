@@ -9,14 +9,31 @@ import NotificationDropdown from "@/src/components/common/NotificationDropdown";
 import { CirclePlus, FileClock, MessageSquareText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useAppSelector } from "@/src/lib/store/hooks";
+import { useUser } from "@/src/lib/api/user";
+import BecomeSellerModal from "@/src/components/common/BecomeSellerModal";
 
 // bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60
 
 const AppNavbar = () => {
   const router = useRouter();
+  const [isBecomeSellerOpen, setIsBecomeSellerOpen] = useState(false);
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   const isLoggedIn = Boolean(isAuthenticated && user);
+  const userId = user?._id;
+  const { data: userData } = useUser(userId ?? "", {
+    enabled: Boolean(userId),
+  });
+
+  const handleCreateProductClick = () => {
+    if (userData?.data?.isSeller === false) {
+      setIsBecomeSellerOpen(true);
+      return;
+    }
+
+    router.push("/app/create-product");
+  };
 
   return (
     <nav className="sticky top-0 z-40 border-b border-border bg-background">
@@ -34,7 +51,7 @@ const AppNavbar = () => {
               aria-label="Create Product"
               title="Create Product"
               className="p-0"
-              onClick={() => router.push("/app/create-product")}
+              onClick={handleCreateProductClick}
             >
               <CirclePlus />
             </Button>
@@ -60,6 +77,10 @@ const AppNavbar = () => {
             <NotificationDropdown />
             <ThemeToggle />
             <ProfileMenu />
+            <BecomeSellerModal
+              open={isBecomeSellerOpen}
+              onOpenChange={setIsBecomeSellerOpen}
+            />
           </div>
         )}
         {!isLoggedIn && (

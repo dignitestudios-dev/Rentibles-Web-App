@@ -106,7 +106,7 @@ export const RegisterSchema = z
       }),
 
     terms: z.boolean().refine((v) => v === true, {
-      message: "You must accept Terms & Conditions & Privacy Policy",
+      message: "You must accept Terms & Conditions and Privacy Policy",
     }),
   })
   .refine((data) => data.password === data.confirmPassword, {
@@ -175,7 +175,7 @@ export const createProductSchema = z.object({
         message: "Each image must be a valid file",
       }),
     )
-    .min(1, { message: "At least 1 product image is required" })
+    .min(1, { message: "At least 4 product images are required" })
     .min(4, { message: "At least 4 product images are required" })
     .max(10, { message: "Maximum 10 images allowed" }),
 
@@ -302,20 +302,17 @@ export const updateProductSchema = z
         (file) => ["image/jpeg", "image/png", "image/webp"].includes(file.type),
         { message: "Cover image must be JPEG, PNG, or WebP" },
       )
-      .optional()
-      .nullable(),
-
-    category: z.string().min(1, { message: "Category is required" }).optional(),
-
-    subCategory: z
-      .string()
-      .min(1, { message: "Sub-category is required" })
+      .nullable()
+      .refine((val) => val !== null, { message: "Cover image is required" })
       .optional(),
+
+    category: z.string().min(1, { message: "Category is required" }),
+
+    subCategory: z.string().min(1, { message: "Sub-category is required" }),
 
     availableDays: z
       .array(z.string())
-      .min(1, { message: "At least one day must be selected" })
-      .optional(),
+      .min(1, { message: "At least one day must be selected" }),
 
     location: z
       .object({
@@ -349,8 +346,7 @@ export const updateProductSchema = z
           message:
             "Location is required. Please select a valid address on the map.",
         },
-      )
-      .optional(),
+      ),
   })
   // ✅ Main validation: Total images (existing + new) must be at least 4
   .refine(

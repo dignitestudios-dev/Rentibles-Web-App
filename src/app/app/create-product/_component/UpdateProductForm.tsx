@@ -218,7 +218,7 @@ const UpdateProductForm: React.FC<Props> = ({ productId }) => {
       images: [],
       // start with the current images as existing pictures so the schema stays happy
       existingPictures: p.images || [],
-      coverImage: undefined,
+      coverImage: p.cover ? undefined : (null as any), // If no cover, require upload
       location: {
         lat: p.pickupLocation?.coordinates?.[1] || 0,
         lng: p.pickupLocation?.coordinates?.[0] || 0,
@@ -340,13 +340,12 @@ const UpdateProductForm: React.FC<Props> = ({ productId }) => {
             error={errors.images?.message}
           />
 
-          <div className="w-[50%]  flex-shrink-0">
+          <div className="w-[50%] shrink-0">
             <CoverImageInput
               value={watch("coverImage")} // New upload only
               prefilledImage={productResp?.data?.cover} // Prefilled URL from backend
               onChange={(file) =>
-                file &&
-                setValue("coverImage", file, {
+                setValue("coverImage", file as any, {
                   shouldValidate: true,
                   shouldDirty: true,
                 })

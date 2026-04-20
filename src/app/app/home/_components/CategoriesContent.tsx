@@ -66,21 +66,27 @@ const CategoriesContent = () => {
 
       <div className="mt-3 relative">
         <div className="flex gap-3 overflow-x-auto py-2 mb-6 scrollbar-light">
-          {data?.data?.map((cat) => (
-            <div key={cat._id} className="shrink-0">
-              <CategoryCard
-                category={{
-                  _id: cat._id,
-                  name: cat.name,
-                  cover: "",
-                  createdAt: "",
-                  updatedAt: "",
-                }}
-                selected={cat._id === selectedCategoryId}
-                onClick={() => handleSelect(cat._id)}
-              />
+          {!data?.data || data.data.length === 0 ? (
+            <div className="w-full flex items-center justify-center py-8">
+              <p className="text-foreground/60 text-sm">Category not loaded</p>
             </div>
-          ))}
+          ) : (
+            data.data.map((cat) => (
+              <div key={cat._id} className="shrink-0">
+                <CategoryCard
+                  category={{
+                    _id: cat._id,
+                    name: cat.name,
+                    cover: "",
+                    createdAt: "",
+                    updatedAt: "",
+                  }}
+                  selected={cat._id === selectedCategoryId}
+                  onClick={() => handleSelect(cat._id)}
+                />
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

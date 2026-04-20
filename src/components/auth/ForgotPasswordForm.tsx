@@ -13,6 +13,7 @@ import { FiLoader } from "react-icons/fi";
 import { ErrorToast } from "../common/Toaster";
 import { useRouter } from "next/navigation";
 import Loader from "../common/Loader";
+import { ArrowLeft } from "lucide-react";
 
 const ForgotPasswordForm = () => {
   const router = useRouter();
@@ -46,6 +47,15 @@ const ForgotPasswordForm = () => {
 
   return (
     <form className="w-full mt-6" onSubmit={handleSubmit(onSubmit)} action="">
+      <div className=" absolute top-4 left-0 pl-4">
+        <button
+          type="button"
+          onClick={() => router.push("/auth/login")}
+          className="p-2 hover:bg-muted hover:text-foreground rounded-md transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5 " />
+        </button>
+      </div>
       <div>
         <InputField
           inputType="email"

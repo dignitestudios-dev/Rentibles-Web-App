@@ -20,6 +20,7 @@ import DateFilter from "@/src/components/common/DateFilter";
 import WithdrawModal from "./_components/WithdrawModal";
 import { generatePayoutsPDF } from "./_components/PayoutsPDF";
 import { generateTransactionPDF } from "./_components/TransactionsPDF";
+import { Button } from "@/components/ui/button";
 
 // balance will be fetched from API via useBalance
 
@@ -185,7 +186,14 @@ const CashWithdrawalPage = () => {
           </button>
 
           <h1 className="text-lg font-semibold">Cash Withdrawal Page</h1>
-          <div></div>
+          <div>
+            <Button
+              onClick={() => router.push("/app/settings/bank-details/add")}
+              className="bg-primary hover:bg-primary/90 text-white"
+            >
+              Add Bank Account
+            </Button>
+          </div>
         </div>
       </div>
       <div className="min-h-screen p-4 sm:p-6 lg:p-8">

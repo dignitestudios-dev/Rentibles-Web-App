@@ -1164,3 +1164,59 @@ export interface GetBookingDetailsResponse {
   message: string;
   data: TrackingBooking;
 }
+
+export interface ReportBookingReporter {
+  _id: string;
+  id?: string;
+  email?: string;
+  name: string;
+  profilePicture?: string | null;
+  uid?: string;
+}
+
+export interface ReportBookingProductUser {
+  _id: string;
+  name: string;
+  profilePicture?: string | null;
+  uid: string;
+}
+
+export interface ReportBookingProduct {
+  _id: string;
+  name: string;
+  cover?: string;
+  user: ReportBookingProductUser;
+}
+
+export interface ReportBookingBooking {
+  _id: string;
+  shortCode: string;
+  chatId: string;
+  product: ReportBookingProduct;
+}
+
+export interface ReportBookingItem {
+  _id: string;
+  title: string;
+  description: string;
+  reportedByUser: ReportBookingReporter | null;
+  reportedByStore: {
+    _id: string;
+    name: string;
+  } | null;
+  booking: ReportBookingBooking;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GetReportBookingResponse {
+  success: boolean;
+  message: string;
+  data: ReportBookingItem[];
+  pagination: {
+    itemsPerPage: number;
+    currentPage: number;
+    totalItems: number;
+    totalPages: number;
+  };
+}

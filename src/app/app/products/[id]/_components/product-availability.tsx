@@ -34,6 +34,10 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
 
   const [slots, setSlots] = React.useState<TimeSlot[]>([]);
 
+  const [rangeHasUnavailableDates, setRangeHasUnavailableDates] =
+    React.useState(false);
+  const [rangeError, setRangeError] = React.useState("");
+
   const [dateRange, setDateRange] = React.useState<
     { from?: Date; to?: Date } | undefined
   >();
@@ -236,27 +240,49 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
     );
   };
 
+  const getDatesInRange = (from: Date, to: Date) => {
+    const dates: Date[] = [];
+    const current = new Date(from);
+
+    current.setHours(0, 0, 0, 0);
+
+    const end = new Date(to);
+    end.setHours(0, 0, 0, 0);
+
+    while (current <= end) {
+      dates.push(new Date(current));
+      current.setDate(current.getDate() + 1);
+    }
+
+    return dates;
+  };
+
   // Handle day selection (single day mode)
   const handleSelectDay = (range: { from?: Date; to?: Date } | undefined) => {
     setSelectionMode("day");
-    onSelectionModeChange?.("day");
-
     setSelectedSlots([]);
-
     setDateRange(range);
-    onDateRangeChange?.(range);
 
     if (!range?.from) return;
-    // const dateKey = new Date(range.from).toISOString().split("T")[0];
-    const unixTimestamp = getUnixTimestamp(range.from);
 
-    const minQuantity = availabilityMap.get(unixTimestamp)?.minQuantity;
-    const availableQty = minQuantity ?? product.quantity;
+    if (range.from && range.to) {
+      const dates = getDatesInRange(range.from, range.to);
 
-    setAvailableQuantity(availableQty ?? 0);
+      const hasInvalid = dates.some((date) => !isDateAvailable(date));
 
-    // onDaySelect?.(range.from);
-    onDateRangeChange?.(range);
+      setRangeHasUnavailableDates(hasInvalid);
+
+      if (hasInvalid) {
+        setRangeError("Selected range contains unavailable dates.");
+      } else {
+        setRangeError("");
+      }
+    } else {
+      setRangeHasUnavailableDates(false);
+      setRangeError("");
+    }
+
+    onDaySelect?.(range.from);
   };
 
   const isSlotSelected = (slot: TimeSlot): boolean => {
@@ -398,7 +424,8 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
             selected={
               selectionMode === "hour"
                 ? (selectedDate as Date | undefined)
-                : (dateRange as any)
+                : // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  (dateRange as any)
             }
             // selected={selectedDate}
             month={currentMonth}
@@ -539,32 +566,39 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
           )}
 
           {/* Day Selection Mode Message */}
-          {selectionMode === "day" && dateRange?.from && (
-            <div className="space-y-4">
-              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
-                  <p className="text-sm font-medium text-green-900 dark:text-green-200">
-                    ✓ {formatDate(dateRange.from)}
-                    {dateRange.to && dateRange.to !== dateRange.from && (
-                      <> – {formatDate(dateRange.to)}</>
-                    )}{" "}
-                    selected
-                  </p>
+          {rangeHasUnavailableDates ? (
+            <p className="text-red-500 text-sm mt-2">
+              Selected range includes unavailable dates.
+            </p>
+          ) : (
+            selectionMode === "day" &&
+            dateRange?.from && (
+              <div className="space-y-4">
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-600 dark:text-green-400" />
+                    <p className="text-sm font-medium text-green-900 dark:text-green-200">
+                      ✓ {formatDate(dateRange.from)}
+                      {dateRange.to && dateRange.to !== dateRange.from && (
+                        <> – {formatDate(dateRange.to)}</>
+                      )}{" "}
+                      selected
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              <button
-                type="button"
-                onClick={() => {
-                  onSlotSelect?.([]);
-                  setIsOpen(false);
-                }}
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
-              >
-                Confirm Day Selection
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSlotSelect?.([]);
+                    setIsOpen(false);
+                  }}
+                  className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
+                >
+                  Confirm Day Selection
+                </button>
+              </div>
+            )
           )}
         </div>
       )}

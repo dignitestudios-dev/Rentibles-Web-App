@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import Image from "next/image";
@@ -13,8 +14,25 @@ import { useMutation } from "@tanstack/react-query";
 import { RegisterPayload } from "@/src/types/index.type";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { RegisterSchema } from "@/src/schema";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { CheckEmailStatus, RegisterUser } from "@/src/lib/query/queryFn";
+
+type RegisterDraft = {
+  fullName: string;
+  email: string;
+  phone: string;
+  zipCode: string;
+  apartmentNo: string;
+  location: {
+    lat: number;
+    lng: number;
+    address?: string;
+    city?: string;
+    state?: string;
+    country?: string;
+  } | null;
+  terms: boolean;
+};
 import Loader from "../common/Loader";
 import GoogleMapComponent from "../common/GoogleMapPicker";
 import { useDispatch } from "react-redux";
@@ -49,6 +67,8 @@ const RegisterForm = () => {
     null,
   );
 
+  const [locationError, setLocationError] = useState<string | null>(null);
+
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
     libraries,
@@ -81,6 +101,8 @@ const RegisterForm = () => {
     setValue,
     clearErrors,
     setError,
+    watch,
+    control,
     formState: { errors },
   } = useForm<RegisterPayload>({
     resolver: zodResolver(RegisterSchema),
@@ -98,6 +120,37 @@ const RegisterForm = () => {
     },
   });
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const restoreFlag = sessionStorage.getItem("registerReturnFromSelectOtp");
+    const storedDraft = sessionStorage.getItem("registerDraft");
+
+    if (!restoreFlag || !storedDraft) return;
+
+    try {
+      const draft: RegisterDraft = JSON.parse(storedDraft);
+      console.log("🚀 ~ RegisterForm ~ draft:", draft.phone);
+
+      setValue("fullName", draft.fullName);
+      setValue("email", draft.email);
+      setValue("phone", draft.phone);
+      setValue("zipCode", draft.zipCode);
+      setValue("apartmentNo", draft.apartmentNo);
+      setValue("location", draft.location);
+      setValue("terms", draft.terms);
+
+      if (draft.location) {
+        setLocation(draft.location);
+        setLatLng({ lat: draft.location.lat, lng: draft.location.lng });
+      }
+    } catch (error) {
+      console.error("Failed to restore registration draft", error);
+    } finally {
+      sessionStorage.removeItem("registerReturnFromSelectOtp");
+    }
+  }, [setValue]);
+
   const checkEmailMutation = useMutation({
     mutationFn: (payload: { email: string; role: string }) =>
       CheckEmailStatus(payload),
@@ -108,6 +161,18 @@ const RegisterForm = () => {
       setFirebaseLoading(true);
 
       await checkEmailMutation.mutateAsync({ email: data.email, role: "user" });
+
+      const draft: RegisterDraft = {
+        fullName: data.fullName,
+        email: data.email,
+        phone: data.phone,
+        zipCode: data.zipCode,
+        apartmentNo: data.apartmentNo,
+        location: location ?? data.location,
+        terms: data.terms,
+      };
+
+      sessionStorage.setItem("registerDraft", JSON.stringify(draft));
 
       let idToken = "";
       try {
@@ -159,7 +224,6 @@ const RegisterForm = () => {
     mutationFn: (payload: FormData) => RegisterUser(payload),
 
     onSuccess: (response) => {
-      console.log("🚀 ~ RegisterForm ~ response:", response);
       invalidateAll();
       const userInfo = response?.data;
       const normalizedUser = {
@@ -181,7 +245,6 @@ const RegisterForm = () => {
     },
     onError: (err) => {
       const message = getAxiosErrorMessage(err);
-      console.log("🚀 ~ RegisterForm ~ message:", message);
       setError("root", { type: "manual", message });
       ErrorToast(message);
     },
@@ -210,9 +273,27 @@ const RegisterForm = () => {
       async (position) => {
         const { latitude, longitude } = position.coords;
         setLatLng({ lat: latitude, lng: longitude });
+        setLocationError(null);
       },
-      () => {
+      (error) => {
         setLatLng(null);
+        if (error.code === error.PERMISSION_DENIED) {
+          setLocationError(
+            "Location permission denied. Please enable location services in your browser settings.",
+          );
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+          setLocationError(
+            "Location not available. Please ensure location services are enabled.",
+          );
+        } else if (error.code === error.TIMEOUT) {
+          setLocationError(
+            "Location request timed out. Please try again or enable location services.",
+          );
+        } else {
+          setLocationError(
+            "Unable to get your location. Please enable location services and try again.",
+          );
+        }
       },
     );
   }, [isLoaded]);
@@ -280,21 +361,50 @@ const RegisterForm = () => {
         />
 
         <div className="md:col-span-2">
-          <PhoneInput
-            placeholder="Phone Number"
-            error={errors.phone?.message}
-            {...register("phone")}
+          <Controller
+            name="phone"
+            control={control}
+            render={({ field }) => (
+              <PhoneInput
+                placeholder="Phone Number"
+                error={errors.phone?.message}
+                value={field.value}
+                onChange={(e) => field.onChange(e.target.value)}
+              />
+            )}
           />
         </div>
       </div>
 
       <div>
-        {latLng?.lat ? (
+        {latLng?.lat || location ? (
           <GoogleMapComponent
             onLocationSelect={onLocationSelect}
             latLng={currentLocation ? latLng : null}
+            editAddress={
+              location
+                ? {
+                    address: location.address,
+                    city: location.city,
+                    state: location.state,
+                    country: location.country,
+                    zipCode: "",
+                    location: {
+                      type: "Point",
+                      coordinates: [location.lng, location.lat],
+                    },
+                  }
+                : null
+            }
             setCurrentLocation={setCurrentLocation}
           />
+        ) : locationError ? (
+          <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+            <p className="text-sm text-red-700 font-medium">
+              ⚠️ Location Access Required
+            </p>
+            <p className="text-sm text-red-600 mt-1">{locationError}</p>
+          </div>
         ) : (
           <p className="text-sm text-gray-500">Loading map...</p>
         )}

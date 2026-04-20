@@ -34,7 +34,8 @@ const IdentityVerificationPage = () => {
 
   const handleFaceCapture = (image: string) => {
     const file = base64ToFile(image, "face.jpg");
-    setValue("face", file);
+    setValue("face", file, { shouldValidate: true, shouldDirty: true });
+
     setFacePreview(image);
   };
   const {
@@ -45,13 +46,14 @@ const IdentityVerificationPage = () => {
   } = useForm<IdentityFormValues>({
     resolver: zodResolver(identitySchema),
   });
+  console.log("🚀 ~ IdentityVerificationPage ~ errors:", errors);
 
   const handleImage = (
     file: File,
     field: "face" | "front" | "back",
     previewSetter: (val: string) => void,
   ) => {
-    setValue(field, file);
+    setValue(field, file, { shouldValidate: true, shouldDirty: true });
     previewSetter(URL.createObjectURL(file));
   };
 
@@ -118,6 +120,10 @@ const IdentityVerificationPage = () => {
             </div>
           )}
         </label>
+        <input type="hidden" {...register("face")} />
+        {errors.face && (
+          <p className="text-red-500 text-xs mt-1">{errors.face.message}</p>
+        )}
 
         <div>
           <InputField

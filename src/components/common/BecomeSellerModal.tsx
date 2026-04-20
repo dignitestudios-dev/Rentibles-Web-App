@@ -46,7 +46,6 @@ const BecomeSellerModal = ({ open, onOpenChange }: BecomeSellerModalProps) => {
         onInteractOutside={(e) => {
           e.preventDefault();
         }}
-        showCloseButton={false}
         className="rounded-3xl border-0 bg-card px-6 pb-6 pt-14 text-center max-w-sm"
       >
         <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2">

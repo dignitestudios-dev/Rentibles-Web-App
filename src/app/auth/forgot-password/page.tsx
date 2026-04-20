@@ -5,7 +5,7 @@ import Image from "next/image";
 
 const Page = () => {
   return (
-    <div className="w-full h-auto flex flex-col items-center px-6 py-8 md:w-125 rounded-[19px] bg-background">
+    <div className="w-full h-auto flex flex-col items-center px-6 py-8 md:w-125 rounded-[19px] bg-background relative">
       <Image src={ForgotPassword} alt="forgot_password" className="w-37" />
 
       <div className="w-full flex flex-col mt-6 items-center text-center">

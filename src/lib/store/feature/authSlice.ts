@@ -66,6 +66,16 @@ const authSlice = createSlice({
       localStorage.setItem("token", action.payload.token.access);
       localStorage.removeItem("guest_mode");
     },
+    setNewPassword: (
+      state,
+      action: PayloadAction<{
+        isResetPasswordFlow?: boolean;
+      }>,
+    ) => {
+      state.isAuthenticated = false;
+      state.isGuestMode = false;
+      state.isResetPasswordFlow = action.payload.isResetPasswordFlow || false;
+    },
     setAccessToken: (state, action: PayloadAction<string>) => {
       state.accessToken = action.payload;
     },
@@ -105,6 +115,7 @@ const authSlice = createSlice({
 
 export const {
   singUp,
+  setNewPassword,
   setAccessToken,
   setUser,
   logout,

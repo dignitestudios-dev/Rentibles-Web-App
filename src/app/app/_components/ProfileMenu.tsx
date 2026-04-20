@@ -27,6 +27,7 @@ const NAV_LINKS = [
   { label: "Chat Support", href: "/app/chat-support" },
   { label: "Cash Withdrawal", href: "/app/cash-withdrawal" },
   { label: "Product Request", href: "/app/product-request" },
+  { label: "Product Issues", href: "/app/product-issues" },
   { label: "Settings", href: "/app/settings" },
 ];
 
@@ -48,7 +49,7 @@ const ProfileMenu = () => {
     try {
       invalidateAll();
       dispatch(logout());
-      router.push("/auth/login");
+      router.push("/auth/get-started");
     } finally {
       setIsLoading(false);
       setOpenConfirm(false);

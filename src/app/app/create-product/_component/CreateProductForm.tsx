@@ -27,7 +27,6 @@ import { ProductImagesInput } from "./ProductImagesInput";
 import { CoverImageInput } from "./CoverImageInput";
 import { useRouter } from "next/navigation";
 import Loader from "@/src/components/common/Loader";
-import BecomeSellerModal from "@/src/components/common/BecomeSellerModal";
 import { useUser } from "@/src/lib/api/user";
 
 type LocationData = {
@@ -74,7 +73,6 @@ const CreateProductForm = () => {
   const [user, setUser] = useState<User>();
   const [isMap, setIsMap] = useState<boolean>(false);
   const router = useRouter();
-  const [isBecomeSellerOpen, setIsBecomeSellerOpen] = useState(false);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -92,6 +90,12 @@ const CreateProductForm = () => {
   const { data: userData } = useUser(userId ?? "", {
     enabled: Boolean(userId),
   });
+
+  useEffect(() => {
+    if (userData?.data?.isSeller === false) {
+      router.push("/app/home");
+    }
+  }, [userData, router]);
 
   const [location, setLocation] = useState<{
     lat: number;
@@ -117,15 +121,6 @@ const CreateProductForm = () => {
   const { data, isLoading, isError, error } = useCategories();
   const { data: subCategoriesData, isLoading: isSubCategoriesLoading } =
     useSubCategories(selectedCategoryId);
-
-  useEffect(() => {
-    if (userData?.data) {
-      if (userData?.data?.isSeller === false) {
-        setIsBecomeSellerOpen(true);
-        return;
-      }
-    }
-  }, [userData]);
 
   // Store categories in Redux when data is fetched
   useEffect(() => {
@@ -316,18 +311,6 @@ const CreateProductForm = () => {
     }
 
     const [lng, lat] = user.location.coordinates;
-
-    const userData: LocationData = {
-      address: user.address,
-      city: user.city,
-      state: user.state,
-      country: user.country,
-      // zipCode: user.zipCode,
-      location: {
-        type: "Point",
-        coordinates: [lng, lat],
-      },
-    };
 
     // Update the location state
     setLocation({
@@ -613,10 +596,6 @@ const CreateProductForm = () => {
           </Button>
         )}
       </form>
-      <BecomeSellerModal
-        open={isBecomeSellerOpen}
-        onOpenChange={setIsBecomeSellerOpen}
-      />
     </div>
   );
 };

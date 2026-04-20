@@ -20,6 +20,7 @@ const PublicRoutes = ({ children }: PublicRoutesProps) => {
   useEffect(() => {
     const hasForgotEmail =
       typeof window !== "undefined" && Boolean(localStorage.getItem("email"));
+
     const isAuthRoute = pathname.startsWith("/auth");
 
     if (isGuestMode && !isLoggedIn && pathname === "/auth/get-started") {
@@ -90,6 +91,10 @@ const PublicRoutes = ({ children }: PublicRoutesProps) => {
             path: "/auth/phone-verify",
             canAccess: (ctx) =>
               Boolean(ctx.isEmailVerified) && !ctx.isPhoneVerified,
+          },
+          {
+            path: "/auth/register",
+            canAccess: () => true,
           },
         ],
       });

@@ -31,7 +31,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "@/src/lib/store";
 import { calculateDistanceMiles } from "@/src/utils/helperFunctions";
 import Link from "next/link";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createWishlist } from "@/src/lib/query/queryFn";
 import { reportUser } from "@/src/lib/api/user";
 import Loader from "@/src/components/common/Loader";
@@ -45,6 +45,7 @@ const ProductDetailsPage = () => {
   const { latitude, longitude } = useSelector(
     (state: RootState) => state.location,
   );
+  const queryClient = useQueryClient();
 
   const [user, setUser] = useState<User | undefined>(() => {
     if (typeof window !== "undefined") {
@@ -133,6 +134,10 @@ const ProductDetailsPage = () => {
       const message = getAxiosErrorMessage(err || "Failed to update wishlist");
       ErrorToast(message);
     },
+    // onSettled: () => {
+
+    //   queryClient.invalidateQueries( { queryKey: ["productById", productId] });
+    // },
   });
 
   // Handle wishlist toggle
@@ -243,6 +248,10 @@ const ProductDetailsPage = () => {
 
   // Handle quantity change with proper validation
   const handleQuantityChange = (change: number) => {
+    if (!getBookingEpochs()) {
+      ErrorToast("Please select booking date and time first");
+      return;
+    }
     const newQty = quantity + change;
     const maxQuantity = product?.quantity || product?.totalQuantity || 0;
 
@@ -356,7 +365,7 @@ const ProductDetailsPage = () => {
           <h1 className="text-lg font-semibold">Product Details</h1>
 
           <div className="flex items-center gap-3">
-            {product?.user?._id !== userId && (
+            {/* {product?.user?._id !== userId && (
               <>
                 <button
                   onClick={handleWishlistToggle}
@@ -378,7 +387,7 @@ const ProductDetailsPage = () => {
                   <Flag className="w-5 h-5 text-gray-400" />
                 </button>
               </>
-            )}
+            )} */}
             <Link
               href={
                 product?.user?._id

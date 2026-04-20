@@ -2,13 +2,12 @@
 
 import { Button } from "@/components/ui/button";
 import { InputField } from "@/src/components/common/InputField";
-import { newPassword } from "@/src/lib/query/queryFn";
 import { NewPasswordSchema } from "@/src/schema";
 import { NewPasswordPayload } from "@/src/types/index.type";
 import { getAxiosErrorMessage } from "@/src/utils/errorHandlers";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { redirect, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import PasswordResetModal from "./PasswordResetModal";
 import { useState } from "react";
@@ -17,6 +16,7 @@ import { ErrorToast } from "../common/Toaster";
 import z from "zod";
 import { logout } from "@/src/lib/store/feature/authSlice";
 import { useDispatch } from "react-redux";
+import { axiosInstance } from "@/src/lib/axiosInstance";
 
 const NewPasswordForm = () => {
   const router = useRouter();
@@ -34,12 +34,31 @@ const NewPasswordForm = () => {
     },
   });
 
+  const postNewPassword = async (payload: { password: string }) => {
+    const token = sessionStorage.getItem("token");
+    if (!token) {
+      throw new Error(
+        "Missing reset token. Please restart the password reset flow.",
+      );
+    }
+
+    const { data } = await axiosInstance.post("/auth/updatePassword", payload, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json, text/plain, */*",
+      },
+    });
+
+    return data;
+  };
+
   const newPasswordMutation = useMutation({
-    mutationFn: newPassword,
+    mutationFn: postNewPassword,
     onSuccess: () => {
-      dispatch(logout());
+      sessionStorage.removeItem("token");
       localStorage.removeItem("email");
       setOpen(true);
+      // dispatch(logout());
     },
     onError: (err) => {
       const message = getAxiosErrorMessage(err || "Something went wrong");

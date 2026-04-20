@@ -13,7 +13,7 @@ import { useRouter } from "next/navigation";
 import { useDispatch } from "react-redux";
 import OtpForm from "@/src/components/auth/Otp";
 import { ForgotVerifyOtpPayload } from "@/src/types/index.type";
-import { singUp } from "@/src/lib/store/feature/authSlice";
+import { setNewPassword } from "@/src/lib/store/feature/authSlice";
 
 const Page = () => {
   const dispatch = useDispatch();
@@ -51,22 +51,12 @@ const Page = () => {
     mutationFn: ForgotVerifyOtp,
 
     onSuccess: (response) => {
-      const userInfo = response?.data;
-      const normalizedUser = {
-        ...response.data.user,
-        _id: response.data.user.id,
-      };
+      const token = response?.data?.token;
+      if (token) {
+        sessionStorage.setItem("token", token);
+      }
 
-      dispatch(
-        singUp({
-          token: {
-            access: userInfo.token,
-            refresh: userInfo.token,
-          },
-          user: normalizedUser,
-          isResetPasswordFlow: true,
-        }),
-      );
+      dispatch(setNewPassword({ isResetPasswordFlow: true }));
       SuccessToast(response.message);
       router.push("/auth/new-password");
     },
