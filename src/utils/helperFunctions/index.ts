@@ -6,9 +6,9 @@ export const phoneFormatter = (input: string): string => {
 
   let cleaned = input.replace(/\D/g, "");
 
-  if (cleaned.length === 11 && cleaned.startsWith("1")) {
-    cleaned = cleaned.slice(1);
-  }
+  // if (cleaned.length === 11 && cleaned.startsWith("1")) {
+  //   cleaned = cleaned.slice(1);
+  // }
 
   cleaned = cleaned.slice(0, 10);
 
