@@ -37,6 +37,20 @@ export type RegisterResponse = {
     };
   };
 };
+
+export type EditProfilePayload = {
+  fullName: string;
+  image?: any;
+  email: string;
+  phone: string;
+  zipCode: string;
+  apartmentNo: string;
+  location: {
+    lat: number;
+    lng: number;
+  } | null;
+};
+
 export type CheckEmailPayload = {
   email: string;
   role: string;

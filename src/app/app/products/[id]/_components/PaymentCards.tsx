@@ -16,7 +16,7 @@ import { Elements } from "@stripe/react-stripe-js";
 import StripeForm from "@/src/components/forms/StripeForm";
 
 const stripePromise = loadStripe(
-  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "",
 );
 
 interface PaymentCardsProps {
@@ -42,8 +42,8 @@ const PaymentCards: React.FC<PaymentCardsProps> = ({
         </Button>
       </DialogTrigger>
 
-<DialogContent className="max-w-md max-h-[90vh] flex flex-col">
-          <DialogHeader>
+      <DialogContent className="max-w-md max-h-[90vh] flex flex-col">
+        <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {showAddCard && (
               <ArrowLeft
@@ -75,8 +75,8 @@ const PaymentCards: React.FC<PaymentCardsProps> = ({
             </div>
 
             {/* Cards List */}
-<div className="flex-1 overflow-y-auto pr-1">
-                {cardsData && cardsData.data.length > 0 ? (
+            <div className="flex-1 overflow-y-auto pr-1">
+              {cardsData && cardsData.data.length > 0 ? (
                 cardsData.data.map((card: any) => (
                   <div
                     key={card._id}

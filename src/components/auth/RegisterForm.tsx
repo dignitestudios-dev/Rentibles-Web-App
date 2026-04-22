@@ -130,7 +130,6 @@ const RegisterForm = () => {
 
     try {
       const draft: RegisterDraft = JSON.parse(storedDraft);
-      console.log("🚀 ~ RegisterForm ~ draft:", draft.phone);
 
       setValue("fullName", draft.fullName);
       setValue("email", draft.email);
@@ -440,6 +439,7 @@ const RegisterForm = () => {
           placeholder="Apartment No"
           error={errors.apartmentNo?.message}
           {...register("apartmentNo")}
+          inputType="letter"
         />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

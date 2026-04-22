@@ -432,6 +432,7 @@ const CreateProductForm = () => {
               error={errors.productName?.message}
               {...register("productName")}
               placeholder="Enter Product Name"
+              inputType="letter"
             />
             <InputField
               error={errors.description?.message}

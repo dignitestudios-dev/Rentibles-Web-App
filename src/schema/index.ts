@@ -128,6 +128,43 @@ export const identitySchema = z.object({
 
 export type IdentityFormValues = z.infer<typeof identitySchema>;
 
+export const EditProfileSchema = z.object({
+  fullName: z
+    .string()
+    .trim()
+    .min(1, "Full name is required")
+    .min(2, "Full name must be at least 2 characters"),
+  email: z
+    .string()
+    .min(1, "Email is required")
+    .refine((val) => emailRegex.test(val), {
+      message: "Invalid email address",
+    }),
+  phone: z
+    .string()
+    .trim()
+    .min(1, "Phone number is required")
+    .min(7, "Phone number must be at least 7 digits"),
+  zipCode: z
+    .string()
+    .trim()
+    .min(1, "Zip code is required")
+    .min(5, "Zip code must be at least 5 characters"),
+  apartmentNo: z.string().min(1, "Apartment number is required"),
+  image: z.any().optional(),
+  location: z
+    .object({
+      lat: z.number(),
+      lng: z.number(),
+    })
+    .nullable()
+    .refine((val) => val !== null, {
+      message: "Please select your location on the map",
+    }),
+});
+
+export type EditProfilePayload = z.infer<typeof EditProfileSchema>;
+
 export const createProductSchema = z.object({
   productName: z
     .string()

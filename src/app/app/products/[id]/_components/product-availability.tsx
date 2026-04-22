@@ -14,7 +14,7 @@ interface ProductAvailabilityProps {
     quantity: number; // total quantity available for day-based rentals
   };
   onSlotSelect?: (slots: TimeSlot[]) => void;
-  onDaySelect?: (date: Date) => void;
+  onDaySelect?: (data: boolean) => void;
   setAvailableQuantity: (qty: number) => void; // new callback to set available quantity in parent
   onSelectionModeChange?: (mode: "day" | "hour" | null) => void;
   onDateRangeChange?: (range: { from?: Date; to?: Date } | undefined) => void;
@@ -137,9 +137,7 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
     const generatedSlots = generateSlots(new Date(date));
 
     setSlots(generatedSlots);
-
-    // Call callback
-    onDaySelect?.(date);
+    onDaySelect?.(false);
   };
 
   // Handle time slot selection (multiple selection for hourly)
@@ -260,8 +258,11 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
   // Handle day selection (single day mode)
   const handleSelectDay = (range: { from?: Date; to?: Date } | undefined) => {
     setSelectionMode("day");
+    onSelectionModeChange?.("day");
     setSelectedSlots([]);
     setDateRange(range);
+    onDateRangeChange?.(range);
+    onDaySelect?.(false);
 
     if (!range?.from) return;
 
@@ -281,8 +282,6 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
       setRangeHasUnavailableDates(false);
       setRangeError("");
     }
-
-    onDaySelect?.(range.from);
   };
 
   const isSlotSelected = (slot: TimeSlot): boolean => {
@@ -592,6 +591,7 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
                   onClick={() => {
                     onSlotSelect?.([]);
                     setIsOpen(false);
+                    onDaySelect?.(true);
                   }}
                   className="w-full bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
                 >

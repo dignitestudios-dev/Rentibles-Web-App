@@ -70,15 +70,18 @@ const ProductDetailsPage = () => {
   const [timeSlots, setTimeSlots] = useState<TimeSlot[]>([]);
 
   // const [rentalType, setRentalType] = useState<"day" | "hour">("day");
-  // const [selectedDate, setSelectedDate] = useState<Date | undefined>();
+  const [selectedDate, setSelectedDate] = useState<boolean>(false);
   const [availableQuantity, setAvailableQuantity] = useState<number>(0);
 
   const [selectionMode, setSelectionMode] = useState<"day" | "hour" | null>(
     null,
   );
+  console.log("🚀 ~ ProductDetailsPage ~ selectionMode:", selectionMode);
+
   const [dateRange, setDateRange] = useState<
     { from?: Date; to?: Date } | undefined
   >();
+
   const [selectedCardId, setSelectedCardId] = useState<string | null>(null);
 
   // Wishlist state
@@ -248,15 +251,16 @@ const ProductDetailsPage = () => {
 
   // Handle quantity change with proper validation
   const handleQuantityChange = (change: number) => {
-    if (!getBookingEpochs()) {
+    if (getBookingEpochs() || selectedDate) {
+      const newQty = quantity + change;
+      const maxQuantity = product?.quantity || product?.totalQuantity || 0;
+
+      if (newQty > 0 && newQty <= maxQuantity) {
+        setQuantity(newQty);
+      }
+    } else {
       ErrorToast("Please select booking date and time first");
       return;
-    }
-    const newQty = quantity + change;
-    const maxQuantity = product?.quantity || product?.totalQuantity || 0;
-
-    if (newQty > 0 && newQty <= maxQuantity) {
-      setQuantity(newQty);
     }
   };
 
@@ -526,6 +530,7 @@ const ProductDetailsPage = () => {
                       setAvailableQuantity={setAvailableQuantity}
                       onSelectionModeChange={setSelectionMode} // ← new
                       onDateRangeChange={setDateRange} // ← new
+                      onDaySelect={(date) => setSelectedDate(date)}
                     />
 
                     <hr className="my-6 border-border" />
@@ -619,8 +624,8 @@ const ProductDetailsPage = () => {
                     product?.isBooked ||
                     !product?.isActive ||
                     !selectedCardId ||
-                    !getBookingEpochs() ||
-                    createBookingMutation.isPending
+                    createBookingMutation.isPending ||
+                    !getBookingEpochs()
                   }
                   onClick={handleBookNow}
                   title={
@@ -642,11 +647,12 @@ const ProductDetailsPage = () => {
                 className="flex-1 max-w-sm bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-4 rounded-lg transition-colors text-lg disabled:opacity-50"
                 disabled={product?.isBooked || !product?.isActive}
                 onClick={() => {
-                  if (!getBookingEpochs()) {
+                  if (getBookingEpochs() || selectedDate) {
+                    setIsBookNow(true);
+                  } else {
                     ErrorToast("Please select booking date and time first");
                     return;
                   }
-                  setIsBookNow(true);
                 }}
               >
                 Book Now

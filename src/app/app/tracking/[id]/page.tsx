@@ -153,7 +153,6 @@ const OrderDetailsPage = () => {
   if (!bookingData?.data) return <div>No data found</div>;
 
   const booking = bookingData.data;
-  console.log("🚀 ~ OrderDetailsPage ~ booking: 154 tracking", booking);
 
   const product = booking.product;
   const detail = booking.detail;

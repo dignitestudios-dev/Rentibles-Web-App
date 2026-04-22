@@ -22,6 +22,7 @@ import { ErrorToast, SuccessToast } from "@/src/components/common/Toaster";
 import { getAxiosErrorMessage } from "@/src/utils/errorHandlers";
 import countries from "@/src/data/countries.json";
 import { useThemeContext } from "@/src/lib/theme/ThemeProvider";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface StripeFormProps {
   onSaved: () => void;
@@ -35,6 +36,7 @@ export default function StripeForm({ onSaved }: StripeFormProps) {
   const [country, setCountry] = useState("US");
   const [zipCode, setZipCode] = useState("");
   const [formError, setFormError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
 
   const { isDark } = useThemeContext();
 
@@ -113,6 +115,8 @@ export default function StripeForm({ onSaved }: StripeFormProps) {
       // Call API with just the paymentMethodId
       await addCardMutation.mutateAsync({ paymentMethodId: paymentMethod.id });
       SuccessToast("Card added successfully");
+      queryClient.invalidateQueries({ queryKey: ["cards"] });
+
       // Delay redirect to ensure cache is invalidated
       setTimeout(() => {
         onSaved();
@@ -128,7 +132,7 @@ export default function StripeForm({ onSaved }: StripeFormProps) {
 
   return (
     <div>
-      <Loader show={isSubmitting || addCardMutation.isPending} />
+      <Loader />
       <div className="max-w-md">
         {/* Error Message */}
         {formError && (
@@ -242,7 +246,11 @@ export default function StripeForm({ onSaved }: StripeFormProps) {
           disabled={isSubmitting || !stripe || !isFormValid}
           className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold py-3 rounded-lg transition-colors text-base"
         >
-          {isSubmitting ? "Saving..." : "Save"}
+          {isSubmitting || addCardMutation.isPending ? (
+            <Loader show={true} />
+          ) : (
+            "Save"
+          )}
         </button>
       </div>
     </div>

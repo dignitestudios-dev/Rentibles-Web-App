@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ArrowLeft, MapPin, Phone, TriangleAlert } from "lucide-react";
+import { ArrowLeft, Edit, MapPin, Phone, TriangleAlert } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import ProductCard from "../../home/_components/product-card";
 import Image from "next/image";
@@ -159,12 +159,20 @@ export default function UserProfilePage() {
           <h2 className="absolute left-1/2 -translate-x-1/2 top-4 text-white text-xl font-semibold">
             Profile
           </h2>
-          {!isOwnProfile && (
+          {!isOwnProfile ? (
             <div className="absolute right-8 top-4 z-50">
               <TooltipButton
                 icon={<TriangleAlert className="w-5 h-5" />}
                 tooltip="Report User"
                 onClick={() => setShowConfirmation(true)}
+              />
+            </div>
+          ) : (
+            <div className="absolute right-8 top-4 z-50">
+              <TooltipButton
+                icon={<Edit className="w-5 h-5" />}
+                tooltip="Edit Profile"
+                onClick={() => router.push("/app/users/edit-profile")}
               />
             </div>
           )}
