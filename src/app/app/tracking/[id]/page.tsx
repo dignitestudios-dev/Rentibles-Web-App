@@ -210,6 +210,8 @@ const OrderDetailsPage = () => {
     refetch();
   };
 
+  console.log("booking--> ", booking);
+
   return (
     <div className="bg-background min-h-screen">
       {/* ── Header ── */}
@@ -223,7 +225,7 @@ const OrderDetailsPage = () => {
           </button>
           <h1 className="text-lg font-semibold">Tracking Dashboard</h1>
           <div className="flex items-center gap-8">
-            {booking?.type === "own" && (
+            {/* {booking?.type === "rental" && (
               <button
                 className="text-primary bg-primary/10 px-4 py-2 rounded-md hover:bg-primary/20 transition-colors cursor-pointer"
                 onClick={() =>
@@ -232,18 +234,27 @@ const OrderDetailsPage = () => {
               >
                 Chat
               </button>
-            )}
+            )} */}
+            <button
+              className="text-primary bg-primary/10 px-4 py-2 rounded-md hover:bg-primary/20 transition-colors cursor-pointer"
+              onClick={() =>
+                router.push(`/app/user-chat?id=${booking?.user?.uid}`)
+              }
+            >
+              Chat
+            </button>
             <div className="w-10 h-10 rounded-full p-1 bg-primary ring-2 ring-primary overflow-hidden">
               <Image
                 src={
                   booking?.type === "own"
-                    ? booking?.user?.profilePicture
-                    : booking.customer.profilePicture
+                    ? booking?.user?.profilePicture || DummyAvatar
+                    : booking?.customer?.profilePicture || DummyAvatar
                 }
                 alt="user"
                 width={40}
                 height={40}
                 className="w-full h-full object-cover rounded-full"
+                unoptimized
               />
             </div>
           </div>
@@ -512,7 +523,7 @@ const OrderDetailsPage = () => {
 
       {/* ── Action bar ── */}
       <div className="w-full px-6 py-6 border-t border-border flex gap-3 justify-center">
-        {type === "customer_rental" ? (
+        {type === "customer_rental" && booking.status !== "completed" ? (
           <div className="w-100">
             <PickupCaptchaDialog
               refetchBookings={refetch}
