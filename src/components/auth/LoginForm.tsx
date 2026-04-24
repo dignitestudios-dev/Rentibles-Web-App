@@ -17,11 +17,77 @@ import { useDispatch } from "react-redux";
 import { singUp } from "@/src/lib/store/feature/authSlice";
 import { useInvalidateAllQueries } from "@/src/hooks/useInvalidateAllQueries";
 import { ArrowLeft } from "lucide-react";
+import { axiosInstance } from "@/src/lib/axiosInstance";
+import { auth, messaging } from "@/src/firebase/firebase";
+import { getToken } from "firebase/messaging";
 
 const LoginForm = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const { invalidateAll } = useInvalidateAllQueries();
+  // 1. Get Firebase ID Token
+  // (same as Flutter _getIdToken())
+  // ---------------------------
+  const getFirebaseIdToken = async (): Promise<string | null> => {
+    try {
+      const user = auth.currentUser;
+
+      if (!user) return null;
+
+      return await user.getIdToken();
+    } catch (error) {
+      console.error("ID token error:", error);
+      return null;
+    }
+  };
+
+  // ---------------------------
+  // 2. Get FCM Token
+  // (same as prefs.fcmToken in Flutter)
+  // ---------------------------
+  const getFcmToken = async (): Promise<string | null> => {
+    try {
+      if (!messaging) return null;
+
+      const token = await getToken(messaging, {
+        vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
+      });
+
+      return token || null;
+    } catch (error) {
+      console.error("FCM token error:", error);
+      return null;
+    }
+  };
+
+  // ---------------------------
+  // 3. Save FCM token to backend
+  // same as Flutter saveFcmToServer()
+  // ---------------------------
+  const saveFcmToServer = async () => {
+    try {
+      const fcmToken = await getFcmToken();
+
+      if (!fcmToken) return;
+
+      const idToken = await getFirebaseIdToken();
+
+      await axiosInstance.post(
+        "/auth/updateFCM",
+        { fcmToken },
+        {
+          headers: {
+            Authorization: `Bearer ${idToken}`,
+          },
+        },
+      );
+
+      console.log("FCM token saved successfully");
+    } catch (error) {
+      console.error("Save FCM failed:", error);
+    }
+  };
+
   const {
     register,
     handleSubmit,
@@ -42,7 +108,7 @@ const LoginForm = () => {
 
   const loginMutation = useMutation({
     mutationFn: loginUser,
-    onSuccess: (response) => {
+    onSuccess: async (response) => {
       invalidateAll();
       const userInfo = response?.data;
 
@@ -60,6 +126,7 @@ const LoginForm = () => {
           user: normalizedUser,
         }),
       );
+      await saveFcmToServer();
       SuccessToast(response?.message);
       if (
         userInfo?.user.isEmailVerified === false ||

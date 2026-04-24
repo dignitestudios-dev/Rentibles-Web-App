@@ -23,8 +23,7 @@ const getFCMToken = async (): Promise<string | undefined> => {
     }
 
     const token: string = await getToken(messaging, {
-      vapidKey:
-        "BNnLSgZYDG5ojySEHllcFMk-BfdHRgBin9Qi3yISF820n0Cfgne6iazbjOCO5upjepmFwFi7zdvT1BUSG2wxDIw",
+      vapidKey: process.env.NEXT_PUBLIC_VAPID_KEY,
     });
 
     return token;

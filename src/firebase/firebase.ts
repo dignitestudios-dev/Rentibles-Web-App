@@ -44,12 +44,10 @@ export const auth: Auth = getAuth(app);
 export const googleProvider = new GoogleAuthProvider();
 export const appleProvider = new OAuthProvider("apple.com");
 
-
 export const db: Firestore = getFirestore(app);
 export const firestore: Firestore = getFirestore(app);
 
 export const storage: FirebaseStorage = getStorage(app);
-
 
 export let messaging: Messaging | null = null;
 

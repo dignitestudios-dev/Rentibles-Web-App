@@ -13,6 +13,7 @@ export const onMessageListener = (): Promise<MessagePayload> => {
     }
 
     onMessage(messaging, (payload: MessagePayload) => {
+      console.log("🚀 ~ onMessageListener ~ payload:", payload);
       resolve(payload);
     });
   });

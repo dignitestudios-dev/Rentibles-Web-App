@@ -132,7 +132,6 @@ export default function StripeForm({ onSaved }: StripeFormProps) {
 
   return (
     <div>
-      <Loader />
       <div className="max-w-md">
         {/* Error Message */}
         {formError && (

@@ -71,6 +71,7 @@ const ProfileMenu = () => {
                 width={100}
                 height={100}
                 className="h-full w-full object-cover"
+                unoptimized
               />
             </div>
 
@@ -95,6 +96,7 @@ const ProfileMenu = () => {
                   width={48}
                   height={48}
                   className="rounded-full"
+                  unoptimized
                 />
               )}
               <div

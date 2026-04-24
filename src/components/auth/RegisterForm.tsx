@@ -37,7 +37,11 @@ import Loader from "../common/Loader";
 import GoogleMapComponent from "../common/GoogleMapPicker";
 import { useDispatch } from "react-redux";
 import { ErrorToast, SuccessToast } from "../common/Toaster";
-import { firebaseLogin, firebaseSignup } from "@/src/firebase/getIdToken";
+import {
+  createFirebaseUser,
+  getFirebaseIdToken,
+  loginFirebaseUser,
+} from "@/src/firebase/getIdToken";
 import { singUp } from "@/src/lib/store/feature/authSlice";
 import { useInvalidateAllQueries } from "@/src/hooks/useInvalidateAllQueries";
 import { Libraries, useLoadScript } from "@react-google-maps/api";
@@ -174,18 +178,18 @@ const RegisterForm = () => {
       sessionStorage.setItem("registerDraft", JSON.stringify(draft));
 
       let idToken = "";
+
       try {
-        const firebaseRes = await firebaseSignup(data.email, data.password);
-        idToken = firebaseRes.idToken;
+        await createFirebaseUser(data.email, data.password);
       } catch (firebaseError: any) {
         if (firebaseError.code === "auth/email-already-in-use") {
-          ErrorToast("Email already registered.");
-          const loginRes = await firebaseLogin(data.email, data.password);
-          idToken = loginRes.idToken;
+          await loginFirebaseUser(data.email, data.password);
         } else {
           throw firebaseError;
         }
       }
+
+      idToken = await getFirebaseIdToken();
 
       const formData = new FormData();
       formData.append("name", data.fullName);

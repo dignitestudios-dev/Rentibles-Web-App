@@ -108,6 +108,7 @@ export const CoverImageInput: React.FC<CoverImageInputProps> = ({
                 alt="Cover preview"
                 fill
                 style={{ objectFit: "contain" }}
+                unoptimized
               />
             </div>
 

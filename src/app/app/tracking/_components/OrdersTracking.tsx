@@ -66,7 +66,6 @@ const OrdersTracking: React.FC<OrdersTrackingProps> = ({
     activeFilter === "all"
       ? bookings
       : bookings.filter((booking) => booking.status === activeFilter);
-  console.log("🚀 ~ OrdersTracking ~ filteredBookings:", filteredBookings);
 
   const handleRedirect = (id: string) => {
     const params = new URLSearchParams(searchParams?.toString() ?? "");

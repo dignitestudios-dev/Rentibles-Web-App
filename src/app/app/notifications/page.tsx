@@ -92,6 +92,7 @@ const NotificationsPage: React.FC = () => {
                             width={48}
                             height={48}
                             className="object-cover w-12 h-12"
+                            unoptimized
                           />
                         ) : (
                           <div className="w-12 h-12 bg-gray-200" />

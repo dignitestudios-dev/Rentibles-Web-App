@@ -72,6 +72,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
               width={1000}
               height={1000}
               onLoadingComplete={() => setImgLoaded(true)}
+              unoptimized
               className={`w-full h-full object-cover transition-opacity duration-300 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
             />
           ) : (

@@ -114,6 +114,7 @@ const RentalCard = ({
               width={40}
               height={40}
               className="object-cover"
+              unoptimized
             />
           </div>
           <span className="text-foreground font-medium">{userName}</span>
@@ -139,6 +140,7 @@ const RentalCard = ({
               width={80}
               height={80}
               className="h-full w-full object-cover"
+              unoptimized
             />
           ) : null}
         </div>

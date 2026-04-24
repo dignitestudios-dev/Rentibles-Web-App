@@ -25,6 +25,7 @@ const StoreCard: React.FC<{ store?: Store }> = ({ store }) => {
           width={1000}
           height={1000}
           className="absolute inset-0 w-full h-full object-cover"
+          unoptimized
         />
       ) : (
         <div className="absolute inset-0 bg-gray-100 dark:bg-gray-700" />
@@ -43,6 +44,7 @@ const StoreCard: React.FC<{ store?: Store }> = ({ store }) => {
                   width={500}
                   height={500}
                   className="w-full h-full object-cover rounded-full"
+                  unoptimized
                 />
               </div>
             </div>

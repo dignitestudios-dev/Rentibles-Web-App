@@ -17,8 +17,6 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
   dateRange,
   timeSlots,
 }) => {
-  console.log("🚀 ~ BookingSummary ~ selectionMode:", selectionMode);
-  console.log("🚀 ~ BookingSummary ~ dateRange:", dateRange);
   const totalAmount = (() => {
     if (selectionMode === "day" && dateRange?.from) {
       const from = dateRange.from;

@@ -36,7 +36,7 @@
     "**/*.mts",
     "src/firebase/firebase.ts",
     ".next/dev/types/**/*.ts"
-  ],
+, "public/firebase-messaging-sw.js"  ],
   "exclude": [
     "node_modules"
   ]

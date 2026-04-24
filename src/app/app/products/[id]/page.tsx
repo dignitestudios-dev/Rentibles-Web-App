@@ -71,12 +71,12 @@ const ProductDetailsPage = () => {
 
   // const [rentalType, setRentalType] = useState<"day" | "hour">("day");
   const [selectedDate, setSelectedDate] = useState<boolean>(false);
+
   const [availableQuantity, setAvailableQuantity] = useState<number>(0);
 
   const [selectionMode, setSelectionMode] = useState<"day" | "hour" | null>(
     null,
   );
-  console.log("🚀 ~ ProductDetailsPage ~ selectionMode:", selectionMode);
 
   const [dateRange, setDateRange] = useState<
     { from?: Date; to?: Date } | undefined
@@ -251,6 +251,7 @@ const ProductDetailsPage = () => {
 
   // Handle quantity change with proper validation
   const handleQuantityChange = (change: number) => {
+    const booking = getBookingEpochs();
     if (getBookingEpochs() || selectedDate) {
       const newQty = quantity + change;
       const maxQuantity = product?.quantity || product?.totalQuantity || 0;

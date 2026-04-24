@@ -227,9 +227,10 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
   };
 
   React.useEffect(() => {
-    if (selectionMode === "hour" && selectedSlots.length >= 4) {
-      onSlotSelect?.(selectedSlots);
-    }
+    onSlotSelect?.(selectedSlots);
+    // if (selectionMode === "hour" && selectedSlots.length >= 4) {
+    //   onSlotSelect?.(selectedSlots);
+    // }
   }, [selectedSlots, selectionMode, onSlotSelect]);
 
   const getUnixTimestamp = (date: Date) => {
@@ -292,7 +293,7 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
     // Compute the minimum availableQuantity among all selected slots
     const minAvailableQuantity = selectedSlots.reduce((min, s) => {
       return s.availableQuantity! < min ? s.availableQuantity! : min;
-    }, Infinity);
+    }, product?.quantity);
     setAvailableQuantity(minAvailableQuantity);
     return selected;
   };
