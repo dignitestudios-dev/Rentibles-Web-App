@@ -15,6 +15,7 @@ import MediaViewer from "../../products/[id]/_components/MediaViewer";
 import {
   useBookingDetails,
   useCancelBooking,
+  useSignDetails,
   useUpdateBooking,
 } from "@/src/lib/api/booking";
 import {
@@ -41,6 +42,7 @@ import WriteReviewModal from "../_components/Writereviewmodal";
 import ReportIssueModal from "../_components/ReportIssueModal";
 import { useReportIssue } from "@/src/lib/api/booking";
 import { DummyAvatar, NoDataFound } from "@/public/images/export";
+import { generateAgreementPdf } from "@/src/utils/helperFunctions/pdfFunction/imagePdfFunction";
 const useCurrentEpoch = () => {
   const [now, setNow] = useState(() => Math.floor(Date.now() / 1000));
 
@@ -87,6 +89,7 @@ const OrderDetailsPage = () => {
   const [scannedId, setScannedId] = useState<string | null>(null);
   const [showAdjust, setShowAdjust] = useState(false);
   const [isReportIssueModalOpen, setIsReportIssueModalOpen] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState<string | undefined | null>(null);
 
   const now = useCurrentEpoch();
   const { latitude, longitude } = useSelector(
@@ -102,6 +105,15 @@ const OrderDetailsPage = () => {
   } = useBookingDetails(bookingId, {
     enabled: !!bookingId,
   });
+
+  const { data: signData } = useSignDetails(
+    bookingData?.data?.product?._id as string,
+    bookingId as string,
+    {
+      enabled: !!bookingData?.data?.product?._id && !!bookingId,
+    },
+  );
+  console.log("🚀 ~ OrderDetailsPage ~ signData:", signData);
 
   const cancelBookingMutation = useCancelBooking();
   const { mutate: updateBooking, isPending: isUpdating } = useUpdateBooking();
@@ -153,8 +165,10 @@ const OrderDetailsPage = () => {
   if (!bookingData?.data) return <div>No data found</div>;
 
   const booking = bookingData.data;
+  console.log("🚀 ~ OrderDetailsPage ~ booking:", booking);
 
   const product = booking.product;
+
   const detail = booking.detail;
 
   const timeNow = now;
@@ -210,7 +224,98 @@ const OrderDetailsPage = () => {
     refetch();
   };
 
-  console.log("booking--> ", booking);
+  const handleViewContract = async () => {
+    const url = await generateAgreementPdf(
+      {
+        itemName: signData?.data?.product?.name || product.name,
+        pickupTime: booking?.pickupTime,
+        dropOffTime: booking?.dropOffTime,
+        quantity: booking.quantity,
+        code: signData?.data?.orderId,
+        selectionMode: booking.duration === "24 hrs" ? "day" : "hour",
+        dateRange: {},
+        timeSlots: [],
+        hourlyPrice: booking.totalAmount,
+        dailyPrice: booking.totalAmount,
+        renterName: booking?.customer?.name || "Renter",
+        ownerName: booking.user?.name || "Owner",
+        totalAmount: booking.totalAmount,
+        renterSign: signData?.data?.user?.signature,
+        ownerSign: signData?.data?.store?.signature,
+        signDateRenter: signData?.data?.userSignatureDate,
+        signDateOwner: signData?.data?.userSignatureDate,
+      },
+      true,
+      false,
+      false,
+    );
+
+    setPdfUrl(url);
+  };
+
+  if (pdfUrl) {
+    return (
+      <div className="relative">
+        <div className="fixed inset-0 z-50 bg-white flex flex-col">
+          {/* Header */}
+          <div className="p-4 border-b flex justify-between items-center bg-gray-50">
+            <h3 className="font-bold text-gray-800">Review & Sign Agreement</h3>
+            <Button variant="ghost" onClick={() => setPdfUrl(null)}>
+              Close
+            </Button>
+          </div>
+
+          {/* PDF View Area */}
+          <div className="flex-grow   ">
+            <iframe
+              src={pdfUrl}
+              width="100%"
+              height="100%"
+              title="PDF Viewer"
+              className="border-none"
+            />
+          </div>
+
+          {/* Signature Form Area */}
+        </div>
+        {/*
+          <div className="flex justify-center absolute z-50 top-125 left-80 right-0">
+            <div className="p-6 border-t bg-white shadow-lg w-[600px] ">
+              <form
+                onSubmit={handleSubmit(onSubmit)}
+                className="max-w-2xl mx-auto flex flex-col md:flex-row gap-4 items-end"
+              >
+                <div className="flex-grow w-full">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Type your full name to sign
+                  </label>
+                  <InputField
+                    placeholder="Your Digital Signature"
+                    error={errors.sign?.message}
+                    {...register("sign")}
+                    inputType="text"
+                    maxLength={50}
+                    disabled={isPending}
+                  />
+                </div>
+  
+                <Button
+                  type="submit"
+                  className="w-full md:w-auto h-[45px] px-8"
+                  disabled={isPending}
+                >
+                  {isPending ? "Submitting..." : "Confirm & Sign"}
+                </Button>
+              </form>
+              <p className="text-center text-xs text-gray-400 mt-3">
+                By clicking &quot;Confirm & Sign&quot;, you agree to the terms
+                listed in the document above.
+              </p>
+            </div>
+          </div>*/}
+      </div>
+    );
+  }
 
   return (
     <div className="bg-background min-h-screen">
@@ -378,6 +483,11 @@ const OrderDetailsPage = () => {
             <hr className="my-6 border-border" />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <div></div>
+              <div className="flex justify-end items-center mb-2">
+                {/* <h3 className="text-lg font-semibold">Contracted Product</h3> */}
+                <Button onClick={handleViewContract}> View Contract </Button>
+              </div>
               <div>
                 <h3 className="text-lg font-semibold mb-2">Pickup Location</h3>
                 <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">

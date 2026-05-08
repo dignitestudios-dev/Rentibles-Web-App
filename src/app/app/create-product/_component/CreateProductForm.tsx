@@ -28,6 +28,9 @@ import { CoverImageInput } from "./CoverImageInput";
 import { useRouter } from "next/navigation";
 import Loader from "@/src/components/common/Loader";
 import { useUser } from "@/src/lib/api/user";
+import { useSubmitSignature } from "@/src/lib/api/booking";
+import z from "zod";
+import { generateAgreementPdf } from "@/src/utils/helperFunctions/pdfFunction/imagePdfFunction";
 
 type LocationData = {
   country?: string;
@@ -73,6 +76,9 @@ const CreateProductForm = () => {
   const [user, setUser] = useState<User>();
   const [isMap, setIsMap] = useState<boolean>(false);
   const router = useRouter();
+  const [pdfUrl, setPdfUrl] = useState<string | undefined | null>(null);
+  const [pendingProductFormData, setPendingProductFormData] =
+    useState<FormData | null>(null);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -96,6 +102,18 @@ const CreateProductForm = () => {
       router.push("/app/home");
     }
   }, [userData, router]);
+
+  const handleViewContract = async () => {
+    const obj = Object.fromEntries(pendingProductFormData?.entries() || []);
+
+    const url = await generateAgreementPdf(
+      { itemName: obj.name, ownerName: userData?.data?.name },
+      false,
+      true,
+      false,
+    );
+    setPdfUrl(url);
+  };
 
   const [location, setLocation] = useState<{
     lat: number;
@@ -177,6 +195,7 @@ const CreateProductForm = () => {
     register,
     handleSubmit,
     setValue,
+    reset,
     clearErrors,
     watch,
     formState: { errors, isDirty },
@@ -227,19 +246,41 @@ const CreateProductForm = () => {
     // clearErrors("location");
   };
 
+  // const createProductMutation = useMutation({
+  //   mutationFn: createProduct,
+  //   onSuccess: (response) => {
+  //     SuccessToast("Product Created");
+  //     router.push(`/app/products/${response?.data?._id}`);
+  //   },
+  //   onError: (err) => {
+  //     const message = getAxiosErrorMessage(err || "Failed to create product");
+  //     ErrorToast(message);
+  //   },
+  // });
+
+  // ✅ Warn user about unsaved changes before leaving or refreshing
   const createProductMutation = useMutation({
     mutationFn: createProduct,
+
     onSuccess: (response) => {
       SuccessToast("Product Created");
+
+      reset();
+      // signReset();
+
+      setPdfUrl(null);
+      // setPendingProductFormData(null);
+
       router.push(`/app/products/${response?.data?._id}`);
     },
+
     onError: (err) => {
       const message = getAxiosErrorMessage(err || "Failed to create product");
+
       ErrorToast(message);
     },
   });
 
-  // ✅ Warn user about unsaved changes before leaving or refreshing
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isDirty && !createProductMutation.isPending) {
@@ -255,7 +296,52 @@ const CreateProductForm = () => {
     };
   }, [isDirty, createProductMutation.isPending]);
 
-  const onsubmit = (data: CreateProductPayload) => {
+  // const onsubmit = (data: CreateProductPayload) => {
+  //   const formData = new FormData();
+
+  //   // Basic fields
+  //   formData.append("name", data.productName);
+  //   formData.append("description", data.description);
+  //   formData.append("quantity", String(data.quantity));
+  //   formData.append("categoryId", selectedCategoryId);
+  //   formData.append("subCategoryId", selectedSubCategoryId);
+  //   formData.append("pickupTime", toUnixTimestamp(data.pickupTime).toString());
+  //   formData.append(
+  //     "dropOffTime",
+  //     toUnixTimestamp(data.dropOffTime).toString(),
+  //   );
+
+  //   formData.append("pricePerHour", String(data.hourlyPrice));
+  //   formData.append("pricePerDay", String(data.dailyPrice));
+  //   formData.append("pickupAddress", location?.address || "");
+
+  //   // Available days
+  //   selectedDays
+  //     ?.filter((d) => d.enabled)
+  //     .forEach((d) => {
+  //       formData.append("availableDays[]", d.day);
+  //     });
+
+  //   // Location
+  //   if (locationValue) {
+  //     formData.append("longitude", String(location?.lng));
+  //     formData.append("latitude", String(location?.lat));
+  //   }
+
+  //   // Cover image
+  //   if (data.coverImage) {
+  //     formData.append("cover", data.coverImage);
+  //   }
+
+  //   // Product images
+  //   data.images.forEach((file) => {
+  //     formData.append("images", file);
+  //   });
+
+  //   createProductMutation.mutate(formData);
+  // };
+
+  const onsubmit = async (data: CreateProductPayload) => {
     const formData = new FormData();
 
     // Basic fields
@@ -264,7 +350,9 @@ const CreateProductForm = () => {
     formData.append("quantity", String(data.quantity));
     formData.append("categoryId", selectedCategoryId);
     formData.append("subCategoryId", selectedSubCategoryId);
+
     formData.append("pickupTime", toUnixTimestamp(data.pickupTime).toString());
+
     formData.append(
       "dropOffTime",
       toUnixTimestamp(data.dropOffTime).toString(),
@@ -272,6 +360,7 @@ const CreateProductForm = () => {
 
     formData.append("pricePerHour", String(data.hourlyPrice));
     formData.append("pricePerDay", String(data.dailyPrice));
+
     formData.append("pickupAddress", location?.address || "");
 
     // Available days
@@ -297,7 +386,14 @@ const CreateProductForm = () => {
       formData.append("images", file);
     });
 
-    createProductMutation.mutate(formData);
+    // STORE TEMPORARILY
+    setPendingProductFormData(formData);
+
+    if (userData?.data?.signature === null) {
+      handleViewContract();
+    } else {
+      createProductMutation.mutate(formData);
+    }
   };
 
   const handleSameAsProfile = () => {
@@ -391,6 +487,159 @@ const CreateProductForm = () => {
   const pickupTimeOptions = TimeOptions.filter(
     (option) => option.value <= "19:00",
   );
+
+  const { mutateAsync: signContract, isPending } = useSubmitSignature();
+  // const {
+  //   register: signRegister,
+  //   handleSubmit: handleSignSubmit,
+  //   reset,
+  //   formState: { errors: signErrors },
+  // } = useForm<{ sign: string }>({
+  //   resolver: zodResolver(
+  //     z.object({
+  //       sign: z
+  //         .string()
+  //         .trim()
+  //         .min(1, "Signature is required")
+  //         .min(2, "Signature must be at least 2 characters"),
+  //     }),
+  //   ),
+  //   defaultValues: { sign: "" },
+  // });
+  const {
+    register: signRegister,
+    handleSubmit: handleSignSubmit,
+    reset: signReset,
+    formState: { errors: signErrors },
+  } = useForm<{ sign: string }>({
+    resolver: zodResolver(
+      z.object({
+        sign: z
+          .string()
+          .trim()
+          .min(1, "Signature is required")
+          .min(2, "Signature must be at least 2 characters"),
+      }),
+    ),
+    defaultValues: {
+      sign: "",
+    },
+  });
+
+  // const onSignSubmit = async (formData: { sign: string }) => {
+  //   signContract(
+  //     {
+  //       // name: user?.name || "User",
+  //       signature: formData.sign,
+  //     },
+  //     {
+  //       onSuccess: async () => {
+  //         SuccessToast("Signature submitted successfully!");
+  //         reset();
+  //         setPdfUrl(null);
+  //       },
+
+  //       onError: (err) => {
+  //         ErrorToast(err.message || "Failed to submit signature");
+  //       },
+  //     },
+  //   );
+  // };
+
+  const onSignSubmit = async (formData: { sign: string }) => {
+    try {
+      // 1. SIGNATURE API
+      await signContract({
+        signature: formData.sign,
+      });
+
+      SuccessToast("Signature submitted successfully!");
+
+      // 2. CREATE PRODUCT API
+      if (!pendingProductFormData) {
+        ErrorToast("Product data missing");
+        return;
+      }
+
+      await createProductMutation.mutateAsync(pendingProductFormData);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (err: any) {
+      ErrorToast(err?.message || "Failed to complete process");
+    }
+  };
+
+  // If pdfUrl exists, show the viewer; otherwise show the product info
+  if (pdfUrl) {
+    return (
+      <div className="relative">
+        <div className="fixed inset-0 z-50 bg-white flex flex-col">
+          {/* Header */}
+          <div className="p-4 border-b flex justify-between items-center bg-gray-50">
+            <h3 className="font-bold text-gray-800">Review & Sign Agreement</h3>
+            <Button
+              variant="ghost"
+              onClick={() => {
+                setPdfUrl(null);
+                // handleViewContract();
+              }}
+            >
+              Close
+            </Button>
+          </div>
+
+          {/* PDF View Area */}
+          <div className="flex-grow   ">
+            <iframe
+              src={pdfUrl}
+              width="100%"
+              height="100%"
+              title="PDF Viewer"
+              className="border-none"
+            />
+          </div>
+        </div>
+        {/* Signature Form Area */}
+        <div className="flex justify-center absolute z-50 top-125 left-80 right-0">
+          <div className="p-6 border-t bg-white shadow-lg w-[600px] ">
+            <form
+              onSubmit={handleSignSubmit(onSignSubmit)}
+              className="max-w-2xl mx-auto flex flex-col md:flex-row gap-4 items-end"
+            >
+              <div className="flex-grow w-full">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Type your full name to sign
+                </label>
+                <InputField
+                  placeholder="Your Digital Signature"
+                  error={signErrors.sign?.message}
+                  {...signRegister("sign")}
+                  inputType="letter"
+                  maxLength={50}
+                  disabled={isPending}
+                />
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full md:w-auto h-[45px] px-8"
+                disabled={isPending || createProductMutation.isPending}
+              >
+                {isPending
+                  ? "Submitting..."
+                  : createProductMutation.isPending
+                    ? "Creating Product..."
+                    : "Confirm & Sign"}
+              </Button>
+            </form>
+            <p className="text-center text-xs text-gray-400 mt-3">
+              By clicking &quot;Confirm & Sign&quot;, you agree to the terms
+              listed in the document above.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="mx-auto px-3 sm:px-4 py-4 sm:py-6 text-white">
@@ -586,14 +835,16 @@ const CreateProductForm = () => {
         </div>
 
         {createProductMutation.isPending ? (
-          <Loader show={createProductMutation.isPending} />
+          <Loader show={createProductMutation.isPending || isPending} />
         ) : (
           <Button
             className="w-full h-10 sm:h-12 text-sm sm:text-base"
             type="submit"
-            disabled={createProductMutation.isPending}
+            disabled={createProductMutation.isPending || isPending}
           >
-            Add Rental Product
+            {createProductMutation.isPending
+              ? "Creating Product..."
+              : "Add Rental Product"}
           </Button>
         )}
       </form>

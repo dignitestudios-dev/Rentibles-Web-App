@@ -67,6 +67,7 @@ import {
 } from "@/src/types/index.type";
 import { OtpPayload } from "@/src/schema";
 import { UpdateBookingPayload, UpdateBookingResponse } from "../api/booking";
+import axios from "axios";
 
 export const loginUser = async (
   credentials: LoginPayload,
@@ -289,7 +290,8 @@ export const getUsers = async (): Promise<GetCategoriesResponse> => {
 export const getUserById = async (
   userId: string,
 ): Promise<GetUserProfileResponse> => {
-  const { data } = await axiosInstance.get(`/user?userId=${userId}`);
+  const userUrl = userId ? `/user?userId=${userId}` : "/user";
+  const { data } = await axiosInstance.get(userUrl);
   return data;
 };
 
@@ -385,6 +387,7 @@ export const createSupportTicket = async (
     const { data } = await axiosInstance.post("/support", payload);
     // Optionally validate response structure here
     return data;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
     // Optionally handle/log error, rethrow for react-query to catch
     if (error.response && error.response.data) {
@@ -408,6 +411,19 @@ export const getBookingById = async (
   id: string,
 ): Promise<GetBookingDetailsResponse> => {
   const { data } = await axiosInstance.get(`/booking/${id}`);
+  return data;
+};
+
+export const getSignById = async (
+  productId: string,
+  bookingId?: string,
+): Promise<GetBookingDetailsResponse> => {
+  const url = bookingId
+    ? `contract/contract-data/${productId}/${bookingId}`
+    : `contract/contract-data/${productId}`;
+
+  const { data } = await axiosInstance.get(url);
+
   return data;
 };
 

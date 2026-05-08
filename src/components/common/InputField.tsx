@@ -36,6 +36,16 @@ export const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
                     .replace(/\b\w/g, (char) => char.toUpperCase());
                   break;
 
+                case "alphanumeric":
+                  // 1. Keep letters, numbers, and spaces. Remove everything else.
+                  value = value.replace(/[^A-Za-z0-9\s]/g, "");
+
+                  // 2. Convert to lowercase and capitalize the first letter of every word.
+                  value = value
+                    .toLowerCase()
+                    .replace(/\b\w/g, (char) => char.toUpperCase());
+                  break;
+
                 case "email":
                   value = value.replace(/\s+/g, "");
                   break;

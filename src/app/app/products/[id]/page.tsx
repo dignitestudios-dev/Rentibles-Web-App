@@ -12,6 +12,7 @@ import {
   Flag,
 } from "lucide-react";
 import { useParams, useRouter } from "next/navigation";
+import { z } from "zod";
 
 import MediaViewer from "./_components/MediaViewer";
 import BookingSummary from "./_components/BookingSummary";
@@ -21,10 +22,13 @@ import ProductInfoSection from "./_components/ProductInfoSection";
 import { useProductById } from "@/src/lib/api/products";
 import { TimeSlot, User } from "@/src/types/index.type";
 import { ProductAvailability } from "./_components/product-availability";
-// import { useForm } from "react-hook-form"; // unused
 import { ErrorToast, SuccessToast } from "@/src/components/common/Toaster";
 import { getAxiosErrorMessage } from "@/src/utils/errorHandlers";
-import { useCreateBooking } from "@/src/lib/api/booking";
+import {
+  useCreateBooking,
+  useSignDetails,
+  useSubmitSignature,
+} from "@/src/lib/api/booking";
 import { useGetCards } from "@/src/lib/api/cards";
 import { Button } from "@/components/ui/button";
 import { useSelector } from "react-redux";
@@ -37,6 +41,13 @@ import { reportUser } from "@/src/lib/api/user";
 import Loader from "@/src/components/common/Loader";
 import ReportProductModal from "./_components/ReportProductModal";
 import { ReportProductContent } from "./_components/reportProductOptions";
+import { generateRentalPolicyPDF } from "./../../../../utils/helperFunctions/pdfFunction/pdfFunction";
+import ContractModal from "@/src/components/common/ContractModal";
+import { generateAgreementPdf } from "./../../../../utils/helperFunctions/pdfFunction/imagePdfFunction";
+import { InputField } from "@/src/components/common/InputField";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { axiosInstance } from "@/src/lib/axiosInstance";
 
 const ProductDetailsPage = () => {
   const router = useRouter();
@@ -61,9 +72,13 @@ const ProductDetailsPage = () => {
   const [isMediaViewerOpen, setIsMediaViewerOpen] = useState(false);
   const [isBookNow, setIsBookNow] = useState(false);
   const [distance, setDistance] = useState("");
+  const [contractOpen, setContractOpen] = useState(false);
 
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | undefined | null>(null);
+  const [isPDFView, setIsPDFView] = useState(true);
+  const [isPending, setIsPending] = useState(false);
 
   // const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
   // rentalDate state removed as it's no longer needed
@@ -113,6 +128,9 @@ const ProductDetailsPage = () => {
 
   // data hooks must run unconditionally at top of component
   const { data: apiResponse, isLoading, isError } = useProductById(productId);
+  const { data: signData } = useSignDetails(productId, {
+    enabled: true,
+  });
 
   const { data: cardsData } = useGetCards();
 
@@ -198,7 +216,161 @@ const ProductDetailsPage = () => {
       }
     : null;
 
+  // const { mutate: signContract, isPending } = useSubmitSignature();
+
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<{ sign: string }>({
+    resolver: zodResolver(
+      z.object({
+        sign: z
+          .string()
+          .trim()
+          .min(1, "Signature is required")
+          .min(2, "Signature must be at least 2 characters"),
+      }),
+    ),
+    defaultValues: {
+      sign: "",
+    },
+  });
+
+  // const onSignSubmit = (formData: { sign: string }) => {
+  //   setPdfUrl(null); // Close the PDF preview
+  //   signContract(
+  //     {
+  //       bookingId: "", // Using product ID as booking ID
+  //       name: user?.name || "User",
+  //       signature: formData.sign,
+  //     },
+  //     {
+  //       onSuccess: () => {
+  //         SuccessToast("Signature submitted successfully!");
+  //         setPdfUrl(null); // Close the preview
+  //         reset(); // Clear the form
+  //       },
+  //       onError: (err) => {
+  //         ErrorToast(err.message || "Failed to submit signature");
+  //       },
+  //     },
+  //   );
+  // };
+
   // Initialize selected card on mount or when cardsData changes
+
+  const onSignSubmit = async (formData: { sign: string }) => {
+    setIsPending(true);
+    const epochs = getBookingEpochs();
+
+    if (!epochs) {
+      ErrorToast("Please select booking date and time");
+      return;
+    }
+
+    if (!selectedCardId) {
+      ErrorToast("Please select a card");
+      return;
+    }
+
+    try {
+      // ─────────────────────────────────────────────
+      // 1. CREATE BOOKING
+      // ─────────────────────────────────────────────
+      const bookingResponse = await createBookingMutation.mutateAsync({
+        productId: product?._id,
+        quantity,
+        pickupTime: epochs.pickupTime,
+        dropOffTime: epochs.dropOffTime,
+        sourceId: selectedCardId,
+        isContracted: false,
+      });
+
+      console.log("🚀 ~ onSignSubmit ~ bookingResponse:", bookingResponse);
+
+      if (!bookingResponse?.success) {
+        ErrorToast("Booking creation failed");
+        return;
+      }
+
+      const paymentIntentId = bookingResponse?.data?.paymentIntent;
+
+      if (!paymentIntentId) {
+        ErrorToast("Payment Intent not found");
+        return;
+      }
+
+      // ─────────────────────────────────────────────
+      // 2. CHECK BOOKING STATUS
+      // ─────────────────────────────────────────────
+      const paymentStatusResponse = await axiosInstance.post(
+        "/booking/status",
+        {
+          paymentIntentId,
+        },
+      );
+
+      console.log("🚀 ~ paymentStatusResponse:", paymentStatusResponse);
+
+      if (!paymentStatusResponse?.data?.success) {
+        ErrorToast("Payment status verification failed");
+        return;
+      }
+
+      const bookingId = paymentStatusResponse?.data?.data?._id;
+
+      if (!bookingId) {
+        ErrorToast("Booking ID not found");
+        return;
+      }
+
+      // ─────────────────────────────────────────────
+      // 3. SUBMIT SIGNATURE
+      // ─────────────────────────────────────────────
+      const signaturePayload = {
+        bookingId,
+        name: user?.name || "User",
+        signature: formData.sign,
+      };
+
+      const signContractResponse = await axiosInstance.post(
+        "/contract/user-signature",
+        signaturePayload,
+      );
+
+      console.log("🚀 ~ signContractResponse:", signContractResponse);
+
+      if (!signContractResponse?.data?.success) {
+        ErrorToast("Failed to submit signature");
+        return;
+      }
+
+      // ─────────────────────────────────────────────
+      // 4. SUCCESS FLOW
+      // ─────────────────────────────────────────────
+      SuccessToast("Contract signed successfully");
+
+      setPdfUrl(null);
+      setIsBookNow(false);
+      setSelectedCardId(null);
+
+      reset();
+
+      router.push("/app/tracking");
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      console.log("🚀 ~ onSignSubmit ~ error:", error);
+
+      const message = getAxiosErrorMessage(error, "Failed to complete booking");
+
+      ErrorToast(message);
+    } finally {
+      setIsPending(false);
+    }
+  };
+
   useEffect(() => {
     if (cardsData?.data && cardsData.data.length > 0 && !selectedCardId) {
       // Select default card if exists, otherwise select first card
@@ -354,6 +526,98 @@ const ProductDetailsPage = () => {
     }
   };
 
+  const handleViewContract = async () => {
+    const url = await generateAgreementPdf(
+      {
+        itemName: product.name,
+        pickupTime: product.pickupTime,
+        dropOffTime: product?.dropOffTime,
+        quantity: quantity,
+        code: "",
+        selectionMode: selectionMode,
+        dateRange,
+        timeSlots,
+        hourlyPrice: product.pricePerHour,
+        dailyPrice: product.pricePerDay,
+        ownerName: product.user?.name || "Owner",
+        ownerSign: signData?.data?.store?.signature,
+      },
+      false,
+      false,
+      isPDFView,
+    );
+
+    setPdfUrl(url);
+  };
+
+  // If pdfUrl exists, show the viewer; otherwise show the product info
+  if (pdfUrl) {
+    return (
+      <div className="relative">
+        <div className="fixed inset-0 z-50 bg-white flex flex-col">
+          {/* Header */}
+          <div className="p-4 border-b flex justify-between items-center bg-gray-50">
+            <h3 className="font-bold text-gray-800">Review & Sign Agreement</h3>
+            <Button variant="ghost" onClick={() => setPdfUrl(null)}>
+              Close
+            </Button>
+          </div>
+
+          {/* PDF View Area */}
+          <div className="flex-grow   ">
+            <iframe
+              src={pdfUrl}
+              width="100%"
+              height="100%"
+              title="PDF Viewer"
+              className="border-none"
+            />
+          </div>
+
+          {/* Signature Form Area */}
+        </div>
+        {isBookNow && (
+          <div className="flex justify-center absolute z-50 top-125 left-80 right-0">
+            <div className="p-6 border-t bg-white shadow-lg w-[600px] ">
+              <form
+                onSubmit={handleSubmit(onSignSubmit)}
+                className="max-w-2xl mx-auto flex flex-col md:flex-row gap-4 items-end"
+              >
+                <div className="flex-grow w-full">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Type your full name to sign
+                  </label>
+                  <InputField
+                    placeholder="Your Digital Signature"
+                    error={errors.sign?.message}
+                    {...register("sign")}
+                    inputType="text"
+                    maxLength={50}
+                    disabled={isPending}
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full md:w-auto h-[45px] px-8"
+                  disabled={isPending || createBookingMutation.isPending}
+                >
+                  {isPending || createBookingMutation.isPending
+                    ? "Submitting..."
+                    : "Confirm & Sign"}
+                </Button>
+              </form>
+              <p className="text-center text-xs text-gray-400 mt-3">
+                By clicking &quot;Confirm & Sign&quot;, you agree to the terms
+                listed in the document above.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="bg-background min-h-screen">
       <Loader show={isReporting} />
@@ -493,8 +757,17 @@ const ProductDetailsPage = () => {
 
             <div className="my-2">
               <div className="flex justify-between items-center mb-2">
-                <h3 className="text-lg font-semibold">Contracted Product</h3>
-                <Button> View Contract </Button>
+                {!isBookNow && (
+                  <>
+                    <h3 className="text-lg font-semibold">
+                      Contracted Product
+                    </h3>
+                    <Button onClick={handleViewContract}>
+                      {" "}
+                      View Contract{" "}
+                    </Button>
+                  </>
+                )}
               </div>
               <div>
                 <p className="text-sm text-gray-500">
@@ -611,15 +884,18 @@ const ProductDetailsPage = () => {
             {isBookNow ? (
               <>
                 <button
+                  type="button"
                   className="flex-1 max-w-sm bg-gray-300 hover:bg-gray-400 text-gray-700 font-semibold py-4 rounded-lg transition-colors text-lg"
                   onClick={() => {
                     setIsBookNow(false);
+                    setIsPDFView(true);
                     setSelectedCardId(null);
                   }}
                 >
                   Go Back
                 </button>
                 <button
+                  type="button"
                   className="flex-1 max-w-sm bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-4 rounded-lg transition-colors text-lg disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={
                     product?.isBooked ||
@@ -628,7 +904,7 @@ const ProductDetailsPage = () => {
                     createBookingMutation.isPending ||
                     !getBookingEpochs()
                   }
-                  onClick={handleBookNow}
+                  onClick={handleViewContract}
                   title={
                     !selectedCardId
                       ? "Please select a payment method"
@@ -650,6 +926,7 @@ const ProductDetailsPage = () => {
                 onClick={() => {
                   if (getBookingEpochs() || selectedDate) {
                     setIsBookNow(true);
+                    setIsPDFView(false);
                   } else {
                     ErrorToast("Please select booking date and time first");
                     return;
@@ -680,6 +957,24 @@ const ProductDetailsPage = () => {
         isLoading={isReporting}
         title="Report Product"
         reasons={ReportProductContent}
+      />
+      <ContractModal
+        open={contractOpen}
+        onClose={() => setContractOpen(false)}
+        product={{
+          productName: product.name,
+          pickupTime: product.pickupTime,
+          dropOffTime: product?.dropOffTime,
+          quantity: quantity,
+          productId: product._id,
+          selectionMode: selectionMode,
+          dateRange,
+          timeSlots,
+          hourlyPrice: product.pricePerHour,
+          dailyPrice: product.pricePerDay,
+          renterName: user?.name || "Renter",
+          ownerName: product.user?.name || "Owner",
+        }}
       />
     </div>
   );

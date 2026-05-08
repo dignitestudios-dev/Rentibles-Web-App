@@ -777,6 +777,8 @@ export interface GetUserProfileResponse {
     city: string;
     state: string;
     zipCode: number;
+    signature: string;
+    signatureDate: string;
     location: {
       type: string;
       coordinates: [number, number];
@@ -1080,6 +1082,7 @@ export interface TrackingBooking {
   quantity: number;
   perUnitPrice: number;
   totalAmount: number;
+  orderId: string | null;
   pickupAddress: string | null;
   pickupLocation: {
     type: string;
@@ -1106,12 +1109,15 @@ export interface TrackingBooking {
   platformAmount: number;
   stripeFee: number;
   sellerAmount: number;
+  userSignatureDate: string | null;
   user: {
     _id: string;
     name: string;
     profilePicture: string;
     phone: string;
     uid: string;
+    signature: string | null;
+    signatureDate: string | null;
   };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   store: null | any;

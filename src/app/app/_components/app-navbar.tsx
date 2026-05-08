@@ -22,8 +22,8 @@ const AppNavbar = () => {
   const { isAuthenticated, user } = useAppSelector((state) => state.auth);
   const isLoggedIn = Boolean(isAuthenticated && user);
   const userId = user?._id;
-  const { data: userData } = useUser(userId ?? "", {
-    enabled: Boolean(userId),
+  const { data: userData } = useUser("", {
+    enabled: true,
   });
 
   const handleCreateProductClick = () => {

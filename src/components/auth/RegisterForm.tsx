@@ -443,7 +443,7 @@ const RegisterForm = () => {
           placeholder="Apartment No"
           error={errors.apartmentNo?.message}
           {...register("apartmentNo")}
-          inputType="letter"
+          inputType="alphanumeric"
         />
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

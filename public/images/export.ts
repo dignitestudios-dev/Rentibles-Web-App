@@ -17,6 +17,12 @@ import ProductSearch from "./searchImg.png";
 import NoDataFound from "./no_data.png";
 import AppleIcon from "./appleIcon.png";
 import DummyAvatar from "./dummyAvatar.jpg";
+import agreement_one from "./rentible_agree_1.png";
+import agreement_two from "./rentible_agree_2.png";
+import agreement_three from "./rentible_agree_3.png";
+import agreement_four from "./rentible_agree_4.png";
+import agreement_five from "./rentible_agree_5.png";
+import agreement_six from "./rentible_agree_6.png";
 
 export {
   OrangeLogo,
@@ -38,4 +44,10 @@ export {
   ProductSearch,
   NoDataFound,
   DummyAvatar,
+  agreement_one,
+  agreement_two,
+  agreement_three,
+  agreement_four,
+  agreement_five,
+  agreement_six,
 };

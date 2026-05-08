@@ -6,12 +6,18 @@ import {
   UseQueryResult,
 } from "@tanstack/react-query";
 import { axiosInstance } from "@/src/lib/axiosInstance";
-import { getTracking, getBookingById, updateBooking } from "../query/queryFn";
+import {
+  getTracking,
+  getBookingById,
+  updateBooking,
+  getSignById,
+} from "../query/queryFn";
 import {
   GetTrackingParams,
   GetTrackingResponse,
   GetBookingDetailsResponse,
 } from "@/src/types/index.type";
+import axios from "axios";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -28,7 +34,7 @@ export interface UpdateBookingResponse {
 }
 
 export interface CreateBookingPayload {
-  productId: string;
+  productId: string | undefined;
   quantity: number;
   pickupTime: number;
   dropOffTime: number;
@@ -37,7 +43,11 @@ export interface CreateBookingPayload {
 }
 export interface CreateBookingResponse {
   success: boolean;
-  data?: unknown;
+  data?: {
+    _id: string;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    [key: string]: any; // Allows for other properties too
+  };
   message?: string;
 }
 
@@ -233,6 +243,18 @@ export interface GetReportBookingResponse {
   };
 }
 
+export interface SignaturePayload {
+  bookingId?: string;
+  name?: string;
+  signature: string;
+}
+
+export interface SignatureResponse {
+  success: boolean;
+  message: string;
+  // Add other fields returned by your backend
+}
+
 export const getReportBookings =
   async (): Promise<GetReportBookingResponse> => {
     const { data } = await axiosInstance.get("/report/booking");
@@ -263,3 +285,56 @@ export const useReportIssue = (): UseMutationResult<
   ReportIssuePayload,
   unknown
 > => useMutation({ mutationFn: reportIssue });
+
+export const submitContractSignature = async (
+  payload: SignaturePayload,
+): Promise<SignatureResponse> => {
+  // const token =
+  //   typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  // const { data } = await axios.post(
+  //   "https://htpjxxnx-3050.inc1.devtunnels.ms/contract/user-signature",
+  //   payload,
+  //   {
+  //     headers: {
+  //       Authorization: `Bearer ${token}`,
+  //       "Content-Type": "application/json",
+  //       // Add any other custom headers required by this specific endpoint
+  //     },
+  //   },
+  // );
+  const { data } = await axiosInstance.post(
+    "/contract/store-signature",
+    payload,
+  );
+  return data;
+};
+
+export const useSubmitSignature = (): UseMutationResult<
+  SignatureResponse,
+  Error,
+  SignaturePayload,
+  unknown
+> => useMutation({ mutationFn: submitContractSignature });
+
+export const useSignDetails = (
+  productId: string,
+  bookingIdOrOptions?: string | { enabled?: boolean },
+  maybeOptions?: { enabled?: boolean },
+) => {
+  const bookingId =
+    typeof bookingIdOrOptions === "string" ? bookingIdOrOptions : undefined;
+
+  const options =
+    typeof bookingIdOrOptions === "object" ? bookingIdOrOptions : maybeOptions;
+
+  return useQuery({
+    queryKey: ["sign-details", productId, bookingId],
+
+    queryFn: () => getSignById(productId, bookingId),
+
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+
+    enabled: options?.enabled && !!productId,
+  });
+};
