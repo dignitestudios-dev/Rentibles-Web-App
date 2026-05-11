@@ -12,7 +12,7 @@ import {
   getReturnDateTimeString,
   getTotalAmountString,
 } from "./rentalPDFUtils";
-import { formatDateToMMDDYYYY } from "..";
+import { formatDateToMMDDYYYY } from "../index.ts";
 import { rochesterBase64 } from "./rochesterBase64";
 
 const loadImage = (url) => {
@@ -91,7 +91,7 @@ export const generateAgreementPdf = async (
     doc.addImage(images[5], "JPEG", 0, 0, PW, PH);
 
     // --- Data Overlays ---
-    doc.setFont("helvetica", "bold");
+    doc.setFont("helvetica", "normal");
     doc.setFontSize(11);
     doc.setTextColor(0, 0, 0);
 

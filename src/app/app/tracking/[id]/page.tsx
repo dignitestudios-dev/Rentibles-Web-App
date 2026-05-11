@@ -260,7 +260,7 @@ const OrderDetailsPage = () => {
           {/* Header */}
           <div className="p-4 border-b flex justify-between items-center bg-gray-50">
             <h3 className="font-bold text-gray-800">Review & Sign Agreement</h3>
-            <Button variant="ghost" onClick={() => setPdfUrl(null)}>
+            <Button variant="default" onClick={() => setPdfUrl(null)}>
               Close
             </Button>
           </div>

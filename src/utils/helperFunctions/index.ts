@@ -51,6 +51,29 @@ export function formatDateToMMDDYYYY(
   return `${month}/${day}/${year}`;
 }
 
+// export function formatDateForPDF(
+//   dateString: string | null | undefined | number,
+// ): string {
+//   if (!dateString) return "—";
+
+//   const date = new Date(
+//     typeof dateString === "number" && dateString < 10000000000
+//       ? dateString * 1000
+//       : dateString,
+//   );
+
+//   if (Number.isNaN(date.getTime())) return "—";
+
+//   return date.toLocaleString("en-US", {
+//     month: "2-digit",
+//     day: "2-digit",
+//     year: "numeric",
+//     hour: "2-digit",
+//     minute: "2-digit",
+//     hour12: false,
+//   });
+// }
+
 export const toUnixTimestamp = (time: string): number => {
   // Assume today's date, combine with time string
   const today = new Date();

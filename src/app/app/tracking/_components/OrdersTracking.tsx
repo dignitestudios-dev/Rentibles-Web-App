@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import RentalCard from "./RentalCards";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { TrackingBooking } from "@/src/types/index.type";
+import Loader from "@/src/components/common/Loader";
 
 export const TrackingFilter = [
   { _id: "all", name: "All" },
@@ -76,11 +77,7 @@ const OrdersTracking: React.FC<OrdersTrackingProps> = ({
   };
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center py-10">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <Loader show={true} />;
   }
 
   return (
@@ -114,8 +111,8 @@ const OrdersTracking: React.FC<OrdersTrackingProps> = ({
         ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {filteredBookings.length
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4  ">
+        {filteredBookings.length > 0
           ? filteredBookings.map((booking) => {
               // ✅ Convert epoch → Date
               const bookingDateObj = new Date(booking.bookingDate * 1000);
