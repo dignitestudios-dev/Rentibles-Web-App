@@ -30,24 +30,29 @@ export const InputField = forwardRef<HTMLInputElement, InputFieldProps>(
 
               switch (inputType) {
                 case "letter":
-                  value = value.replace(/[^A-Za-z\s]/g, "");
-                  value = value
-                    .toLowerCase()
-                    .replace(/\b\w/g, (char) => char.toUpperCase());
+                  value = value.replace(/[^\p{L}\s'-]/gu, "");
+
+                  value = value.replace(/\b\p{L}/gu, (char) =>
+                    char.toUpperCase(),
+                  );
                   break;
 
                 case "alphanumeric":
                   // 1. Keep letters, numbers, and spaces. Remove everything else.
-                  value = value.replace(/[^A-Za-z0-9\s]/g, "");
+                  value = value.replace(/[^\p{L}0-9\s\-\/]/gu, "");
 
                   // 2. Convert to lowercase and capitalize the first letter of every word.
-                  value = value
-                    .toLowerCase()
-                    .replace(/\b\w/g, (char) => char.toUpperCase());
+                  // value = value
+                  //   .toLowerCase()
+                  //   .replace(/\b\w/g, (char) => char.toUpperCase());
                   break;
 
                 case "email":
-                  value = value.replace(/\s+/g, "");
+                  value = value
+                    .replace(/\s+/g, "")
+                    .replace(/[^A-Za-z0-9@._%+-]/g, "")
+                    .toLowerCase();
+
                   break;
 
                 case "numeric":

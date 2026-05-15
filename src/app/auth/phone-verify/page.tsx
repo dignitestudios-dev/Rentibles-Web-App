@@ -35,7 +35,6 @@ const Page = () => {
     watch,
     setValue,
     clearErrors,
-
     handleSubmit,
     formState: { errors },
   } = useForm<OtpPayload>({
@@ -97,7 +96,7 @@ const Page = () => {
       <p className="text-gray-400 mt-2 text-center">
         Enter the OTP sent to
         <span className="text-foreground mx-2">
-          +1{formatUSAPhoneNumber(user?.phone || "")}
+          {formatUSAPhoneNumber(user?.phone || "")}
         </span>
       </p>
 

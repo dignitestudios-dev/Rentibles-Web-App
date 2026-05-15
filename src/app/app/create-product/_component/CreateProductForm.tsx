@@ -773,6 +773,7 @@ const CreateProductForm = () => {
             placeholder="Enter Price"
             error={errors.hourlyPrice?.message}
             {...register("hourlyPrice")}
+            maxLength={7}
           />
           <InputField
             inputType="numeric"
@@ -780,6 +781,7 @@ const CreateProductForm = () => {
             placeholder="Enter Price"
             error={errors.dailyPrice?.message}
             {...register("dailyPrice")}
+            maxLength={7}
           />
         </div>
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-4 sm:mt-6">

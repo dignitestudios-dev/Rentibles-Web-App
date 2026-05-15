@@ -253,3 +253,12 @@ export const formatTimeToDisplay = (isoString: string) => {
 
   return date.toLocaleTimeString("en-US", options);
 };
+
+export const formatCompactPrice = (value: number) => {
+  if (!value) return "0";
+
+  return new Intl.NumberFormat("en", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(value);
+};

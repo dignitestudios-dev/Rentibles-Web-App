@@ -432,7 +432,9 @@ const ProductDetailsPage = () => {
         setQuantity(newQty);
       }
     } else {
-      ErrorToast("Please select booking date and time first");
+      ErrorToast(
+        "Please select a date or at least four consecutive time slots.",
+      );
       return;
     }
   };
@@ -578,20 +580,20 @@ const ProductDetailsPage = () => {
         </div>
         {isBookNow && (
           <div className="flex justify-center absolute z-50 top-125 left-80 right-0">
-            <div className="p-6 border-t bg-white shadow-lg w-[600px] ">
+            <div className="p-6 border-t bg-white dark:bg-accent shadow-lg w-[600px] ">
               <form
                 onSubmit={handleSubmit(onSignSubmit)}
                 className="max-w-2xl mx-auto flex flex-col md:flex-row gap-4 items-end"
               >
                 <div className="flex-grow w-full">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium dark:text-accent-foreground text-gray-700 mb-1">
                     Type your full name to sign
                   </label>
                   <InputField
                     placeholder="Your Digital Signature"
                     error={errors.sign?.message}
                     {...register("sign")}
-                    inputType="text"
+                    inputType="letter"
                     maxLength={50}
                     disabled={isPending}
                   />
@@ -928,7 +930,9 @@ const ProductDetailsPage = () => {
                     setIsBookNow(true);
                     setIsPDFView(false);
                   } else {
-                    ErrorToast("Please select booking date and time first");
+                    ErrorToast(
+                      "Please select a date or at least four consecutive time slots.",
+                    );
                     return;
                   }
                 }}

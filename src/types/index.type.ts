@@ -9,6 +9,7 @@ export interface SupportTicketResponse {
 }
 export type RegisterPayload = {
   fullName: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   image?: any;
   email: string;
   phone: string;
@@ -29,7 +30,7 @@ export type RegisterResponse = {
   data: {
     token: string;
     user: {
-      id: string;
+      _id: string;
       name: string;
       email: string;
       image?: string;
@@ -40,6 +41,7 @@ export type RegisterResponse = {
 
 export type EditProfilePayload = {
   fullName: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   image?: any;
   email: string;
   phone: string;

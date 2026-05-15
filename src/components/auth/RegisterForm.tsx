@@ -231,7 +231,7 @@ const RegisterForm = () => {
       const userInfo = response?.data;
       const normalizedUser = {
         ...response.data.user,
-        _id: response.data.user.id,
+        _id: response.data.user._id,
       };
 
       dispatch(
@@ -351,7 +351,7 @@ const RegisterForm = () => {
           error={errors.fullName?.message}
           {...register("fullName")}
           inputType="letter"
-          maxLength={50}
+          maxLength={64}
         />
 
         <InputField
@@ -414,7 +414,9 @@ const RegisterForm = () => {
       </div>
 
       {errors.location && (
-        <p className="mt-1 text-xs text-red-500">{errors.location.message}</p>
+        <p className=" text-xs text-red-500">
+          Please Enter/Select valid location
+        </p>
       )}
 
       <div>
@@ -422,7 +424,7 @@ const RegisterForm = () => {
           type="button"
           variant="outline"
           onClick={() => {
-            setCurrentLocation(true);
+            setCurrentLocation((prev) => !prev);
           }}
           className="mb-2 h-10 w-full border-gray-300 text-sm"
         >
@@ -452,7 +454,7 @@ const RegisterForm = () => {
           placeholder="Password"
           error={errors.password?.message}
           {...register("password")}
-          maxLength={32}
+          maxLength={64}
           inputType="password"
         />
 
@@ -461,7 +463,7 @@ const RegisterForm = () => {
           placeholder="Confirm Password"
           error={errors.confirmPassword?.message}
           {...register("confirmPassword")}
-          maxLength={32}
+          maxLength={64}
           inputType="password"
         />
       </div>

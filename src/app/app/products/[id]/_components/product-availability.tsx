@@ -55,6 +55,12 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
     Math.floor(new Date().getTime() / 1000),
   );
 
+  const getUnixTimestamp = (date: Date) => {
+    return Math.floor(
+      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 1000,
+    );
+  };
+
   React.useEffect(() => {
     const today = new Date();
     if (
@@ -74,7 +80,10 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
 
   // API call to fetch availability data for the month
   const { data: availabilityResp, isLoading: availabilityLoading } =
-    useProductAvailability(product._id, 1775006536);
+    useProductAvailability(
+      product._id,
+      getUnixTimestamp(selectedDate || new Date()),
+    );
 
   // Availability Data Setup
   const availabilityMap = React.useMemo(() => {
@@ -209,9 +218,9 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
       }
 
       // ❌ Prevent selecting more than 4
-      if (prev.length >= 4) {
-        return prev;
-      }
+      // if (prev.length >= 4) {
+      //   return prev;
+      // }
 
       const min = selectedIndexes[0];
       const max = selectedIndexes[selectedIndexes.length - 1];
@@ -232,12 +241,6 @@ export const ProductAvailability: React.FC<ProductAvailabilityProps> = ({
     //   onSlotSelect?.(selectedSlots);
     // }
   }, [selectedSlots, selectionMode, onSlotSelect]);
-
-  const getUnixTimestamp = (date: Date) => {
-    return Math.floor(
-      Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 1000,
-    );
-  };
 
   const getDatesInRange = (from: Date, to: Date) => {
     const dates: Date[] = [];

@@ -78,7 +78,7 @@ const LocationAndSearch = ({ onOpenModal, latLng }: LocationAndSearchProps) => {
         <button
           onClick={handleLocationClick}
           type="button"
-          className="flex gap-2 text-sm items-center my-2"
+          className="flex gap-2 text-sm items-center my-2 text-left"
         >
           <MapPin className="text-primary cursor-pointer size-4" />
           <span

@@ -62,14 +62,14 @@ const Products = () => {
         isLoading={isLoading}
         pagination={data?.pagination}
       />
-      {data?.pagination?.totalPages && data.pagination.totalPages > 1 && (
+      {data?.pagination?.totalPages && data.pagination.totalPages > 1 ? (
         <Pagination
           currentPage={currentPage}
           totalPages={data.pagination.totalPages}
           onPageChange={handlePageChange}
           isLoading={isLoading}
         />
-      )}
+      ) : null}
     </div>
   );
 };

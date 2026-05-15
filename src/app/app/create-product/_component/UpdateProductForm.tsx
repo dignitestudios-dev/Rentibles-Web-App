@@ -63,6 +63,9 @@ const TimeOptions = [
   { label: "06:00 PM", value: "18:00" },
   { label: "07:00 PM", value: "19:00" },
   { label: "08:00 PM", value: "20:00" },
+  { label: "09:00 PM", value: "21:00" },
+  { label: "10:00 PM", value: "22:00" },
+  { label: "11:00 PM", value: "23:00" },
 ];
 
 interface Props {
@@ -170,7 +173,20 @@ const UpdateProductForm: React.FC<Props> = ({ productId }) => {
     ) {
       setSelectedSubCategoryId(watchedSubCategoryId);
     }
-  }, [watchedSubCategoryId, selectedSubCategoryId]);
+  }, [watchedSubCategoryId, selectedSubCategoryId, subCategoriesData]);
+
+  // When edit data + subcategories are loaded
+  useEffect(() => {
+    if (
+      productResp?.data?.subCategory?._id &&
+      subCategoryOptions &&
+      subCategoryOptions.length > 0
+    ) {
+      setValue("subCategory", productResp.data.subCategory._id);
+
+      setSelectedSubCategoryId(productResp.data.subCategory._id);
+    }
+  }, [productResp, subCategoryOptions, setValue]);
 
   // read the images once so we don't pass the callable watch function itself to props
   const watchedImages = watch("images");
@@ -179,6 +195,7 @@ const UpdateProductForm: React.FC<Props> = ({ productId }) => {
   useEffect(() => {
     if (!productResp?.data) return;
     const p = productResp.data;
+
     setSelectedCategoryId(p.category?._id || "");
     setSelectedSubCategoryId(p.subCategory?._id || "");
     setLocation({
@@ -193,9 +210,12 @@ const UpdateProductForm: React.FC<Props> = ({ productId }) => {
     // convert unix timestamps to HH:MM strings
     const toTime = (ts?: number) => {
       if (!ts) return "";
+
       const d = new Date(ts * 1000);
-      const hh = String(d.getHours()).padStart(2, "0");
-      const mm = String(d.getMinutes()).padStart(2, "0");
+
+      const hh = String(d.getUTCHours()).padStart(2, "0");
+      const mm = String(d.getUTCMinutes()).padStart(2, "0");
+
       return `${hh}:${mm}`;
     };
 
@@ -452,6 +472,7 @@ const UpdateProductForm: React.FC<Props> = ({ productId }) => {
             placeholder="Enter Price"
             error={errors.hourlyPrice?.message}
             {...register("hourlyPrice")}
+            maxLength={7}
           />
           <InputField
             inputType="numeric"
@@ -459,6 +480,7 @@ const UpdateProductForm: React.FC<Props> = ({ productId }) => {
             placeholder="Enter Price"
             error={errors.dailyPrice?.message}
             {...register("dailyPrice")}
+            maxLength={7}
           />
         </div>
 

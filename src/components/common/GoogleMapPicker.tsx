@@ -132,8 +132,14 @@ const GoogleMapComponent = ({
   }, [editAddress]);
 
   useEffect(() => {
-    if (editAddress?.location?.coordinates?.length === 2) return;
+    console.log(
+      "🚀 ~ GoogleMapComponent ~ editAddress: 137===> ",
+      editAddress?.location?.coordinates?.length,
+    );
 
+    // if (editAddress?.location?.coordinates?.length === 2) return;
+
+    console.log("latLng.lat ---> 139", latLng?.lat);
     if (latLng?.lat && latLng?.lng) {
       updateLocationFromLatLng(latLng.lat, latLng.lng);
     }
@@ -197,13 +203,13 @@ const GoogleMapComponent = ({
           value={inputValue}
           disabled={isDisabled}
           placeholder="Enter your street, city, state, zip"
-          className="mb-2 w-full rounded-md text-black border  border-gray-300 p-2 text-sm"
+          className="mb-2 w-full rounded-md dark:text-white text-black border border-gray-300 p-2 text-sm"
           onChange={(e) => {
             setCurrentLocation(false);
             let value = e.target.value;
-    if (value.length > 0) {
-    value = value.charAt(0).toUpperCase() + value.slice(1);
-  }
+            if (value.length > 0) {
+              value = value.charAt(0).toUpperCase() + value.slice(1);
+            }
             setInputValue(value);
 
             if (!value) {

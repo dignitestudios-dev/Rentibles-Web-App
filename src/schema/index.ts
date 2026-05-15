@@ -53,7 +53,8 @@ export const NewPasswordSchema = z
   });
 
 export type NewPasswordPayload = z.infer<typeof NewPasswordSchema>;
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const emailRegex =
+  /^(?=.{4,}$)(?=[^@]*[A-Za-z])(?!.*\.\.)(?!\.)(?!.*\.$)[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$/;
 export const RegisterSchema = z
   .object({
     fullName: z
@@ -63,7 +64,7 @@ export const RegisterSchema = z
       .min(2, "Full name must be at least 2 characters"),
     email: z
       .string()
-      .min(1, "Email is required") // empty check
+      .min(4, "Email must be at least 4 characters") // empty check
       .refine((val) => emailRegex.test(val), {
         message: "Invalid email address",
       }),
