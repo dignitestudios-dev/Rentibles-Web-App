@@ -26,6 +26,7 @@ import { reportStore } from "@/src/lib/api/store";
 import { UserProfile } from "@/public/images/export";
 import { useRequireLogin } from "@/src/hooks/useRequireLogin";
 import Loader from "@/src/components/common/Loader";
+import { formatUSAPhoneNumber } from "@/src/utils/helperFunctions";
 
 const StoreDetailsContent = () => {
   const router = useRouter();
@@ -240,7 +241,7 @@ const StoreDetailsContent = () => {
 
                     <div className="flex items-center gap-2">
                       <Phone className="w-4 h-4 text-primary" />
-                      <span>{stores?.data?.phone}</span>
+                      <span>{formatUSAPhoneNumber(stores?.data?.phone)}</span>
                     </div>
                   </div>
 

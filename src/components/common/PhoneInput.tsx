@@ -67,7 +67,7 @@ const PhoneInput = forwardRef<HTMLInputElement, PhoneInputProps>(
       <div className="flex flex-col gap-1">
         <div
           className={`
-            flex items-center gap-3 bg-background dark:border-2 dark:border-muted rounded-md px-4 h-12 shadow-sm
+            flex items-center gap-3 bg-background dark:focus-within:ring-0.5 dark:focus-within:ring-offset-1 dark:border-2 dark:border-muted rounded-md px-4 h-12 shadow-sm
             ${error ? "border border-red-500" : ""}
           `}
         >

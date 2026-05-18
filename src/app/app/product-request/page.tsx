@@ -85,22 +85,25 @@ const ProductRequestsScreen = () => {
             {productRequests.map((request) => (
               <div
                 key={request._id}
-                className="bg-card rounded-xl p-5 flex items-center justify-between shadow border border-border overflow-hidden"
+                className="bg-card rounded-xl p-5 flex items-start justify-between shadow border border-border overflow-hidden gap-4"
               >
-                <div>
-                  <div className="text-lg font-bold text-foreground mb-1">
+                <div className="min-w-0 flex-1">
+                  <div className="text-lg font-bold text-foreground mb-1 break-words break-all">
                     {request.name}
                   </div>
-                  <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1">
+
+                  <div className="text-xs text-muted-foreground uppercase tracking-wide mb-1 break-words">
                     {request.category?.name}
                   </div>
-                  <div className="text-sm text-muted-foreground">
+
+                  <div className="text-sm text-muted-foreground break-words break-all">
                     {request.description}
                   </div>
                 </div>
+
                 <button
                   onClick={() => handleDelete(request._id)}
-                  className="ml-4 p-2 rounded-full bg-destructive/90 hover:bg-destructive transition-colors"
+                  className="shrink-0 p-2 rounded-full bg-destructive/90 hover:bg-destructive transition-colors"
                   disabled={deleteProductRequestMutation.isPending}
                 >
                   <Trash2 className="w-5 h-5 text-white" />

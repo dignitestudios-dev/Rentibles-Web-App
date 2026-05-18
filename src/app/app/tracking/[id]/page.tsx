@@ -21,6 +21,7 @@ import {
 import {
   calculateDistanceMiles,
   formatTimeToDisplay,
+  formatUSAPhoneNumber,
 } from "@/src/utils/helperFunctions";
 import { useSelector } from "react-redux";
 import { RootState } from "@/src/lib/store";
@@ -113,7 +114,6 @@ const OrderDetailsPage = () => {
       enabled: !!bookingData?.data?.product?._id && !!bookingId,
     },
   );
-  console.log("🚀 ~ OrderDetailsPage ~ signData:", signData);
 
   const cancelBookingMutation = useCancelBooking();
   const { mutate: updateBooking, isPending: isUpdating } = useUpdateBooking();
@@ -508,7 +508,9 @@ const OrderDetailsPage = () => {
                   className="flex items-center gap-2"
                 >
                   <Phone className="w-5 h-5 text-gray-500" />
-                  <span className="text-lg">{booking.user.phone}</span>
+                  <span className="text-lg">
+                    {formatUSAPhoneNumber(booking.user.phone)}
+                  </span>
                 </Link>
               </div>
             </div>

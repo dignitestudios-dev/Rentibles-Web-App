@@ -3,6 +3,7 @@ import { Star, Phone, Heart, Flag } from "lucide-react";
 import { IProductDetails, IUser } from "@/src/types/index.type";
 import { useSelector } from "react-redux";
 import Link from "next/link";
+import { formatUSAPhoneNumber } from "@/src/utils/helperFunctions";
 
 interface ProductInfoSectionProps {
   product: IProductDetails;
@@ -104,7 +105,7 @@ const ProductInfoSection: React.FC<ProductInfoSectionProps> = ({
                 href={`tel:${storeInfo.phone}`}
                 className="text-base text-[14px] hover:underline"
               >
-                {storeInfo.phone}
+                {formatUSAPhoneNumber(storeInfo.phone)}
               </Link>
             ) : (
               <span className="text-base text-[14px]">

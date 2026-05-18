@@ -103,23 +103,7 @@ const GetStarted = () => {
         <div className="w-full max-w-md flex flex-col gap-4 mt-10">
           <Link
             href="/auth/login"
-            className="
-              h-14
-              w-full
-              rounded-xl
-              bg-background
-              border-2
-                            border-orange-400
-              text-orange-400
-              text-base
-              font-medium
-              hover:bg-background
-              hover:text-orange-400
-              hover:border-orange-400
-              flex
-              items-center
-              justify-center
-            "
+            className="h-14 w-full rounded-xl bg-background border-2 border-orange-400 text-orange-400 text-base font-medium  flex items-center justify-center  transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
           >
             Continue with Email
           </Link>
@@ -134,9 +118,11 @@ const GetStarted = () => {
               text-orange-400
               text-base
               font-medium
-                            hover:bg-background
-              hover:text-orange-400
-              hover:border-orange-400
+               transition-all
+      duration-200
+      hover:-translate-y-0.5
+      hover:shadow-md
+      hover:bg-background
               cursor-pointer
             "
             onClick={() => {
@@ -157,10 +143,10 @@ const GetStarted = () => {
               text-orange-400
               text-base
               font-medium
-                            hover:bg-background
-
-              hover:text-orange-400
-              hover:border-orange-400
+              duration-200
+      hover:-translate-y-0.5
+      hover:shadow-md
+      hover:bg-background
               flex
               items-center
               justify-center
@@ -183,10 +169,10 @@ const GetStarted = () => {
               text-orange-400
               text-base
               font-medium
-                            hover:bg-background
-
-              hover:text-orange-400
-              hover:border-orange-400
+              duration-200
+      hover:-translate-y-0.5
+      hover:shadow-md
+      hover:bg-background
               flex
               items-center
               justify-center

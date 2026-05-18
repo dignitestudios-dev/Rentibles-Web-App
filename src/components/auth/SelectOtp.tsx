@@ -19,6 +19,7 @@ import { useDispatch } from "react-redux";
 import { useRouter } from "next/navigation";
 import { useInvalidateAllQueries } from "@/src/hooks/useInvalidateAllQueries";
 import { logout } from "@/src/lib/store/feature/authSlice";
+import { formatUSAPhoneNumber } from "@/src/utils/helperFunctions";
 
 const SelectOtp = () => {
   const { user } = useSelector((state: RootState) => state.auth);
@@ -131,7 +132,10 @@ const SelectOtp = () => {
                   <p className="text-sm font-medium text-foreground">
                     Phone number
                   </p>
-                  <p className="text-xs text-foreground">+1 {user?.phone}</p>
+                  <p className="text-xs text-foreground">
+                    {" "}
+                    {formatUSAPhoneNumber(user?.phone)}
+                  </p>
                 </div>
               </div>
               {user?.isPhoneVerified ? (

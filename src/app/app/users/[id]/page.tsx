@@ -259,36 +259,38 @@ export default function UserProfilePage() {
                         {userData.data.email}
                       </p>
                     </div>
-
-                    <div className="bg-muted dark:bg-card p-6 rounded-2xl">
-                      <h3 className="text-lg font-semibold mb-3 text-foreground flex items-center gap-2">
-                        <Phone className="w-5 h-5" />
-                        Phone
-                      </h3>
-                      <p className="text-gray-600 dark:text-gray-400">
-                        {formatUSAPhoneNumber(userData.data.phone)}
-                      </p>
-                    </div>
-
-                    <div className="bg-muted dark:bg-card p-6 rounded-2xl">
-                      <h3 className="text-lg font-semibold mb-3 text-foreground flex items-center gap-2">
-                        <MapPin className="w-5 h-5" />
-                        Address
-                      </h3>
-                      <div className="space-y-2 text-gray-600 dark:text-gray-400">
-                        <p>{userData.data.address}</p>
-                        {userData.data.apartment && (
-                          <p className="text-sm">
-                            Apt: {userData.data.apartment}
-                          </p>
-                        )}
-                        <p className="text-sm">
-                          {userData.data.city}, {userData.data.state}{" "}
-                          {userData.data.zipCode}
+                    {isOwnProfile && (
+                      <div className="bg-muted dark:bg-card p-6 rounded-2xl">
+                        <h3 className="text-lg font-semibold mb-3 text-foreground flex items-center gap-2">
+                          <Phone className="w-5 h-5" />
+                          Phone
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-400">
+                          {formatUSAPhoneNumber(userData.data.phone)}
                         </p>
-                        <p className="text-sm">{userData.data.country}</p>
                       </div>
-                    </div>
+                    )}
+                    {isOwnProfile && (
+                      <div className="bg-muted dark:bg-card p-6 rounded-2xl">
+                        <h3 className="text-lg font-semibold mb-3 text-foreground flex items-center gap-2">
+                          <MapPin className="w-5 h-5" />
+                          Address
+                        </h3>
+                        <div className="space-y-2 text-gray-600 dark:text-gray-400">
+                          <p>{userData.data.address}</p>
+                          {userData.data.apartment && (
+                            <p className="text-sm">
+                              Apt: {userData.data.apartment}
+                            </p>
+                          )}
+                          <p className="text-sm">
+                            {userData.data.city}, {userData.data.state}{" "}
+                            {userData.data.zipCode}
+                          </p>
+                          <p className="text-sm">{userData.data.country}</p>
+                        </div>
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div className="text-center py-8">

@@ -22,6 +22,7 @@ import { Libraries, useLoadScript } from "@react-google-maps/api";
 import { useUser } from "@/src/lib/api/user";
 import { useAppSelector } from "@/src/lib/store/hooks";
 import { ArrowLeft } from "lucide-react";
+import { formatUSAPhoneNumber } from "@/src/utils/helperFunctions";
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024;
 const libraries: Libraries = ["places"];
@@ -301,7 +302,7 @@ const EditProfileForm = () => {
               Phone Number (Read-only)
             </label>
             <p className="mt-2 text-base text-gray-900 dark:text-white">
-              {userData?.data?.phone}
+              {formatUSAPhoneNumber(userData?.data?.phone)}
             </p>
           </div>
         </div>

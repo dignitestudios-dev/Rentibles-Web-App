@@ -698,6 +698,7 @@ const CreateProductForm = () => {
               placeholder="Enter Quantity"
               error={errors.quantity?.message}
               {...register("quantity")}
+              maxLength={5}
             />
             <SelectField
               label="Category"

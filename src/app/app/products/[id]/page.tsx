@@ -48,6 +48,7 @@ import { InputField } from "@/src/components/common/InputField";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { axiosInstance } from "@/src/lib/axiosInstance";
+import { useRequireLogin } from "@/src/hooks/useRequireLogin";
 
 const ProductDetailsPage = () => {
   const router = useRouter();
@@ -125,6 +126,8 @@ const ProductDetailsPage = () => {
       };
     }
   }, [isOpen]);
+
+  const { requireLogin } = useRequireLogin();
 
   // data hooks must run unconditionally at top of component
   const { data: apiResponse, isLoading, isError } = useProductById(productId);
@@ -926,15 +929,22 @@ const ProductDetailsPage = () => {
                 className="flex-1 max-w-sm bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-4 rounded-lg transition-colors text-lg disabled:opacity-50"
                 disabled={product?.isBooked || !product?.isActive}
                 onClick={() => {
-                  if (getBookingEpochs() || selectedDate) {
-                    setIsBookNow(true);
-                    setIsPDFView(false);
-                  } else {
-                    ErrorToast(
-                      "Please select a date or at least four consecutive time slots.",
-                    );
-                    return;
-                  }
+                  requireLogin({
+                    onAuthenticated: () => {
+                      if (getBookingEpochs() || selectedDate) {
+                        setIsPDFView(false);
+
+                        requestAnimationFrame(() => {
+                          setIsBookNow(true);
+                        });
+                      } else {
+                        ErrorToast(
+                          "Please select a date or at least four consecutive time slots.",
+                        );
+                        return;
+                      }
+                    },
+                  });
                 }}
               >
                 Book Now

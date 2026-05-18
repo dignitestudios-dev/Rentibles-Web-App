@@ -483,7 +483,7 @@ const RegisterForm = () => {
           >
             Terms & Conditions
           </Link>{" "}
-          &{" "}
+          and{" "}
           <Link
             href="https://www.rentibles.com/privacy"
             target="_blank"
