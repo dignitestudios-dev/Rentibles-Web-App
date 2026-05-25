@@ -53,7 +53,7 @@ const SwiperStores: React.FC<SwiperStoresProps> = ({
 
   return (
     <div className="my-5">
-      <h2 className="font-semibold text-2xl mb-4">Stores</h2>
+      <h2 className="font-semibold text-xl sm:text-2xl mb-4">Stores</h2>
 
       {isLoading ? (
         <Loader show={isLoading} />
@@ -62,7 +62,21 @@ const SwiperStores: React.FC<SwiperStoresProps> = ({
           <Swiper
             modules={[Navigation, A11y]}
             spaceBetween={16}
-            slidesPerView={3}
+            slidesPerView={1.2}
+            breakpoints={{
+              480: {
+                slidesPerView: 1.5,
+              },
+              640: {
+                slidesPerView: 2,
+              },
+              768: {
+                slidesPerView: 2.5,
+              },
+              1024: {
+                slidesPerView: 3, // keeps existing desktop layout
+              },
+            }}
             navigation={{
               nextEl: ".swiper-button-next-stores",
               prevEl: ".swiper-button-prev-stores",
@@ -82,19 +96,56 @@ const SwiperStores: React.FC<SwiperStoresProps> = ({
                 ))}
           </Swiper>
 
-          {/* Custom Navigation Buttons */}
+          {/* Previous Button */}
           <button
-            className="swiper-button-prev-stores absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 z-10 bg-primary text-primary-foreground rounded-full p-2 hover:bg-primary/90 transition-colors flex items-center justify-center"
+            className="
+          swiper-button-prev-stores
+          absolute
+          left-1 sm:left-0
+          top-1/2
+          -translate-y-1/2
+          sm:-translate-x-4
+          z-10
+          bg-primary
+          text-primary-foreground
+          rounded-full
+          p-1.5 sm:p-2
+          hover:bg-primary/90
+          transition-colors
+          flex
+          items-center
+          justify-center
+          shadow-md
+        "
             aria-label="Previous store"
           >
-            <ChevronLeft className="h-6 w-6" />
+            <ChevronLeft className="h-5 w-5 sm:h-6 sm:w-6" />
           </button>
 
+          {/* Next Button */}
           <button
-            className="swiper-button-next-stores absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 z-10 bg-primary text-primary-foreground rounded-full p-2 hover:bg-primary/90 transition-colors flex items-center justify-center"
+            className="
+          swiper-button-next-stores
+          absolute
+          right-1 sm:right-0
+          top-1/2
+          -translate-y-1/2
+          sm:translate-x-4
+          z-10
+          bg-primary
+          text-primary-foreground
+          rounded-full
+          p-1.5 sm:p-2
+          hover:bg-primary/90
+          transition-colors
+          flex
+          items-center
+          justify-center
+          shadow-md
+        "
             aria-label="Next store"
           >
-            <ChevronRight className="h-6 w-6" />
+            <ChevronRight className="h-5 w-5 sm:h-6 sm:w-6" />
           </button>
         </div>
       )}

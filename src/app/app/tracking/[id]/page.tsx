@@ -20,6 +20,7 @@ import {
 } from "@/src/lib/api/booking";
 import {
   calculateDistanceMiles,
+  calculateDuration,
   formatTimeToDisplay,
   formatUSAPhoneNumber,
 } from "@/src/utils/helperFunctions";
@@ -555,7 +556,7 @@ const OrderDetailsPage = () => {
               <div>
                 <h3 className="text-lg font-semibold mb-3">Duration</h3>
                 <p className="text-gray-500 dark:text-gray-400 text-sm">
-                  {booking.duration}
+                  {calculateDuration(booking.pickupTime, booking.dropOffTime)}
                 </p>
               </div>
               <div>

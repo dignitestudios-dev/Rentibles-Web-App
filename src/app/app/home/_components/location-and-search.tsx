@@ -73,30 +73,31 @@ const LocationAndSearch = ({ onOpenModal, latLng }: LocationAndSearchProps) => {
   }, [latLng]);
 
   return (
-    <div className="w-full flex justify-between gap-10">
-      <div className="w-160 cursor-pointer">
+    <div className="w-full flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6">
+      {/* Address */}
+      <div className="flex-1 min-w-0">
         <button
           onClick={handleLocationClick}
           type="button"
-          className="flex gap-2 text-sm items-center my-2 text-left"
+          className="flex items-start gap-2 text-sm my-2 text-left w-full"
         >
-          <MapPin className="text-primary cursor-pointer size-4" />
+          <MapPin className="text-primary size-4 shrink-0 mt-0.5" />
+
           <span
-            className={
-              address === "Loading..."
-                ? "text-muted-foreground cursor-pointer"
-                : "cursor-pointer"
-            }
+            className={`truncate sm:whitespace-normal break-words ${
+              address === "Loading..." ? "text-muted-foreground" : ""
+            }`}
           >
             {address}
           </span>
         </button>
       </div>
 
-      <Link href="/app/search">
-        <div className="bg-app rounded-sm p-2 flex items-center gap-2 w-80 max-w-full cursor-pointer">
-          <Search className="size-4 text-muted-foreground" />
-          <span className="text-muted-foreground">Search</span>
+      {/* Search */}
+      <Link href="/app/search" className="w-full sm:w-auto">
+        <div className="bg-app rounded-sm p-2 flex items-center gap-2 w-full sm:w-72 md:w-80 cursor-pointer">
+          <Search className="size-4 text-muted-foreground shrink-0" />
+          <span className="text-muted-foreground truncate">Search</span>
         </div>
       </Link>
     </div>

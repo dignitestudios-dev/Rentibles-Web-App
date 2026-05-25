@@ -261,3 +261,20 @@ export const formatCompactPrice = (value: number) => {
     maximumFractionDigits: 1,
   }).format(value);
 };
+
+export const calculateDuration = (
+  pickupTime?: number,
+  dropOffTime?: number,
+): string => {
+  if (!pickupTime || !dropOffTime) return "-";
+
+  const formatTime = (epoch: number) => {
+    return new Date(epoch * 1000).toLocaleTimeString("en-US", {
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true,
+    });
+  };
+
+  return `${formatTime(pickupTime)} - ${formatTime(dropOffTime)}`;
+};

@@ -3,7 +3,6 @@
 import { logout, setGuestMode } from "@/src/lib/store/feature/authSlice";
 import { useAppDispatch, useAppSelector } from "@/src/lib/store/hooks";
 import { useRouter } from "next/navigation";
-import React from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,

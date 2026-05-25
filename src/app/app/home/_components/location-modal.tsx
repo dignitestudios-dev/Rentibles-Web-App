@@ -35,12 +35,9 @@ const LocationModal = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div
-        className="absolute inset-0 bg-black/50"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
-      <div className="relative bg-white rounded-lg w-[90%] max-w-2xl z-50 p-2">
+      <div className="relative dark:bg-card bg-white rounded-lg w-[90%] max-w-2xl z-50 p-2">
         <button
           onClick={onClose}
           className="absolute top-4 right-4 z-10 text-gray-500 hover:text-gray-700"
@@ -54,9 +51,9 @@ const LocationModal = ({
           latLng={latLng}
         />
         <div className="flex justify-center">
-        <Button onClick={()=>onClose()} className="text-white w-full mt-3 " >
-          Done
-        </Button>
+          <Button onClick={() => onClose()} className="text-white w-full mt-3 ">
+            Done
+          </Button>
         </div>
       </div>
     </div>
