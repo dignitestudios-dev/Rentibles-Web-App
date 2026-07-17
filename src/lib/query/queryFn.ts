@@ -446,3 +446,12 @@ export const updateBooking = async (
 
   return data;
 };
+
+export const updateUserProfile = async (formData: FormData): Promise<any> => {
+  const { data } = await axiosInstance.put("/user", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+  return data;
+};

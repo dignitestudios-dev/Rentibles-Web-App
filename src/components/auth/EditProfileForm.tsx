@@ -19,7 +19,7 @@ import { useDispatch } from "react-redux";
 import { ErrorToast, SuccessToast } from "../common/Toaster";
 import { useInvalidateAllQueries } from "@/src/hooks/useInvalidateAllQueries";
 import { Libraries, useLoadScript } from "@react-google-maps/api";
-import { useUser } from "@/src/lib/api/user";
+import { useUser, useUpdateUserProfile } from "@/src/lib/api/user";
 import { useAppSelector } from "@/src/lib/store/hooks";
 import { ArrowLeft } from "lucide-react";
 import { formatUSAPhoneNumber } from "@/src/utils/helperFunctions";
@@ -70,6 +70,7 @@ const EditProfileForm = () => {
   const { data: userData, isLoading: usersLoading } = useUser(userId ?? "", {
     enabled: Boolean(userId),
   });
+  const updateProfileMutation = useUpdateUserProfile();
 
   const { isLoaded } = useLoadScript({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
@@ -153,12 +154,31 @@ const EditProfileForm = () => {
     try {
       setLoading(true);
 
-      // TODO: Implement API call to update user profile
-      // For now, just show success
+      const formData = new FormData();
+      formData.append("name", data.fullName);
+      formData.append("zipCode", data.zipCode);
+      formData.append("apartment", data.apartmentNo);
+
+      if (data.image && data.image.length > 0) {
+        formData.append("profilePicture", data.image[0]);
+      }
+
+      if (location) {
+        formData.append("latitude", String(location.lat));
+        formData.append("longitude", String(location.lng));
+        formData.append("address", location.address || "");
+        formData.append("city", location.city || "");
+        formData.append("state", location.state || "");
+        formData.append("country", location.country || "");
+      }
+
+      await updateProfileMutation.mutateAsync(formData);
+
+      invalidateAll();
       SuccessToast("Profile updated successfully");
       router.back();
     } catch (err: any) {
-      const message = err?.message || "Failed to update profile.";
+      const message = getAxiosErrorMessage(err);
       setError("root", { type: "manual", message });
       ErrorToast(message);
     } finally {
@@ -293,18 +313,16 @@ const EditProfileForm = () => {
             {...register("email")}
             inputType="email"
             maxLength={35}
+            disabled
           />
         </div>
 
         <div>
-          <div className="bg-muted dark:bg-card p-4 rounded-lg">
-            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Phone Number (Read-only)
-            </label>
-            <p className="mt-2 text-base text-gray-900 dark:text-white">
-              {formatUSAPhoneNumber(userData?.data?.phone)}
-            </p>
-          </div>
+          <InputField
+            label="Phone Number"
+            value={formatUSAPhoneNumber(userData?.data?.phone) || ""}
+            disabled
+          />
         </div>
 
         <div>
@@ -315,16 +333,16 @@ const EditProfileForm = () => {
               editAddress={
                 location
                   ? {
-                      address: location.address,
-                      city: location.city,
-                      state: location.state,
-                      country: location.country,
-                      zipCode: "",
-                      location: {
-                        type: "Point",
-                        coordinates: [location.lng, location.lat],
-                      },
-                    }
+                    address: location.address,
+                    city: location.city,
+                    state: location.state,
+                    country: location.country,
+                    zipCode: "",
+                    location: {
+                      type: "Point",
+                      coordinates: [location.lng, location.lat],
+                    },
+                  }
                   : null
               }
               setCurrentLocation={setCurrentLocation}

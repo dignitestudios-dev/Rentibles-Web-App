@@ -5,10 +5,12 @@ import {
 } from "@/src/types/index.type";
 import {
   useQuery,
+  useMutation,
   UseQueryOptions,
   UseQueryResult,
+  UseMutationResult,
 } from "@tanstack/react-query";
-import { getUsersWithParams, getUserById } from "../query/queryFn";
+import { getUsersWithParams, getUserById, updateUserProfile } from "../query/queryFn";
 import { ReportUserPayload, ReportUserResponse } from "@/src/types/index.type";
 import { axiosInstance } from "../axiosInstance";
 
@@ -70,4 +72,18 @@ export const reportUser = async (
     payload,
   );
   return response.data;
+};
+
+/**
+ * Hook to update the user profile
+ */
+export const useUpdateUserProfile = (): UseMutationResult<
+  any,
+  Error,
+  FormData,
+  unknown
+> => {
+  return useMutation({
+    mutationFn: updateUserProfile,
+  });
 };
