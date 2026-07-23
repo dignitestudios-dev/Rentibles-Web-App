@@ -408,11 +408,10 @@ const OrderDetailsPage = () => {
                     <button
                       key={idx}
                       onClick={() => setActiveImageIndex(idx)}
-                      className={`h-2 rounded-full transition-all ${
-                        idx === activeImageIndex
-                          ? "w-8 bg-primary"
-                          : "w-2 bg-gray-300 dark:bg-gray-600"
-                      }`}
+                      className={`h-2 rounded-full transition-all ${idx === activeImageIndex
+                        ? "w-8 bg-primary"
+                        : "w-2 bg-gray-300 dark:bg-gray-600"
+                        }`}
                     />
                   ))}
                 </div>
@@ -439,23 +438,23 @@ const OrderDetailsPage = () => {
               <div className="space-y-4">
                 <div className="flex justify-between">
                   <span className="font-medium">Order ID:</span>
-                  <span>{booking.shortCode}</span>
+                  <span>{booking?.shortCode}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-medium">Order Created:</span>
                   <span>
-                    {new Date(booking.createdAt).toLocaleDateString()}
+                    {new Date(booking?.createdAt).toLocaleDateString()}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="font-medium">Order Time:</span>
                   <span>
-                    {/* {new Date(booking.pickupTime * 1000).toLocaleTimeString()} */}
-                    {formatTimeToDisplay(booking.createdAt)}
+                    {/* {new Date(booking?.pickupTime * 1000).toLocaleTimeString()} */}
+                    {formatTimeToDisplay(booking?.createdAt)}
                   </span>
                 </div>
-                {booking.status !== "completed" &&
-                  booking.status !== "incomplete" && (
+                {booking?.status !== "completed" &&
+                  booking?.status !== "incomplete" && (
                     <div className="flex justify-between">
                       <span className="font-medium">Time Left:</span>
                       <span className="text-primary font-semibold">
@@ -469,15 +468,15 @@ const OrderDetailsPage = () => {
             <div className="mb-6">
               <div className="flex items-start justify-between gap-4 mb-3">
                 <h2 className="text-3xl md:text-4xl font-bold">
-                  {product.name}
+                  {product?.name}
                 </h2>
                 <div className="flex items-center gap-1 bg-primary text-primary-foreground px-3 py-1 rounded-md whitespace-nowrap">
                   <Star className="w-5 h-5 fill-current" />
-                  <span className="font-semibold">{product.productReview}</span>
+                  <span className="font-semibold">{product?.productReview}</span>
                 </div>
               </div>
               <p className="text-gray-500 dark:text-gray-400 text-sm md:text-base line-clamp-3 break-words overflow-hidden w-full">
-                {product.description}
+                {product?.description}
               </p>
             </div>
 
@@ -492,7 +491,7 @@ const OrderDetailsPage = () => {
               <div>
                 <h3 className="text-lg font-semibold mb-2">Pickup Location</h3>
                 <p className="text-gray-500 dark:text-gray-400 text-sm mb-2">
-                  {booking.pickupAddress}
+                  {booking?.pickupAddress}
                 </p>
                 <p className="text-xl font-bold">
                   {distance === null
@@ -505,12 +504,12 @@ const OrderDetailsPage = () => {
               <div>
                 <h3 className="text-lg font-semibold mb-2">Phone Number</h3>
                 <Link
-                  href={`tel:${booking.user.phone}`}
+                  href={`tel:${booking?.user?.phone}`}
                   className="flex items-center gap-2"
                 >
                   <Phone className="w-5 h-5 text-gray-500" />
                   <span className="text-lg">
-                    {formatUSAPhoneNumber(booking.user.phone)}
+                    {formatUSAPhoneNumber(booking?.user?.phone)}
                   </span>
                 </Link>
               </div>
@@ -539,13 +538,13 @@ const OrderDetailsPage = () => {
               <div>
                 <h3 className="text-lg font-semibold mb-3">Quantity</h3>
                 <p className="text-gray-500 dark:text-gray-400 text-sm">
-                  {booking.quantity} Items
+                  {booking?.quantity} Items
                 </p>
               </div>
               <div>
                 <h3 className="text-lg font-semibold mb-3">Date</h3>
                 <p className="text-gray-500 dark:text-gray-400 text-sm">
-                  {new Date(booking.bookingDate * 1000).toLocaleDateString()}
+                  {new Date(booking?.bookingDate * 1000).toLocaleDateString()}
                 </p>
               </div>
             </div>
@@ -556,13 +555,13 @@ const OrderDetailsPage = () => {
               <div>
                 <h3 className="text-lg font-semibold mb-3">Duration</h3>
                 <p className="text-gray-500 dark:text-gray-400 text-sm">
-                  {calculateDuration(booking.pickupTime, booking.dropOffTime)}
+                  {calculateDuration(booking?.pickupTime, booking?.dropOffTime)}
                 </p>
               </div>
               <div>
                 <h3 className="text-lg font-semibold mb-3">Total Amount</h3>
                 <p className="text-gray-500 dark:text-gray-400 text-sm">
-                  ${booking.totalAmount}
+                  ${booking?.totalAmount}
                 </p>
               </div>
             </div>
@@ -570,13 +569,13 @@ const OrderDetailsPage = () => {
             <hr className="my-6 border-border" />
 
             <div>
-              {!booking?.review && booking.status === "completed" && (
+              {!booking?.review && booking?.status === "completed" && (
                 <h3 className="text-2xl font-bold mb-4">Customer Feedback</h3>
               )}
 
               <>
                 {!booking?.review &&
-                  booking.status === "completed" &&
+                  booking?.status === "completed" &&
                   type === "my_rentals" && (
                     <Button
                       onClick={() => setShowReviewModal(!showReviewModal)}
@@ -586,7 +585,7 @@ const OrderDetailsPage = () => {
                     </Button>
                   )}
 
-                {!booking?.review && booking.status === "completed" && (
+                {!booking?.review && booking?.status === "completed" && (
                   <div className="border rounded-xl mt-3 p-4 text-center text-gray-500">
                     No Feedback Available
                   </div>
@@ -608,11 +607,10 @@ const OrderDetailsPage = () => {
                           {Array.from({ length: 5 }).map((_, i) => (
                             <Star
                               key={i}
-                              className={`w-4 h-4 ${
-                                i < booking?.review?.stars
-                                  ? "text-yellow-500 fill-yellow-500"
-                                  : "text-gray-300"
-                              }`}
+                              className={`w-4 h-4 ${i < booking?.review?.stars
+                                ? "text-yellow-500 fill-yellow-500"
+                                : "text-gray-300"
+                                }`}
                             />
                           ))}
                         </div>
@@ -636,26 +634,26 @@ const OrderDetailsPage = () => {
 
       {/* ── Action bar ── */}
       <div className="w-full px-6 py-6 border-t border-border flex gap-3 justify-center">
-        {type === "customer_rental" && booking.status !== "completed" ? (
+        {type === "customer_rental" && booking?.status !== "completed" ? (
           <div className="w-100">
             <PickupCaptchaDialog
               refetchBookings={refetch}
-              bookingId={booking._id}
+              bookingId={booking?._id}
               productInfo={{
                 ProductName: product.name,
                 productImg: product.images[0] ?? "https://placehold.co/600x400",
               }}
-              disabled={!isReadyForPickup && booking.status !== "in-progress"}
+              disabled={!isReadyForPickup && booking?.status !== "in-progress"}
               trigger={
                 <Button
                   variant={"outline"}
                   className="w-full border-[1px] border-primary text-primary rounded-xl py-6 text-lg"
                 >
-                  {booking.status === "pending"
+                  {booking?.status === "pending"
                     ? "Ready for Pickup"
-                    : booking.status === "in-progress"
+                    : booking?.status === "in-progress"
                       ? "Mark As Received"
-                      : booking.status === "Incomplete"
+                      : booking?.status === "Incomplete"
                         ? "In Complete"
                         : "Completed"}
                 </Button>
@@ -665,7 +663,7 @@ const OrderDetailsPage = () => {
         ) : (
           <div className="w-100">
             {/* ── Pickup flow ── */}
-            {booking.status === "pending" && (
+            {booking?.status === "pending" && (
               <>
                 <Button
                   variant={"outline"}
@@ -679,7 +677,7 @@ const OrderDetailsPage = () => {
                   onOpenChange={setIsReturnModalOpen}
                   type="pickup"
                   product={reviewProduct}
-                  bookingId={booking._id}
+                  bookingId={booking?._id}
                   onScanned={(text) => setScannedId(text)}
                   onEvidenceSubmit={(files) => {
                     const images = files.filter((f) =>

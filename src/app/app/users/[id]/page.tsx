@@ -213,11 +213,10 @@ export default function UserProfilePage() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-6 py-3 font-semibold transition-colors border-b-2 ${
-                    activeTab === tab.id
+                  className={`px-6 py-3 font-semibold transition-colors border-b-2 ${activeTab === tab.id
                       ? "border-b-primary text-primary"
                       : "border-b-transparent text-gray-600 dark:text-gray-400 hover:text-foreground"
-                  }`}
+                    }`}
                 >
                   {tab.label}
                 </button>
