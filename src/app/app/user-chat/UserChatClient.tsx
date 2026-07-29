@@ -717,8 +717,21 @@ const UserChat = () => {
     );
   };
 
+  const isAdminUser = (chat: UserChatModel | null) => {
+    if (!chat) return false;
+    const adminUid =
+      process.env.NEXT_PUBLIC_CHAT_ADMIN_UID || "PlT1bQctJkVAHEvNFZKyR5Uum4v1";
+    return (
+      chat.otherUserId === adminUid ||
+  
+      chat.name?.toLowerCase().includes("admin") ||
+      chat.email?.toLowerCase().includes("admin")
+    );
+  };
+
   const ChatHeader = ({ onBack }: { onBack?: () => void }) => {
     if (!selectedChat) return null;
+    const isOtherAdmin = isAdminUser(selectedChat);
     return (
       <div className="sticky top-0 z-30 bg-background border-b border-border">
         <div className="flex items-center justify-between px-4 py-3 md:px-6">
@@ -750,7 +763,7 @@ const UserChat = () => {
               </p>
             </div>
           </div>
-          {activeChatId && (
+          {activeChatId && !isOtherAdmin && (
             <button
               onClick={handleToggleBlock}
               disabled={isBlockingAction || isBlockedByOther}

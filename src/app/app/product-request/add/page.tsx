@@ -153,6 +153,7 @@ export default function AddProductRequest() {
               Product Name
             </label>
             <Input
+            max={50}
               placeholder="Enter product name"
               {...register("productName")}
               disabled={showSuccess || isLoading}
@@ -177,6 +178,7 @@ export default function AddProductRequest() {
             <Textarea
               placeholder="Enter product description"
               rows={5}
+              maxLength={350}
               {...register("description")}
               disabled={showSuccess || isLoading}
               style={{ maxHeight: "180px" }}

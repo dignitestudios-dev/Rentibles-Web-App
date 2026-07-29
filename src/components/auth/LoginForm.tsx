@@ -20,6 +20,7 @@ import { ArrowLeft } from "lucide-react";
 import { axiosInstance } from "@/src/lib/axiosInstance";
 import { auth, messaging } from "@/src/firebase/firebase";
 import { getToken } from "firebase/messaging";
+import { loginFirebaseUser } from "@/src/firebase/getIdToken";
 
 const LoginForm = () => {
   const router = useRouter();
@@ -50,7 +51,7 @@ const LoginForm = () => {
       if (!messaging) return null;
 
       const token = await getToken(messaging, {
-        vapidKey: process.env.NEXT_PUBLIC_FIREBASE_VAPID_KEY,
+        vapidKey: process.env.NEXT_PUBLIC_VAPID_KEY,
       });
 
       return token || null;
@@ -100,62 +101,71 @@ const LoginForm = () => {
     },
   });
 
-  const onSubmit = (data: LoginPayload) => {
-    loginMutation.mutate({ ...data, role: "user" } as LoginPayload & {
-      role: string;
-    });
-  };
-
-  const loginMutation = useMutation({
-    mutationFn: loginUser,
-    onSuccess: async (response) => {
-      invalidateAll();
-      const userInfo = response?.data;
-
-      const normalizedUser = {
-        ...userInfo.user,
-        _id: userInfo.user._id,
-      };
-
-      dispatch(
-        singUp({
-          token: {
-            access: userInfo.token,
-            refresh: userInfo.token,
-          },
-          user: normalizedUser,
-        }),
-      );
-      await saveFcmToServer();
-      SuccessToast(response?.message);
-      if (
-        userInfo?.user.isEmailVerified === false ||
-        userInfo?.user.isPhoneVerified === false
-      ) {
-        router.push("/auth/select-otp");
-        return;
-      }
-      switch (userInfo?.user.identityStatus) {
-        case "not-provided":
-          router.push("/auth/identity-verification");
-          return;
-
-        case "pending":
-        case "rejected":
-          router.push("/auth/profile-status");
-          return;
-
-        case "approved":
-          router.push("/app/home");
-          return;
-      }
-    },
-    onError: (err) => {
-      const message = getAxiosErrorMessage(err || "Login failed");
-      console.log("🚀 ~ LoginForm ~ message:", message);
-      ErrorToast("Invalid email or password provided.");
-    },
+ const onSubmit = (data: LoginPayload) => {
+  loginMutation.mutate({ ...data, role: "user" } as LoginPayload & {
+    role: string;
   });
+};
+
+const loginMutation = useMutation({
+  mutationFn: loginUser,
+  onSuccess: async (response, variables) => {
+    invalidateAll();
+    const userInfo = response?.data;
+
+    const normalizedUser = {
+      ...userInfo.user,
+      _id: userInfo.user._id,
+    };
+
+    dispatch(
+      singUp({
+        token: {
+          access: userInfo.token,
+          refresh: userInfo.token,
+        },
+        user: normalizedUser,
+      }),
+    );
+
+    
+    try {
+      await loginFirebaseUser(variables.email, variables.password);
+    } catch (fbError) {
+      console.error("Firebase login failed:", fbError);
+    }
+
+    await saveFcmToServer();
+    SuccessToast(response?.message);
+
+    if (
+      userInfo?.user.isEmailVerified === false ||
+      userInfo?.user.isPhoneVerified === false
+    ) {
+      router.push("/auth/select-otp");
+      return;
+    }
+    switch (userInfo?.user.identityStatus) {
+      case "not-provided":
+        router.push("/auth/identity-verification");
+        return;
+
+      case "pending":
+      case "rejected":
+        router.push("/auth/profile-status");
+        return;
+
+      case "approved":
+        router.push("/app/home");
+        return;
+    }
+  },
+  onError: (err) => {
+    const message = getAxiosErrorMessage(err || "Login failed");
+    console.log("🚀 ~ LoginForm ~ message:", message);
+    ErrorToast("Invalid email or password provided.");
+  },
+});
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
