@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
@@ -18,6 +18,7 @@ import {
 } from "@/src/lib/api/notifications";
 import { Notification as TNotification } from "@/src/types/index.type";
 import { Button } from "@/components/ui/button";
+import { subscribeToForegroundMessages } from "@/src/firebase/messages";
 
 interface NotificationDropdownProps {
   onItemClick?: (item: TNotification) => void;
@@ -29,8 +30,17 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const { notifications, isLoading, isFetching, hasNextPage, loadMore } =
+  const { notifications, unreadCount, isLoading, isFetching } =
     useNotifications();
+
+  useEffect(() => {
+    const unsubscribe = subscribeToForegroundMessages(() => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    });
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [queryClient]);
 
   const handleClick = async (n: TNotification) => {
     // mark read if not already
@@ -61,9 +71,14 @@ const NotificationDropdown: React.FC<NotificationDropdownProps> = ({
           variant="ghost"
           aria-label="Notification"
           title="Notification"
-          className="p-0"
+          className="p-0 relative"
         >
           <Bell className="w-5 h-5" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-0.5 right-0 min-w-[16px] h-[16px] px-1 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center pointer-events-none">
+              {unreadCount > 99 ? "99+" : unreadCount}
+            </span>
+          )}
         </Button>
       </DropdownMenuTrigger>
 

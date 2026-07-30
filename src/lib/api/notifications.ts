@@ -33,16 +33,21 @@ export const useNotifications = () => {
   const [page, setPage] = useState(1);
   const [allNotifications, setAllNotifications] = useState<Notification[]>([]);
 
-  const { data, isLoading, isFetching } = useQuery<
+  const { data, isLoading, isFetching, refetch } = useQuery<
     GetNotificationsResponse,
     Error
   >({
     queryKey: ["notifications", page],
     queryFn: () => fetchNotifications(page, LIMIT),
     placeholderData: (prev) => prev,
+    refetchInterval: 8000,
   });
 
   const notifications: Notification[] = data?.data ?? [];
+  const unreadCount =
+    typeof data?.unreadCount === "number"
+      ? data.unreadCount
+      : notifications.filter((n) => !n.isRead).length;
 
   const hasNextPage =
     data?.pagination &&
@@ -50,10 +55,12 @@ export const useNotifications = () => {
 
   return {
     notifications,
+    unreadCount,
     isLoading,
     isFetching,
     hasNextPage,
     loadMore: () => setPage((prev) => prev + 1),
+    refetch,
   };
 };
 
@@ -72,5 +79,6 @@ export const usePaginatedNotifications = (page: number, limit: number = 10) => {
   return useQuery<GetNotificationsResponse, Error>({
     queryKey: ["notifications", "paginated", page, limit],
     queryFn: () => fetchNotifications(page, limit),
+    refetchInterval: 8000,
   });
 };

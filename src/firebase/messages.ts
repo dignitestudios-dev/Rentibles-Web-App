@@ -18,3 +18,13 @@ export const onMessageListener = (): Promise<MessagePayload> => {
     });
   });
 };
+
+export const subscribeToForegroundMessages = (
+  callback: (payload: MessagePayload) => void,
+): (() => void) | undefined => {
+  if (typeof window === "undefined" || !messaging) return undefined;
+  return onMessage(messaging, (payload) => {
+    console.log("🚀 FCM Foreground Message received:", payload);
+    callback(payload);
+  });
+};
